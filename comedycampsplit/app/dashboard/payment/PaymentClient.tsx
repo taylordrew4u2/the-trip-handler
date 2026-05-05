@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { createCheckoutSession } from "@/app/actions/payments";
 import { useSearchParams } from "next/navigation";
 
@@ -16,18 +16,20 @@ export function PaymentClient({ trip, user, payment, userId }: PaymentClientProp
   const success = searchParams.get("success");
   const cancelled = searchParams.get("cancelled");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const isPaid = user?.status === "CONFIRMED_PAID" || payment?.status === "COMPLETED";
 
   async function handlePay() {
     if (!trip.finalPrice) return;
     setLoading(true);
+    setError("");
     const result = await createCheckoutSession(userId, trip.finalPrice);
     if (result.url) {
       window.location.href = result.url;
     } else {
       setLoading(false);
-      alert("Payment error: " + result.error);
+      setError(result.error ?? "Payment failed. Please try again.");
     }
   }
 
@@ -47,6 +49,7 @@ export function PaymentClient({ trip, user, payment, userId }: PaymentClientProp
         <div className="text-5xl mb-4">😅</div>
         <h2 className="text-xl font-bold text-yellow-700 mb-2">Payment Cancelled</h2>
         <p className="text-gray-500 mb-4">No worries! You can try again below.</p>
+        {error && <p className="text-red-600 text-sm mb-3">{error}</p>}
         {trip.finalPrice && (
           <button
             onClick={handlePay}
@@ -67,6 +70,12 @@ export function PaymentClient({ trip, user, payment, userId }: PaymentClientProp
         <h2 className="text-xl font-bold text-gray-900 mb-2">Confirm Your Spot</h2>
         <p className="text-gray-500">The trip is locked and ready! Pay to confirm your place.</p>
       </div>
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm">
+          {error}
+        </div>
+      )}
 
       {trip.finalPrice ? (
         <div className="space-y-4">
