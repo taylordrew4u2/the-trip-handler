@@ -44,7 +44,7 @@ export function AdminNav() {
           href="/admin"
           className="text-xs text-gray-400 hover:text-gray-200"
         >
-          ← Back to Login
+          ← Admin Login
         </Link>
       </div>
     </aside>
