@@ -2,21 +2,17 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { ContributionItem } from "@/components/ContributionItem";
-import { addContribution } from "@/app/actions/contributions";
 
 export default async function ContributionsPage() {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as { id?: string })?.id ?? "";
 
-  const [trip, contributions] = await Promise.all([
-    prisma.trip.findFirst(),
-    prisma.contribution.findMany({
-      orderBy: { createdAt: "asc" },
-      include: {
-        users: { include: { user: { select: { name: true, username: true } } } },
-      },
-    }),
-  ]);
+  const contributions = await prisma.contribution.findMany({
+    orderBy: { createdAt: "asc" },
+    include: {
+      users: { include: { user: { select: { name: true, username: true } } } },
+    },
+  });
 
   return (
     <div className="space-y-6">
