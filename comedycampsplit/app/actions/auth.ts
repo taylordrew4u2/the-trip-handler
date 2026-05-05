@@ -36,7 +36,7 @@ export async function signupAction(formData: FormData) {
     if (existingUsername) return { error: "Username already taken" };
   }
 
-  const hashed = await bcrypt.hash(raw.password, 12);
+  const hashed = await bcrypt.hash(raw.password, 10);
   await prisma.user.create({
     data: {
       name: raw.name,

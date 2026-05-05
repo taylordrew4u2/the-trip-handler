@@ -10,10 +10,26 @@ export default async function AdminRosterPage() {
     },
   });
 
+  function escapeCSV(value: string): string {
+    if (value.includes(",") || value.includes('"') || value.includes("\n")) {
+      return `"${value.replace(/"/g, '""')}"`;
+    }
+    return value;
+  }
+
   const csv = [
-    ["Name", "Email", "Username", "Phone", "Status", "Joined"].join(","),
+    ["Name", "Email", "Username", "Phone", "Status", "Joined"].map(escapeCSV).join(","),
     ...users.map((u) =>
-      [u.name, u.email, u.username ?? "", u.phone ?? "", u.status, u.createdAt.toISOString().split("T")[0]].join(",")
+      [
+        u.name,
+        u.email,
+        u.username ?? "",
+        u.phone ?? "",
+        u.status,
+        u.createdAt.toISOString().split("T")[0],
+      ]
+        .map(escapeCSV)
+        .join(",")
     ),
   ].join("\n");
 
