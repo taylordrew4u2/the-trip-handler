@@ -1,0 +1,54 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { signOut } from "next-auth/react";
+
+const navItems = [
+  { href: "/dashboard", label: "🏠 Home", exact: true },
+  { href: "/dashboard/roster", label: "👥 Roster" },
+  { href: "/dashboard/itinerary", label: "🗓️ Itinerary" },
+  { href: "/dashboard/expenses", label: "💸 Expenses" },
+  { href: "/dashboard/contributions", label: "🎭 Contributions" },
+  { href: "/dashboard/payment", label: "💳 Payment" },
+];
+
+export function DashboardNav() {
+  const pathname = usePathname();
+
+  return (
+    <nav className="bg-white border-b border-purple-100 sticky top-0 z-50 shadow-sm">
+      <div className="max-w-6xl mx-auto px-4">
+        <div className="flex items-center justify-between h-16">
+          <Link href="/dashboard" className="font-bold text-xl text-purple-700">
+            🎪 ComedyCampSplit
+          </Link>
+          <div className="flex items-center gap-1 overflow-x-auto hide-scrollbar">
+            {navItems.map((item) => {
+              const active = item.exact ? pathname === item.href : pathname.startsWith(item.href);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
+                    active
+                      ? "bg-purple-100 text-purple-700"
+                      : "text-gray-600 hover:bg-gray-50"
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+            <button
+              onClick={() => signOut({ callbackUrl: "/login" })}
+              className="px-3 py-1.5 rounded-lg text-sm font-medium text-red-500 hover:bg-red-50 ml-2 whitespace-nowrap"
+            >
+              Sign Out
+            </button>
+          </div>
+        </div>
+      </div>
+    </nav>
+  );
+}
