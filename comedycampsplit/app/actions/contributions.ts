@@ -27,8 +27,14 @@ export async function signUpForContribution(userId: string, contributionId: stri
     });
     revalidatePath("/dashboard/contributions");
     return { success: true };
-  } catch {
-    return { error: "Already signed up" };
+  } catch (err) {
+    // Prisma unique constraint violation (P2002) means already signed up
+    const code = (err as { code?: string })?.code;
+    if (code === "P2002") {
+      return { error: "Already signed up for this item" };
+    }
+    console.error("signUpForContribution error:", err);
+    return { error: "Failed to sign up for contribution" };
   }
 }
 
