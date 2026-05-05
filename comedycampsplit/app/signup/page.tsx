@@ -3,10 +3,8 @@
 import { useState } from "react";
 import { signupAction } from "@/app/actions/auth";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 
 export default function SignupPage() {
-  const router = useRouter();
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -32,7 +30,7 @@ export default function SignupPage() {
           <div className="text-6xl mb-4">🎉</div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Application Submitted!</h2>
           <p className="text-gray-500 mb-6">
-            Your request is pending admin approval. You'll receive an email once approved!
+            Your request is pending admin approval. You&apos;ll receive an email once approved!
           </p>
           <Link
             href="/login"

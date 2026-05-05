@@ -1,7 +1,15 @@
 import Stripe from "stripe";
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error("STRIPE_SECRET_KEY environment variable is required");
-}
+let stripeSingleton: Stripe | null = null;
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+export function getStripe() {
+  if (stripeSingleton) return stripeSingleton;
+
+  const secretKey = process.env.STRIPE_SECRET_KEY;
+  if (!secretKey) {
+    throw new Error("STRIPE_SECRET_KEY environment variable is required");
+  }
+
+  stripeSingleton = new Stripe(secretKey);
+  return stripeSingleton;
+}

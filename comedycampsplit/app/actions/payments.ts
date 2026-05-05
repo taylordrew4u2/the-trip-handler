@@ -1,13 +1,17 @@
 "use server";
 
-import { stripe } from "@/lib/stripe";
+import { getStripe } from "@/lib/stripe";
 import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 
 export async function createCheckoutSession(userId: string, amount: number) {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+  if (!appUrl) return { error: "NEXT_PUBLIC_APP_URL is not configured" };
+
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) return { error: "User not found" };
 
+  const stripe = getStripe();
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ["card"],
     line_items: [
@@ -21,8 +25,8 @@ export async function createCheckoutSession(userId: string, amount: number) {
       },
     ],
     mode: "payment",
-    success_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/payment?success=true`,
-    cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/payment?cancelled=true`,
+    success_url: `${appUrl}/dashboard/payment?success=true`,
+    cancel_url: `${appUrl}/dashboard/payment?cancelled=true`,
     customer_email: user.email,
     metadata: { userId },
   });

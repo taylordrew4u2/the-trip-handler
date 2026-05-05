@@ -22,7 +22,7 @@ export default async function RosterPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">👥 Who's Coming</h1>
+        <h1 className="text-2xl font-bold text-gray-900">👥 Who&apos;s Coming</h1>
         <p className="text-gray-500 text-sm mt-1">
           {totalApproved} Approved • {totalPaid} Confirmed & Paid
         </p>
