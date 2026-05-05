@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { addContribution, deleteContributionItem } from "@/app/actions/contributions";
 
 interface Contribution {
@@ -15,6 +16,7 @@ export function AdminContributionsClient({ contributions, tripId }: {
   contributions: Contribution[];
   tripId: string;
 }) {
+  const router = useRouter();
   const [items, setItems] = useState(contributions);
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -27,7 +29,8 @@ export function AdminContributionsClient({ contributions, tripId }: {
     await addContribution(formData);
     setLoading(false);
     setShowForm(false);
-    window.location.reload();
+    (e.target as HTMLFormElement).reset();
+    router.refresh();
   }
 
   async function handleDelete(id: string) {

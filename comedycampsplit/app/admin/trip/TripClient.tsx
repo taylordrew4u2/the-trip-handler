@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { updateTrip, lockTrip, unlockTrip } from "@/app/actions/admin";
 
 interface Trip {
@@ -20,6 +21,7 @@ interface Trip {
 }
 
 export function TripClient({ trip }: { trip: Trip }) {
+  const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [locking, setLocking] = useState(false);
   const [form, setForm] = useState({
@@ -52,7 +54,7 @@ export function TripClient({ trip }: { trip: Trip }) {
       await lockTrip(trip.id);
     }
     setLocking(false);
-    window.location.reload();
+    router.refresh();
   }
 
   function field(label: string, key: keyof typeof form, type: string = "text", rows?: number) {
