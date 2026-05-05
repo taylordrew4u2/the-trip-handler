@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { RosterCard } from "@/components/RosterCard";
 import { SearchSort } from "@/components/SearchSort";
@@ -13,6 +13,7 @@ type RosterUser = {
   bio: string | null;
   avatarUrl: string | null;
   status: UserStatus;
+  createdAt: Date;
   contributions: {
     contribution: { title: string; category: string | null };
   }[];
@@ -43,18 +44,14 @@ export function RosterClientView({ initialUsers }: { initialUsers: RosterUser[] 
     })
     .sort((a, b) => {
       if (sort === "name") return a.name.localeCompare(b.name);
+      if (sort === "newest") return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       if (sort === "status") return a.status.localeCompare(b.status);
       return 0;
     });
 
   return (
     <div className="space-y-4">
-      <SearchSort
-        search={search}
-        onSearchChange={setSearch}
-        sort={sort}
-        onSortChange={setSort}
-      />
+      <SearchSort search={search} onSearchChange={setSearch} sort={sort} onSortChange={setSort} />
       {filtered.length === 0 ? (
         <div className="text-center py-12 text-gray-400">
           <div className="text-5xl mb-3">🎭</div>
