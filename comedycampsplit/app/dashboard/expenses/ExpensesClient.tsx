@@ -109,6 +109,16 @@ export function ExpensesClient({ expenses, tripId, userId }: {
                 placeholder="Optional notes..."
               />
             </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Receipt (optional)</label>
+              <input
+                name="receipt"
+                type="file"
+                accept="image/*,application/pdf"
+                className="w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-3 file:rounded-xl file:border-0 file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200"
+              />
+              <p className="text-xs text-gray-500 mt-1">PDF or image, up to 10MB.</p>
+            </div>
             <div className="flex gap-3">
               <button
                 type="submit"
