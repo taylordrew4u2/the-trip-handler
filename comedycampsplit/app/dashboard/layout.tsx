@@ -17,7 +17,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           <div className="text-5xl mb-4">⏳</div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Pending Approval</h2>
           <p className="text-gray-500">
-            Your application is being reviewed by the admin. You'll receive an email once approved!
+            Your application is being reviewed by the admin. You&apos;ll receive an email once approved!
           </p>
         </div>
       </div>
