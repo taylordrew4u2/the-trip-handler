@@ -25,6 +25,25 @@ Copy this into a notes app and tick each box yourself. **All boxes must be ticke
 
 ---
 
+## 🚧 What's left to finish (current status)
+
+Everything in the codebase is ready. **The remaining work is account/config setup in Vercel + Stripe + Resend — code changes are not needed.** In rough order:
+
+1. **Point Vercel at `main`.** This repo's default deploy branch should be `main`. If your Vercel project was previously linked to a different branch (e.g. `claude/...` or `codex/...`), open Vercel → **Settings → Git → Production Branch** and set it to `main`. All future pushes to `main` will then auto-deploy.
+2. **Create the Vercel project** with Root Directory = `comedycampsplit` (Step 2).
+3. **Provision storage:** Postgres (Step 3) + Blob (Step 4). These auto-add `DATABASE_URL` and `BLOB_READ_WRITE_TOKEN`.
+4. **Get third-party keys:** Stripe test keys (Step 5) and Resend API key + verified sender domain (Step 6).
+5. **Paste env vars into Vercel** (Step 7) — the full list is in the table below. `EMAIL_FROM` is required (the app no longer hardcodes a sender).
+6. **First deploy** (Step 8), then **update `NEXTAUTH_URL` / `NEXT_PUBLIC_APP_URL`** to the real Vercel URL and redeploy.
+7. **Add the Stripe webhook** at `/api/webhooks/stripe`, paste the signing secret into `STRIPE_WEBHOOK_SECRET`, redeploy (Step 9).
+8. **Push the DB schema and seed** from your laptop — Vercel won't do this for you (Step 10).
+9. **Run the smoke test** (Step 12). When it passes end-to-end on test mode, swap to Stripe **live keys** and create a **live-mode webhook**.
+10. *(Optional)* Attach a **custom domain** and update both URL env vars + the Stripe webhook URL (Step 11).
+
+> If you want to know exactly which env var is still blank, open Vercel → **Settings → Environment Variables** and compare against the table in Step 7. Anything not listed there is still missing.
+
+---
+
 ## What you'll need before starting
 
 - A laptop with a terminal (Mac Terminal, or Windows PowerShell)
