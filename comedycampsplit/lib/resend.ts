@@ -29,6 +29,7 @@ export async function sendTripLockedEmail(email: string, name: string, price: nu
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
         <h1 style="color: #7c3aed;">💰 Trip is Locked!</h1>
         <p>Hey ${name}!</p>
+        <p>Your share is <strong>$${price.toFixed(2)}</strong>.</p>
         <p>The trip has been finalized! Head over to the app to complete your payment and confirm your spot.</p>
         <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard/payment" style="background:#16a34a;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;display:inline-block;margin-top:16px;">Pay Now</a>
         <p style="color:#666;margin-top:32px;">Don't miss out! 🎪</p>
