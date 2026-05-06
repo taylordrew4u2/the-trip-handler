@@ -10,7 +10,7 @@ This is the **Next.js app** for organizing the comedian summer camp trip (roster
 
 Copy this into a notes app and tick each box yourself. **All boxes must be ticked before the site works.**
 
-- [ ] **1.** GitHub repo exists and code is pushed
+- [x] **1.** GitHub repo exists and code is pushed ✅
 - [ ] **2.** Vercel project created, root directory set to `comedycampsplit`
 - [ ] **3.** Vercel Postgres database created and connected
 - [ ] **4.** Vercel Blob store created and connected
@@ -36,15 +36,15 @@ Copy this into a notes app and tick each box yourself. **All boxes must be ticke
 
 ## Step 1 — GitHub repo
 
-If you're reading this on github.com, you're done. Skip to Step 2.
+✅ **Already done** — the repo is live at <https://github.com/taylordrew4u2/COMEDYSUMMERCAMP>. Skip to Step 2.
 
-Otherwise, from the project folder on your laptop:
+If you ever need to re-link a fresh local clone:
 ```bash
-git remote add origin https://github.com/<your-username>/COMEDYSUMMERCAMP.git
+git remote add origin https://github.com/taylordrew4u2/COMEDYSUMMERCAMP.git
 git push -u origin main
 ```
 
-**How to know it worked:** visiting `https://github.com/<your-username>/COMEDYSUMMERCAMP` shows the code.
+**How to know it worked:** visiting <https://github.com/taylordrew4u2/COMEDYSUMMERCAMP> shows the code.
 
 ---
 
