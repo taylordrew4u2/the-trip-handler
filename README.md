@@ -6,18 +6,35 @@ This is the **Next.js app** for organizing the comedian summer camp trip (roster
 
 ---
 
+## 🔥 Right now — do this first
+
+Production is deploying but every page returns **500** because `NEXTAUTH_SECRET` is not set in Vercel. Until you fix this, nothing else matters.
+
+1. Generate a secret:
+   ```bash
+   openssl rand -base64 32
+   ```
+2. Vercel → **Settings → Environment Variables** → add:
+   - `NEXTAUTH_SECRET` = (output from step 1) — apply to Production, Preview, Development
+   - `NEXTAUTH_URL` = your production URL (e.g. `https://comedysummercamp.vercel.app`) — Production
+3. **Deployments → ⋯ → Redeploy** the latest `main` build. Env-var changes don't apply to existing deploys.
+4. While you're in env vars, scan the table in **Step 7** below for anything else still blank.
+
+---
+
 ## ☑️ Progress checklist (tick as you go)
 
 Copy this into a notes app and tick each box yourself. **All boxes must be ticked before the site works.**
 
 - [x] **1.** GitHub repo exists and code is pushed ✅
-- [ ] **2.** Vercel project created, root directory set to `comedycampsplit`
+- [x] **2.** Vercel project created, root directory set to `comedycampsplit` ✅
 - [ ] **3.** Vercel Postgres database created and connected
 - [ ] **4.** Vercel Blob store created and connected
 - [ ] **5.** Stripe account created, API keys copied
 - [ ] **6.** Resend account created, sender domain verified, API key copied
-- [ ] **7.** All environment variables pasted into Vercel (see Step 6 table)
-- [ ] **8.** First deploy succeeded (build is green in Vercel)
+- [ ] **7.** All environment variables pasted into Vercel (see Step 7 table) — ⚠️ **`NEXTAUTH_SECRET` confirmed missing in production**
+- [x] **8a.** Build succeeds in Vercel ✅ (latest deploy on `main` builds green)
+- [ ] **8b.** Deployed site loads without 500s — blocked on Step 7
 - [ ] **9.** Stripe webhook created and `STRIPE_WEBHOOK_SECRET` added to Vercel
 - [ ] **10.** Database schema pushed (`npx prisma db push`) and seeded (`npm run db:seed`) from your laptop
 - [ ] **11.** (Optional) Custom domain attached and `NEXTAUTH_URL` / `NEXT_PUBLIC_APP_URL` updated
@@ -27,18 +44,17 @@ Copy this into a notes app and tick each box yourself. **All boxes must be ticke
 
 ## 🚧 What's left to finish (current status)
 
-Everything in the codebase is ready. **The remaining work is account/config setup in Vercel + Stripe + Resend — code changes are not needed.** In rough order:
+The codebase is ready and the build is green. **All remaining work is account/config setup in Vercel + Stripe + Resend — no code changes needed.** In priority order:
 
-1. **Point Vercel at `main`.** This repo's default deploy branch should be `main`. If your Vercel project was previously linked to a different branch (e.g. `claude/...` or `codex/...`), open Vercel → **Settings → Git → Production Branch** and set it to `main`. All future pushes to `main` will then auto-deploy.
-2. **Create the Vercel project** with Root Directory = `comedycampsplit` (Step 2).
-3. **Provision storage:** Postgres (Step 3) + Blob (Step 4). These auto-add `DATABASE_URL` and `BLOB_READ_WRITE_TOKEN`.
-4. **Get third-party keys:** Stripe test keys (Step 5) and Resend API key + verified sender domain (Step 6).
-5. **Paste env vars into Vercel** (Step 7) — the full list is in the table below. `EMAIL_FROM` is required (the app no longer hardcodes a sender).
-6. **First deploy** (Step 8), then **update `NEXTAUTH_URL` / `NEXT_PUBLIC_APP_URL`** to the real Vercel URL and redeploy.
-7. **Add the Stripe webhook** at `/api/webhooks/stripe`, paste the signing secret into `STRIPE_WEBHOOK_SECRET`, redeploy (Step 9).
-8. **Push the DB schema and seed** from your laptop — Vercel won't do this for you (Step 10).
-9. **Run the smoke test** (Step 12). When it passes end-to-end on test mode, swap to Stripe **live keys** and create a **live-mode webhook**.
-10. *(Optional)* Attach a **custom domain** and update both URL env vars + the Stripe webhook URL (Step 11).
+1. **Set `NEXTAUTH_SECRET` + `NEXTAUTH_URL` in Vercel** and redeploy. *(See "Right now" box above. This is currently the only thing breaking production.)*
+2. **Provision storage:** Postgres (Step 3) + Blob (Step 4). These auto-add `DATABASE_URL` and `BLOB_READ_WRITE_TOKEN`.
+3. **Get third-party keys:** Stripe test keys (Step 5) and Resend API key + verified sender domain (Step 6).
+4. **Fill the rest of the env vars** (Step 7) — the full list is in the table. `EMAIL_FROM` is required (the app no longer hardcodes a sender).
+5. **Redeploy** so all the new env values take effect (Step 8).
+6. **Add the Stripe webhook** at `/api/webhooks/stripe`, paste the signing secret into `STRIPE_WEBHOOK_SECRET`, redeploy (Step 9).
+7. **Push the DB schema and seed** from your laptop — Vercel won't do this for you (Step 10).
+8. **Run the smoke test** (Step 12). When it passes end-to-end on test mode, swap to Stripe **live keys** and create a **live-mode webhook**.
+9. *(Optional)* Attach a **custom domain** and update both URL env vars + the Stripe webhook URL (Step 11).
 
 > If you want to know exactly which env var is still blank, open Vercel → **Settings → Environment Variables** and compare against the table in Step 7. Anything not listed there is still missing.
 
