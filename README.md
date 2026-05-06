@@ -1,199 +1,273 @@
-# COMEDYSUMMERCAMP
+# COMEDYSUMMERCAMP — Setup Guide
 
-Monorepo containing **ComedyCampSplit** — a Next.js app for organizing a comedian summer camp trip (roster, expenses, contribution board, Stripe payments).
+This is the **Next.js app** for organizing the comedian summer camp trip (roster, expenses, Stripe payments, emails). The app code lives in [`comedycampsplit/`](./comedycampsplit). This README is the **only thing you need to follow** to get the site live.
 
-The actual app lives in [`comedycampsplit/`](./comedycampsplit). Everything below is the **manual checklist** you (Taylor) need to complete on your end so the app deploys cleanly to Vercel.
-
----
-
-## TL;DR — What you have to do manually
-
-You need accounts and credentials from **5 services** before Vercel can build successfully:
-
-1. **Vercel** — host the app + Postgres + Blob storage
-2. **Stripe** — payment processing + webhook
-3. **Resend** — transactional emails
-4. **GitHub** — connect this repo to Vercel
-5. **A custom domain (optional)** — point it at Vercel
-
-Then you paste a handful of environment variables into Vercel, push the schema to Postgres, and seed the trip row. Detailed steps are below.
+> **Read this top to bottom. Do the steps in order. Don't skip.** Each step has a "How to know it worked" check — don't move on until that check passes.
 
 ---
 
-## Stack overview (so you know what you're paying for)
+## ☑️ Progress checklist (tick as you go)
 
-| Service | What it's for | Free tier OK? |
-|---|---|---|
-| Vercel | Hosting + serverless functions | Yes (Hobby plan) |
-| Vercel Postgres | Database | Yes (Hobby) |
-| Vercel Blob | Avatar + receipt uploads | Yes (Hobby) |
-| Stripe | Card payments + webhook | Pay per transaction, no monthly fee |
-| Resend | Approval + trip-lock emails | Yes (3,000 emails/mo free) |
+Copy this into a notes app and tick each box yourself. **All boxes must be ticked before the site works.**
+
+- [ ] **1.** GitHub repo exists and code is pushed
+- [ ] **2.** Vercel project created, root directory set to `comedycampsplit`
+- [ ] **3.** Vercel Postgres database created and connected
+- [ ] **4.** Vercel Blob store created and connected
+- [ ] **5.** Stripe account created, API keys copied
+- [ ] **6.** Resend account created, sender domain verified, API key copied
+- [ ] **7.** All environment variables pasted into Vercel (see Step 6 table)
+- [ ] **8.** First deploy succeeded (build is green in Vercel)
+- [ ] **9.** Stripe webhook created and `STRIPE_WEBHOOK_SECRET` added to Vercel
+- [ ] **10.** Database schema pushed (`npx prisma db push`) and seeded (`npm run db:seed`) from your laptop
+- [ ] **11.** (Optional) Custom domain attached and `NEXTAUTH_URL` / `NEXT_PUBLIC_APP_URL` updated
+- [ ] **12.** Smoke test passed (full list at the bottom)
 
 ---
 
-## Step 1 — Push this repo to GitHub
+## What you'll need before starting
 
-If you're reading this on github.com you're done. Otherwise:
+- A laptop with a terminal (Mac Terminal, or Windows PowerShell)
+- A credit card (free tiers work, but Stripe and the optional domain may charge)
+- About **45 minutes** the first time
+- These browser tabs open: <https://vercel.com> · <https://stripe.com> · <https://resend.com> · <https://github.com>
 
+---
+
+## Step 1 — GitHub repo
+
+If you're reading this on github.com, you're done. Skip to Step 2.
+
+Otherwise, from the project folder on your laptop:
 ```bash
 git remote add origin https://github.com/<your-username>/COMEDYSUMMERCAMP.git
 git push -u origin main
 ```
 
+**How to know it worked:** visiting `https://github.com/<your-username>/COMEDYSUMMERCAMP` shows the code.
+
 ---
 
 ## Step 2 — Create the Vercel project
 
-1. Go to <https://vercel.com/new>.
-2. Click **Import Git Repository** and select `COMEDYSUMMERCAMP`.
-3. **Important — set the Root Directory.** Vercel will ask which folder the app is in. Click **Edit** next to "Root Directory" and choose `comedycampsplit`. The framework should auto-detect as **Next.js**.
-4. Leave the build/install/dev commands as default — they're already configured in `comedycampsplit/vercel.json`:
-   - Build: `prisma generate && next build`
-   - Install: `npm install`
-   - Dev: `next dev`
-5. **Do NOT click Deploy yet.** First add the env vars in Step 3 — otherwise the first build will fail.
+1. Go to <https://vercel.com/signup> and sign in with GitHub if you haven't.
+2. Click **Add New… → Project**.
+3. Find `COMEDYSUMMERCAMP` in the list. Click **Import**.
+4. **CRITICAL — Set the Root Directory.**
+   - Click **Edit** next to "Root Directory".
+   - Click **Continue** to browse the repo.
+   - Click `comedycampsplit` to select it.
+   - Click **Continue**.
+5. Vercel should now say **Framework Preset: Next.js**. If it says "Other", you picked the wrong root — go back and fix it.
+6. **DO NOT click Deploy yet.** Leave this tab open. Continue to Step 3.
+
+**How to know it worked:** the project page in Vercel shows "Framework: Next.js" and the project name `comedycampsplit`.
 
 ---
 
-## Step 3 — Provision Vercel Postgres + Vercel Blob
+## Step 3 — Vercel Postgres database
 
-In your new Vercel project:
+Still in your Vercel project (don't deploy yet):
 
-1. Go to **Storage** tab → **Create Database** → choose **Postgres**. Pick a region close to you. Click Create.
-2. Click **Connect Project** and connect it to your project. This auto-injects `DATABASE_URL` (and the other Postgres vars) into your environment variables.
-3. Back in **Storage**, click **Create** again → choose **Blob**. Connect it to the project. This auto-injects `BLOB_READ_WRITE_TOKEN`.
+1. Click the **Storage** tab.
+2. Click **Create Database** → choose **Postgres**.
+3. Name it `comedysummercamp-db` (any name works).
+4. Pick a region close to you (e.g. `iad1` for US East).
+5. Click **Create**.
+6. After it provisions, click **Connect Project** and pick your project. Confirm.
 
----
-
-## Step 4 — Create a Stripe account and get keys
-
-1. Sign up at <https://stripe.com> if you don't have an account.
-2. Go to <https://dashboard.stripe.com/apikeys>.
-3. Copy your **Publishable key** (starts with `pk_live_…` for production, or `pk_test_…` for testing).
-4. Reveal and copy your **Secret key** (starts with `sk_live_…` / `sk_test_…`).
-
-You'll come back later to set up the webhook (Step 7) — you need your deployed URL first.
-
-> Tip: Use the **test** keys (`pk_test_…` / `sk_test_…`) for the first deploy so you can verify the checkout flow with Stripe's test card `4242 4242 4242 4242`. Swap to live keys once it works.
+**How to know it worked:** go to **Settings → Environment Variables**. You should see `DATABASE_URL`, `POSTGRES_URL`, and a few related vars auto-added. **You did not type these — Vercel did.**
 
 ---
 
-## Step 5 — Create a Resend account and verified sender
+## Step 4 — Vercel Blob store
+
+Same Storage tab:
+
+1. Click **Create** → choose **Blob**.
+2. Name it `comedysummercamp-blob`.
+3. Click **Create**, then **Connect Project**.
+
+**How to know it worked:** in **Settings → Environment Variables** you now also see `BLOB_READ_WRITE_TOKEN`.
+
+---
+
+## Step 5 — Stripe account + keys
+
+1. Sign up at <https://stripe.com>.
+2. **Stay in test mode** (toggle in top right says "Test mode"). Use test mode until everything works.
+3. Go to <https://dashboard.stripe.com/test/apikeys>.
+4. Copy the **Publishable key** (starts with `pk_test_…`) — paste into a notes app.
+5. Click **Reveal test key** next to Secret key. Copy it (starts with `sk_test_…`) — paste into notes.
+
+> **You'll switch to live keys (`pk_live_…` / `sk_live_…`) only after a successful test purchase.** Don't skip this — it lets you test with the fake card `4242 4242 4242 4242`.
+
+**How to know it worked:** you have two strings copied that start with `pk_test_` and `sk_test_`.
+
+---
+
+## Step 6 — Resend account + sender domain
 
 1. Sign up at <https://resend.com>.
-2. Go to **API Keys** → **Create API Key**. Copy the key (starts with `re_…`).
-3. Go to **Domains** → **Add Domain**. Add the domain you'll send from (e.g. `comedysummercamp.com`).
-4. Add the DNS records Resend gives you (TXT/MX/CNAME) at your DNS provider. Wait for them to verify.
-5. If you don't have a domain yet, you can use Resend's `onboarding@resend.dev` sender to test, but real users will see emails go to spam — get a verified domain before launch.
+2. **API Keys → Create API Key.** Name it `comedysummercamp`. Copy the key (starts with `re_…`) — paste into notes.
+3. **Domains → Add Domain.** Enter the domain you want emails to come from (e.g. `comedysummercamp.com`). If you don't have one, see "No domain yet?" below.
+4. Resend shows you DNS records (TXT, MX, CNAME). Open your DNS provider in a new tab.
+5. Add **every record exactly as shown**. For most providers, the "Name" / "Host" field is the part *before* your domain (Resend will say "for `mail.comedysummercamp.com`" — you enter `mail` only).
+6. Wait 5–30 minutes. Click **Verify** in Resend until it goes green.
+
+**No domain yet?** You can ship with Resend's default sender `onboarding@resend.dev` and emails will work for testing — but real users will see them go to spam. Verify a domain before launch.
+
+**How to know it worked:** the domain in Resend shows a green "Verified" badge.
 
 ---
 
-## Step 6 — Add all environment variables in Vercel
+## Step 7 — Paste environment variables into Vercel
 
-In your Vercel project: **Settings → Environment Variables**. Add each of the following for **all three environments** (Production, Preview, Development) unless noted.
+Vercel project → **Settings → Environment Variables**. Add each row below for **all three environments** (Production, Preview, Development) unless noted.
 
-| Variable | Where to get it | Example |
-|---|---|---|
-| `DATABASE_URL` | Auto-set by Vercel Postgres in Step 3 | `postgres://…` |
-| `NEXTAUTH_SECRET` | Generate one: `openssl rand -base64 32` | `xK9p…` |
-| `NEXTAUTH_URL` | Your Vercel URL — set to your **production domain** in Production, and `http://localhost:3000` in Development | `https://comedysummercamp.vercel.app` |
-| `NEXT_PUBLIC_APP_URL` | Same as `NEXTAUTH_URL` (this one is exposed to the browser) | `https://comedysummercamp.vercel.app` |
-| `STRIPE_SECRET_KEY` | Stripe → API keys → Secret key | `sk_live_…` |
-| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe → API keys → Publishable key | `pk_live_…` |
-| `STRIPE_WEBHOOK_SECRET` | Set in Step 7 after first deploy | `whsec_…` |
-| `RESEND_API_KEY` | Resend → API Keys | `re_…` |
-| `BLOB_READ_WRITE_TOKEN` | Auto-set by Vercel Blob in Step 3 | `vercel_blob_rw_…` |
+| Variable | Value (where to get it) |
+|---|---|
+| `DATABASE_URL` | ✅ Already added by Step 3 — leave it alone |
+| `BLOB_READ_WRITE_TOKEN` | ✅ Already added by Step 4 — leave it alone |
+| `NEXTAUTH_SECRET` | Open a terminal on your laptop, run `openssl rand -base64 32`, paste the output |
+| `NEXTAUTH_URL` | After first deploy this is your Vercel URL like `https://comedysummercamp.vercel.app`. **Set it to `https://placeholder.vercel.app` for now — you'll fix it after Step 8.** |
+| `NEXT_PUBLIC_APP_URL` | Same value as `NEXTAUTH_URL` |
+| `STRIPE_SECRET_KEY` | Your `sk_test_…` from Step 5 |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Your `pk_test_…` from Step 5 |
+| `STRIPE_WEBHOOK_SECRET` | **Leave blank for now.** You'll get this in Step 9. The build won't crash — Stripe is lazily initialized. |
+| `RESEND_API_KEY` | Your `re_…` from Step 6 |
+| `EMAIL_FROM` | The verified sender address, e.g. `Comedy Camp <noreply@comedysummercamp.com>` (or `onboarding@resend.dev` if no domain) |
 
-> **Heads up:** `STRIPE_WEBHOOK_SECRET` doesn't exist yet — leave it blank or set a placeholder for the first deploy. The build won't crash because the Stripe client is lazily initialized. You'll fill it in during Step 7.
-
-Now click **Deploy**. The first build should succeed. Note the production URL Vercel gives you (e.g. `https://comedysummercamp.vercel.app`).
+**How to know it worked:** the env vars list shows all 10 entries (`STRIPE_WEBHOOK_SECRET` may be blank — that's fine for now).
 
 ---
 
-## Step 7 — Set up the Stripe webhook
+## Step 8 — First deploy
 
-The app listens for Stripe payment events at `/api/webhooks/stripe`.
+1. In Vercel, click **Deployments → Redeploy** (or push a new commit if it hasn't deployed yet).
+2. Watch the build logs.
+3. Wait for **Ready** status with a green checkmark.
 
-1. In Stripe Dashboard, go to <https://dashboard.stripe.com/webhooks> → **Add endpoint**.
-2. **Endpoint URL:** `https://<your-vercel-url>/api/webhooks/stripe`
-3. **Events to send:** select at minimum:
+**Now copy your real Vercel URL** (e.g. `https://comedysummercamp-abc123.vercel.app`) and:
+- Go back to **Settings → Environment Variables**
+- Update `NEXTAUTH_URL` to that exact URL (no trailing slash)
+- Update `NEXT_PUBLIC_APP_URL` to the same URL
+- Click **Deployments → Redeploy** so the new values take effect
+
+**How to know it worked:** visiting the URL redirects you to `/login`.
+
+**If the build failed:**
+| Error message | Fix |
+|---|---|
+| `prisma: command not found` | Root Directory is wrong → re-do Step 2 |
+| `STRIPE_SECRET_KEY` missing | You skipped that env var in Step 7 |
+| `Invalid prisma schema` | Schema in `comedycampsplit/prisma/schema.prisma` got corrupted; restore from git |
+| `Module not found` | Click Redeploy and uncheck "Use existing build cache" |
+
+---
+
+## Step 9 — Stripe webhook
+
+The app listens at `/api/webhooks/stripe`. Stripe needs to know to POST events there.
+
+1. <https://dashboard.stripe.com/test/webhooks> → **Add endpoint**.
+2. **Endpoint URL:** `https://<your-vercel-url>/api/webhooks/stripe` (use the URL from Step 8).
+3. **Events to send** — click **Select events**, then check exactly these:
    - `checkout.session.completed`
    - `payment_intent.succeeded`
    - `payment_intent.payment_failed`
-4. Save. Copy the **Signing secret** (starts with `whsec_…`).
-5. Go back to Vercel → Settings → Environment Variables. Set `STRIPE_WEBHOOK_SECRET` to that value.
-6. **Redeploy** so the new env var takes effect (Deployments → latest → ⋯ → Redeploy).
+4. Click **Add endpoint**.
+5. On the new endpoint's page, click **Reveal** next to "Signing secret". Copy it (starts with `whsec_…`).
+6. Vercel → **Settings → Environment Variables** → edit `STRIPE_WEBHOOK_SECRET` → paste the value → save.
+7. **Deployments → Redeploy.**
+
+**How to know it worked:** in Stripe, send a test event (button on the endpoint page) → it shows **HTTP 200** in the webhook attempts table.
 
 ---
 
-## Step 8 — Push the database schema and seed the trip row
+## Step 10 — Database schema + seed (do this from your laptop, ONCE)
 
-Vercel does **not** run `prisma db push` automatically. You must do this once from your laptop.
+Vercel doesn't run `prisma db push` automatically. You have to.
 
 ```bash
+# On your laptop:
 cd comedycampsplit
 npm install
 
-# Pull production env vars into a local .env file
-npx vercel link            # link this folder to the Vercel project
-npx vercel env pull .env   # downloads DATABASE_URL etc.
+# Link this folder to the Vercel project, then download production env vars
+npx vercel link
+npx vercel env pull .env
 
-# Create tables in your Vercel Postgres database
+# Create all the database tables
 npx prisma db push
 
-# Seed the initial trip row + admin user
+# Insert the trip row + admin user
 npm run db:seed
 ```
 
-You should now be able to visit `https://<your-url>/admin` and log in with the hardcoded admin credentials (see [comedycampsplit/README.md](./comedycampsplit/README.md)).
+**How to know it worked:** running `npx prisma studio` opens a browser showing tables (User, Trip, Expense, etc.) with at least the seeded admin user in `User`.
 
-> Re-run `npx prisma db push` any time the schema in `comedycampsplit/prisma/schema.prisma` changes.
+> **You only re-run `npx prisma db push` if `comedycampsplit/prisma/schema.prisma` changes.** You don't re-seed unless you wipe the database.
 
 ---
 
-## Step 9 — (Optional) Custom domain
+## Step 11 — (Optional) Custom domain
+
+Skip this if you're fine with the `*.vercel.app` URL.
 
 1. Vercel project → **Settings → Domains** → **Add**.
-2. Type your domain (e.g. `comedysummercamp.com`). Vercel shows DNS records to add.
-3. At your DNS provider, add the A / CNAME records exactly as shown. Wait for verification.
-4. Once live, **update both `NEXTAUTH_URL` and `NEXT_PUBLIC_APP_URL` to the new domain** and redeploy.
-5. Update the Stripe webhook URL (Step 7) to use the new domain too.
+2. Type your domain. Vercel shows DNS records (A or CNAME).
+3. At your DNS provider, add the records exactly as shown.
+4. Wait for verification (a few minutes to a few hours).
+5. Once Vercel marks the domain ✅, **update both `NEXTAUTH_URL` and `NEXT_PUBLIC_APP_URL`** to the new domain. Redeploy.
+6. **Update the Stripe webhook URL** (Step 9) to the new domain. Otherwise webhooks break.
+
+**How to know it worked:** visiting your custom domain loads the app.
 
 ---
 
-## Step 10 — Smoke test before going live
+## Step 12 — Smoke test
+
+Tick each item. If any fails, go to Troubleshooting.
 
 - [ ] Visit your URL → redirects to `/login`
 - [ ] Sign up a test participant → see "pending approval" state
-- [ ] Log in to `/admin` (Taylor / weed69) → approve the test user
+- [ ] Log in to `/admin` (default Taylor / `weed69`) → approve the test user
 - [ ] As the test user, see the dashboard, roster, itinerary
 - [ ] Upload an avatar → confirm it appears (verifies Vercel Blob)
-- [ ] Submit an expense with a receipt → confirm upload works
-- [ ] Lock the trip from `/admin/trip` → confirm Resend email arrives
-- [ ] Pay via Stripe Checkout (use `4242 4242 4242 4242` on test keys) → status flips to **Confirmed & Paid**
-- [ ] Check Stripe webhook logs → events show as **Succeeded** (not 4xx/5xx)
+- [ ] Submit an expense with a receipt photo → upload works
+- [ ] Lock the trip from `/admin/trip` → confirmation email arrives
+- [ ] Pay via Stripe Checkout (test card `4242 4242 4242 4242`, any future date, any CVC) → status flips to **Confirmed & Paid**
+- [ ] Stripe Dashboard → Webhooks → endpoint shows **succeeded** events (not 4xx/5xx)
 
-If the webhook is failing: double-check `STRIPE_WEBHOOK_SECRET` is exactly the signing secret from Stripe and that you redeployed after adding it.
+**Once all of those pass**, switch from Stripe test keys to live keys:
+1. Stripe → toggle off "Test mode".
+2. Get your `pk_live_…` and `sk_live_…`.
+3. Replace `STRIPE_SECRET_KEY` and `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` in Vercel env vars.
+4. Create a **new** webhook endpoint in live mode (Step 9 again, but on the live mode dashboard). Get a new `whsec_…` and update `STRIPE_WEBHOOK_SECRET`.
+5. Redeploy.
 
 ---
 
 ## Troubleshooting
 
-| Symptom | Fix |
+| Symptom | Cause / Fix |
 |---|---|
-| Build fails with `prisma: command not found` | Make sure Root Directory is `comedycampsplit` in Vercel project settings |
-| Build fails citing Stripe env vars | Double-check `STRIPE_SECRET_KEY` is set; the client is lazy so a missing webhook secret is OK at build time |
-| `NEXTAUTH_URL` mismatch / login loop | Set `NEXTAUTH_URL` to the exact deployed URL (no trailing slash) and redeploy |
-| Emails not arriving | Verify the sender domain in Resend; check Resend logs for delivery status |
-| Avatars/receipts won't upload | `BLOB_READ_WRITE_TOKEN` missing — reconnect the Blob store to the project |
-| `prisma db push` errors locally | Re-run `npx vercel env pull .env` to refresh `DATABASE_URL` |
+| Build fails with `prisma: command not found` | Root Directory in Vercel isn't `comedycampsplit` — Step 2 |
+| Build fails about Stripe at build time | Should not happen — Stripe is lazily initialized. Make sure you didn't import `stripe` at module top in new code |
+| Login loop / `NEXTAUTH_URL mismatch` | `NEXTAUTH_URL` doesn't match the URL you're visiting. Set it to the *exact* deployed URL (no trailing slash, https not http) and redeploy |
+| Emails not arriving | Resend domain not verified, or `EMAIL_FROM` doesn't match the verified domain. Check Resend → Logs |
+| Avatar/receipt upload fails | `BLOB_READ_WRITE_TOKEN` missing. Storage tab → reconnect Blob → Redeploy |
+| Stripe webhook returns 400 | `STRIPE_WEBHOOK_SECRET` is wrong or you forgot to redeploy after setting it |
+| Stripe webhook returns 500 | Check Vercel function logs: Vercel project → **Logs** → filter `/api/webhooks/stripe` |
+| `prisma db push` errors | `npx vercel env pull .env` again to refresh `DATABASE_URL` |
+| Database is empty after seed | You ran `db:seed` against your laptop's local DB, not Vercel's. Make sure `.env` came from `vercel env pull` |
 
 ---
 
 ## Local development
 
-See [`comedycampsplit/README.md`](./comedycampsplit/README.md) for running the app locally with `npm run dev`.
+See [`comedycampsplit/README.md`](./comedycampsplit/README.md) for running locally with `npm run dev`.
 
 ---
 
@@ -208,5 +282,16 @@ COMEDYSUMMERCAMP/
 │   ├── prisma/               schema.prisma + seed
 │   ├── vercel.json           Vercel build config
 │   └── README.md             app-level docs
-└── README.md               ← you are here (deployment guide)
+└── README.md               ← you are here
 ```
+
+---
+
+## Need help?
+
+If a step fails and the Troubleshooting table doesn't cover it:
+1. Screenshot the error
+2. Note which step number you're on
+3. Copy the last 30 lines of the Vercel build log (or browser console, whichever is failing)
+
+That's enough info to debug almost anything.
