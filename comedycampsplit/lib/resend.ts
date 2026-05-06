@@ -2,9 +2,11 @@ import { Resend } from "resend";
 
 export const resend = new Resend(process.env.RESEND_API_KEY);
 
+const FROM_ADDRESS = process.env.EMAIL_FROM ?? "onboarding@resend.dev";
+
 export async function sendApprovalEmail(email: string, name: string) {
   await resend.emails.send({
-    from: "ComedyCampSplit <noreply@comedycampsplit.com>",
+    from: FROM_ADDRESS,
     to: email,
     subject: "🎭 You're Approved for Comedy Summer Camp!",
     html: `
@@ -22,7 +24,7 @@ export async function sendApprovalEmail(email: string, name: string) {
 
 export async function sendTripLockedEmail(email: string, name: string, price: number) {
   await resend.emails.send({
-    from: "ComedyCampSplit <noreply@comedycampsplit.com>",
+    from: FROM_ADDRESS,
     to: email,
     subject: "💰 Comedy Summer Camp — Time to Pay!",
     html: `
