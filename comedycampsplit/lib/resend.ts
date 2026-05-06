@@ -4,6 +4,15 @@ export const resend = new Resend(process.env.RESEND_API_KEY);
 
 const FROM_ADDRESS = process.env.EMAIL_FROM ?? "onboarding@resend.dev";
 
+export async function sendHelloWorldEmail(to: string = "taylordrew4u@gmail.com") {
+  await resend.emails.send({
+    from: FROM_ADDRESS,
+    to,
+    subject: "Hello World",
+    html: "<p>Congrats on sending your <strong>first email</strong>!</p>",
+  });
+}
+
 export async function sendApprovalEmail(email: string, name: string) {
   await resend.emails.send({
     from: FROM_ADDRESS,
