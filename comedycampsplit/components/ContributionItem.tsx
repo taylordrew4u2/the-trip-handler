@@ -29,26 +29,26 @@ export function ContributionItem({ item, currentUserId }: ContributionItemProps)
   }
 
   return (
-    <div className="bg-white rounded-xl border border-purple-100 p-4">
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <div className="flex items-center gap-2">
-            <h3 className="font-medium text-gray-900">{item.title}</h3>
+    <div className="bg-white rounded-xl border border-stone-200 p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h3 className="font-medium text-stone-900">{item.title}</h3>
             {item.category && (
-              <span className="text-xs px-2 py-0.5 rounded-full bg-pink-50 text-pink-700">
+              <span className="text-xs px-2 py-0.5 rounded-md bg-stone-100 text-stone-700">
                 {item.category}
               </span>
             )}
           </div>
           {item.description && (
-            <p className="text-sm text-gray-500 mt-1">{item.description}</p>
+            <p className="text-sm text-stone-600 mt-1">{item.description}</p>
           )}
           {item.users.length > 0 && (
             <div className="mt-2 flex flex-wrap gap-1.5">
               {item.users.map((uc) => (
                 <span
                   key={uc.userId}
-                  className="text-xs px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-100"
+                  className="text-xs px-2 py-0.5 rounded-md bg-stone-100 text-stone-700"
                 >
                   {uc.user.username ? `@${uc.user.username}` : uc.user.name}
                 </span>
@@ -59,10 +59,10 @@ export function ContributionItem({ item, currentUserId }: ContributionItemProps)
         <form action={handleToggle}>
           <button
             type="submit"
-            className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+            className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${
               isSignedUp
-                ? "bg-red-100 text-red-700 hover:bg-red-200"
-                : "bg-purple-100 text-purple-700 hover:bg-purple-200"
+                ? "border border-red-300 text-red-700 hover:bg-red-50"
+                : "bg-stone-900 text-white hover:bg-stone-800"
             }`}
           >
             {isSignedUp ? "Leave" : "Join"}
