@@ -15,7 +15,7 @@ const STRING_ARRAY_FIELDS = new Set([
   "houseRulesAcks",
 ]);
 
-const BOOL_FIELDS = new Set(["age21Confirmed", "vanAck"]);
+const BOOL_FIELDS = new Set(["age21Confirmed", "vanAck", "substanceFreeAck"]);
 
 const REQUIRED_STRING_FIELDS = ["fullName", "phoneNumber", "emergencyName", "emergencyPhone"];
 
@@ -67,6 +67,7 @@ export async function submitGuestForm(userId: string, formData: FormData) {
     if (!data[f]) return { error: `Please fill in ${f}.` };
   }
   if (!data.age21Confirmed) return { error: "You must confirm you're 21 or older." };
+  if (!data.substanceFreeAck) return { error: "You must agree this is a drug- and alcohol-free trip." };
   if (!data.vanAck) return { error: "Please acknowledge the van transportation expectations." };
 
   const houseRules = (data.houseRulesAcks as string[]) || [];

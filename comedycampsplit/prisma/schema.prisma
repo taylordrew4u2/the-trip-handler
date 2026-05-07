@@ -135,6 +135,9 @@ model GuestForm {
   emergencyName            String
   emergencyPhone           String
 
+  // Substance-free policy (required acknowledgement)
+  substanceFreeAck         Boolean  @default(false)
+
   // Van Transportation
   comingFrom               String?
   centralPickup            String?
@@ -167,7 +170,6 @@ model GuestForm {
   snackRequests            String?
   drinkPrefs               String[]
   drinkOther               String?
-  alcoholPrefs             String?
   communalMeals            String?
   helpCookClean            String?
 
