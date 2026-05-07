@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
+import { notifyAdmin } from "@/lib/resend";
 
 export async function withdrawSelf() {
   const session = await getServerSession(authOptions);
@@ -32,5 +33,15 @@ export async function withdrawSelf() {
   revalidatePath("/admin/users");
   revalidatePath("/admin/sleeping");
   revalidatePath("/dashboard/sleeping");
+
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
+  await notifyAdmin({
+    subject: `${current.name} pulled out of the trip`,
+    intro: `They withdrew before paying. Their bed and contributions have been released so someone else can take the spot.`,
+    details: { Name: current.name, Email: current.email, "Previous status": current.status },
+    actionLabel: "View users",
+    actionUrl: `${baseUrl}/admin/users`,
+  });
+
   return { success: true };
 }
