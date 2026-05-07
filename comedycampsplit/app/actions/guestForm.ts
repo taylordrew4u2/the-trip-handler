@@ -19,7 +19,7 @@ const STRING_ARRAY_FIELDS = new Set([
 
 const BOOL_FIELDS = new Set(["age21Confirmed", "vanAck", "substanceFreeAck"]);
 
-const REQUIRED_STRING_FIELDS = ["fullName", "phoneNumber", "emergencyName", "emergencyPhone"];
+const REQUIRED_STRING_FIELDS = ["fullName", "phoneNumber", "emergencyName", "emergencyPhone", "maxBudget"];
 
 const REQUIRED_HOUSE_RULES = [
   "shared",

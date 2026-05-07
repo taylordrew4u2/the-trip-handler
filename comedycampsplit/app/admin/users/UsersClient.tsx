@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { approveUser, rejectUser, cancelUser, addAdminNote } from "@/app/actions/admin";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -16,6 +17,13 @@ interface UserRow {
   adminNotes: string | null;
   createdAt: Date;
   payments: { status: string; amount: number }[];
+  guestForm: {
+    id: string;
+    maxBudget: string | null;
+    substanceFreeAck: boolean;
+    locked: boolean;
+    editRequested: boolean;
+  } | null;
 }
 
 export function UsersClient({ users }: { users: UserRow[] }) {
@@ -67,6 +75,30 @@ export function UsersClient({ users }: { users: UserRow[] }) {
                 <p className="text-sm text-gray-500">{user.email}</p>
                 {user.phone && <p className="text-sm text-gray-500">{user.phone}</p>}
                 {user.bio && <p className="text-sm text-gray-400 mt-1 italic">&quot;{user.bio}&quot;</p>}
+                {user.guestForm ? (
+                  <div className="mt-2 flex flex-wrap gap-2 items-center">
+                    <span className="inline-flex items-center gap-1.5 text-xs px-2 py-1 rounded-md bg-stone-900 text-stone-100 font-medium">
+                      Max budget: {user.guestForm.maxBudget ?? "(blank)"}
+                    </span>
+                    <span
+                      className={`text-xs px-2 py-1 rounded-md font-medium ${
+                        user.guestForm.substanceFreeAck
+                          ? "bg-emerald-100 text-emerald-900"
+                          : "bg-red-100 text-red-900"
+                      }`}
+                    >
+                      {user.guestForm.substanceFreeAck ? "Sober: ✓" : "Sober: NOT AGREED"}
+                    </span>
+                    <Link
+                      href={`/admin/intake/${user.id}`}
+                      className="text-xs px-2 py-1 rounded-md border border-stone-300 text-stone-700 hover:bg-stone-100"
+                    >
+                      View full guest form →
+                    </Link>
+                  </div>
+                ) : (
+                  <p className="mt-2 text-xs text-amber-700 font-medium">⚠ No guest form submitted yet</p>
+                )}
                 {user.adminNotes && (
                   <p className="text-xs text-orange-600 mt-1">📝 Note: {user.adminNotes}</p>
                 )}

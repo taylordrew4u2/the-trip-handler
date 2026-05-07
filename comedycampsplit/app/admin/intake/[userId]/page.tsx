@@ -53,6 +53,12 @@ export default async function AdminIntakeDetail({ params }: { params: Promise<{ 
           {user.email} · last updated {new Date(f.updatedAt).toLocaleString()}
           {f.locked ? " · 🔒 locked" : " · 🔓 editable"}
         </p>
+        {f.maxBudget && (
+          <div className="mt-3 inline-block bg-stone-900 text-stone-100 rounded-lg px-4 py-2">
+            <p className="text-xs uppercase tracking-wide text-stone-400">Max budget</p>
+            <p className="font-medium tabular-nums">{f.maxBudget}</p>
+          </div>
+        )}
         <div className="mt-3 flex items-center gap-3">
           {f.editRequested && (
             <span className="inline-block text-xs px-2 py-1 rounded bg-amber-100 text-amber-900 font-medium">
