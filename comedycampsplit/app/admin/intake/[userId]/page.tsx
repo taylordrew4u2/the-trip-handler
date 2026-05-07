@@ -94,14 +94,6 @@ export default async function AdminIntakeDetail({ params }: { params: Promise<{ 
         <Row label="Acknowledged" value={f.vanAck ? "Yes" : "No"} />
       </Section>
 
-      <Section title="Sleeping">
-        <Row label="Share room" value={f.shareRoom} />
-        <Row label="Share bed" value={f.shareBed} />
-        <Row label="Need own bed" value={f.needOwnBed} />
-        <Row label="Bringing" value={f.bringingItems} />
-        <Row label="Sleep notes" value={f.sleepNotes} />
-      </Section>
-
       <Section title="Food / allergies">
         <Row label="Has allergies" value={f.hasAllergies} />
         <Row label="Allergies" value={f.allergiesList} />
