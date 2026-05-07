@@ -172,14 +172,18 @@ model GuestForm {
   locked                   Boolean  @default(true)
   editRequested            Boolean  @default(false)
 
+  // Preferences (van, food, comedy, emergency contact) are filled in
+  // post-approval and stay editable; this records when they were last saved.
+  preferencesSubmittedAt   DateTime?
+
   // Basic Info
   fullName                 String
   stageName                String?
   phoneNumber              String
   pronouns                 String?
   age21Confirmed           Boolean  @default(false)
-  emergencyName            String
-  emergencyPhone           String
+  emergencyName            String?
+  emergencyPhone           String?
 
   // Substance-free policy (required acknowledgement)
   substanceFreeAck         Boolean  @default(false)

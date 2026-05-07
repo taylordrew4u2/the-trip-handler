@@ -63,10 +63,24 @@ export default async function DashboardPage() {
           <p className="text-xs uppercase tracking-[0.15em] text-amber-800">Action required</p>
           <h2 className="font-serif text-xl font-medium text-stone-900 mt-1">Fill out your guest form</h2>
           <p className="text-sm text-stone-700 mt-2 leading-relaxed">
-            We need your transportation, sleeping, food, allergy, and content preferences to plan the weekend.
+            Admin reviews your guest form before approving you for the trip.
           </p>
           <a href="/dashboard/intake" className="inline-block mt-4 px-4 py-2 bg-stone-900 hover:bg-stone-800 text-white rounded-lg text-sm font-medium">
             Open the guest form →
+          </a>
+        </div>
+      )}
+
+      {user && guestForm && !guestForm.preferencesSubmittedAt && user.status !== "PENDING" && user.status !== "CANCELLED" && (
+        <div className="bg-blue-50 border border-blue-300 rounded-xl p-5">
+          <p className="text-xs uppercase tracking-[0.15em] text-blue-800">Next step</p>
+          <h2 className="font-serif text-xl font-medium text-stone-900 mt-1">Fill out your trip preferences</h2>
+          <p className="text-sm text-stone-700 mt-2 leading-relaxed">
+            Now that you&apos;re approved, share your emergency contact, transportation, food, and comedy
+            preferences so the trip can actually be planned.
+          </p>
+          <a href="/dashboard/preferences" className="inline-block mt-4 px-4 py-2 bg-stone-900 hover:bg-stone-800 text-white rounded-lg text-sm font-medium">
+            Fill out preferences →
           </a>
         </div>
       )}
