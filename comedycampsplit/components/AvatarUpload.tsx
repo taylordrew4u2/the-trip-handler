@@ -46,18 +46,19 @@ export function AvatarUpload({ userId, currentUrl, name }: AvatarUploadProps) {
         type="button"
       >
         {preview ? (
+          // eslint-disable-next-line @next/next/no-img-element
           <img
             src={preview}
             alt={name}
-            className="w-24 h-24 rounded-full object-cover border-4 border-purple-200"
+            className="w-24 h-24 rounded-full object-cover border border-stone-300"
           />
         ) : (
-          <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white font-bold text-2xl border-4 border-purple-200">
+          <div className="w-24 h-24 rounded-full bg-stone-900 flex items-center justify-center text-stone-100 font-medium text-2xl border border-stone-300">
             {initials}
           </div>
         )}
-        <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-          <span className="text-white text-xs">{uploading ? "..." : "Change"}</span>
+        <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+          <span className="text-white text-xs">{uploading ? "Uploading…" : "Change"}</span>
         </div>
       </button>
       <input
@@ -67,7 +68,7 @@ export function AvatarUpload({ userId, currentUrl, name }: AvatarUploadProps) {
         onChange={handleChange}
         className="hidden"
       />
-      <p className="text-xs text-gray-500">Click to change photo</p>
+      <p className="text-xs text-stone-500">Click to change photo</p>
     </div>
   );
 }
