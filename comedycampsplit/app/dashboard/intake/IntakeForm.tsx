@@ -149,6 +149,27 @@ export function IntakeForm({ userId, defaultEmail, defaultName, defaultPhone, ex
         <Field label="Emergency contact phone number" required><TextInput name="emergencyPhone" type="tel" defaultValue={e?.emergencyPhone} required /></Field>
       </Section>
 
+      <Section
+        title="Drug- and alcohol-free trip"
+        intro="This is a sober weekend. No alcohol, no recreational drugs — full stop. If that's not for you, this isn't the trip."
+      >
+        <Field label="" required>
+          <label className="flex items-start gap-2.5 text-sm text-stone-800 cursor-pointer bg-amber-50 border border-amber-300 rounded-lg p-3">
+            <input
+              type="checkbox"
+              name="substanceFreeAck"
+              defaultChecked={e?.substanceFreeAck}
+              required
+              className="h-4 w-4 mt-0.5 accent-stone-900"
+            />
+            <span>
+              I understand and agree that Comedy Summer Camp is a <strong>drug- and alcohol-free</strong> trip.
+              I will not bring, use, or share any alcohol or recreational drugs during the weekend.
+            </span>
+          </label>
+        </Field>
+      </Section>
+
       <Section title="Van transportation" intro="Transportation will be handled by rental vans. Everyone needs to be on time for pickup and departure.">
         <Field label="Where will you be coming from?"><TextInput name="comingFrom" defaultValue={e?.comingFrom} /></Field>
         <Field label="Can you meet at one central pickup location?">
@@ -261,7 +282,6 @@ export function IntakeForm({ userId, defaultEmail, defaultName, defaultPhone, ex
           ]} />
           <div className="mt-2"><TextInput name="drinkOther" defaultValue={e?.drinkOther} placeholder="Other" /></div>
         </Field>
-        <Field label="Alcohol preferences, if any"><TextArea name="alcoholPrefs" defaultValue={e?.alcoholPrefs} rows={2} /></Field>
         <Field label="Are you okay with communal meals?">
           <RadioGroup name="communalMeals" defaultValue={e?.communalMeals} options={[
             { value: "yes", label: "Yes" },
@@ -418,7 +438,6 @@ export function IntakeForm({ userId, defaultEmail, defaultName, defaultPhone, ex
             { value: "Swimming", label: "Swimming" },
             { value: "Hiking/walks", label: "Hiking/walks" },
             { value: "Cooking together", label: "Cooking together" },
-            { value: "Drinking games", label: "Drinking games" },
             { value: "Quiet writing time", label: "Quiet writing time" },
           ]} />
           <div className="mt-2"><TextInput name="activitiesOtherText" defaultValue={e?.activitiesOtherText} placeholder="Other" /></div>
@@ -462,7 +481,7 @@ export function IntakeForm({ userId, defaultEmail, defaultName, defaultPhone, ex
             { value: "food", label: "I understand food is being planned in advance and I need to list allergies and dietary restrictions honestly." },
             { value: "noStealing", label: "I understand I should not eat food that is clearly set aside for someone else." },
             { value: "quietHours", label: "I understand quiet hours may exist." },
-            { value: "alcohol", label: "I understand alcohol/substances should not become everyone else's problem." },
+            { value: "alcohol", label: "I understand this is a drug- and alcohol-free weekend and I will not bring or use either on the trip." },
             { value: "damage", label: "I understand I am responsible for damage I personally cause." },
             { value: "respect", label: "I understand I need to respect people's space, sleep, food needs, creative work, and boundaries." },
             { value: "groupTrip", label: "I understand this is a group trip, not a hotel, and everyone needs to help keep the house functional." },

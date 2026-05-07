@@ -60,6 +60,7 @@ export default async function AdminIntakeDetail({ params }: { params: Promise<{ 
         <Row label="Pronouns" value={f.pronouns} />
         <Row label="21+" value={f.age21Confirmed ? "Confirmed" : "Not confirmed"} />
         <Row label="Emergency contact" value={`${f.emergencyName ?? ""} · ${f.emergencyPhone ?? ""}`} />
+        <Row label="Substance-free ack" value={f.substanceFreeAck ? "Agreed" : "NOT AGREED"} />
       </Section>
 
       <Section title="Van transportation">
@@ -93,7 +94,6 @@ export default async function AdminIntakeDetail({ params }: { params: Promise<{ 
         <Row label="Likes" value={f.likedFoods} />
         <Row label="Snacks" value={f.snackRequests} />
         <Row label="Drinks" value={[...(f.drinkPrefs ?? []), f.drinkOther].filter(Boolean) as string[]} />
-        <Row label="Alcohol" value={f.alcoholPrefs} />
         <Row label="Communal meals" value={f.communalMeals} />
         <Row label="Help cook/clean" value={f.helpCookClean} />
       </Section>
