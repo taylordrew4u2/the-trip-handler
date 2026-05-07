@@ -73,15 +73,14 @@ export async function sendApprovalEmail(email: string, name: string) {
   await resend.emails.send({
     from: FROM_ADDRESS,
     to: email,
-    subject: "🎭 You're Approved for Comedy Summer Camp!",
+    subject: "You're approved for Comedy Summer Camp",
     html: `
-      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-        <h1 style="color: #7c3aed;">🎭 Welcome to Comedy Summer Camp!</h1>
-        <p>Hey ${name}!</p>
-        <p>Great news — you've been <strong>approved</strong> by the admin. You can now log in and see the full roster, itinerary, and more.</p>
-        <p>Once the trip is locked, you'll be able to pay and confirm your spot.</p>
-        <a href="${process.env.NEXT_PUBLIC_APP_URL}/login" style="background:#7c3aed;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;display:inline-block;margin-top:16px;">Log In Now</a>
-        <p style="color:#666;margin-top:32px;">See you at camp! 🏕️</p>
+      <div style="font-family: ui-sans-serif, system-ui, sans-serif; max-width: 560px; margin: 0 auto; color: #1c1917;">
+        <p style="font-size: 12px; text-transform: uppercase; letter-spacing: 2px; color: #888; margin: 0 0 8px;">Comedy Summer Camp</p>
+        <h1 style="font-size: 22px; margin: 0 0 12px;">Hey ${name} — you&apos;re in.</h1>
+        <p style="font-size: 14px; line-height: 1.5; color: #444;">Admin approved your application. Next step: log in and finish your <strong>trip preferences</strong> (emergency contact, transportation, food, comedy/workshop) so we can plan around you. You can see the roster, itinerary, contributions board, and meet everyone else who&apos;s coming.</p>
+        <p style="font-size: 14px; line-height: 1.5; color: #444;">When the trip is locked you&apos;ll get another email asking you to pay (your trip share + the refundable $75 security deposit).</p>
+        <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard/preferences" style="background:#1c1917;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;display:inline-block;margin-top:16px;font-size:14px;">Open the preferences form</a>
       </div>
     `,
   });
@@ -146,18 +145,18 @@ export async function sendCancellationEmail(email: string, name: string) {
 }
 
 export async function sendTripLockedEmail(email: string, name: string, price: number) {
+  const total = price + 75;
   await resend.emails.send({
     from: FROM_ADDRESS,
     to: email,
-    subject: "💰 Comedy Summer Camp — Time to Pay!",
+    subject: "Trip is locked — time to pay",
     html: `
-      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-        <h1 style="color: #7c3aed;">💰 Trip is Locked!</h1>
-        <p>Hey ${name}!</p>
-        <p>Your share is <strong>$${price.toFixed(2)}</strong>.</p>
-        <p>The trip has been finalized! Head over to the app to complete your payment and confirm your spot.</p>
-        <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard/payment" style="background:#16a34a;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;display:inline-block;margin-top:16px;">Pay Now</a>
-        <p style="color:#666;margin-top:32px;">Don't miss out! 🎪</p>
+      <div style="font-family: ui-sans-serif, system-ui, sans-serif; max-width: 560px; margin: 0 auto; color: #1c1917;">
+        <p style="font-size: 12px; text-transform: uppercase; letter-spacing: 2px; color: #888; margin: 0 0 8px;">Comedy Summer Camp</p>
+        <h1 style="font-size: 22px; margin: 0 0 12px;">Hey ${name} — the trip is locked.</h1>
+        <p style="font-size: 14px; line-height: 1.5; color: #444;">Your trip share is <strong>$${price.toFixed(2)}</strong>. The refundable $75 security deposit is added at checkout, so the total today is <strong>$${total.toFixed(2)}</strong>.</p>
+        <p style="font-size: 14px; line-height: 1.5; color: #444;">The deposit comes back to you after the trip if everyone follows the rules and there&apos;s no damage.</p>
+        <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard/payment" style="background:#1c1917;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;display:inline-block;margin-top:16px;font-size:14px;">Pay $${total.toFixed(2)}</a>
       </div>
     `,
   });

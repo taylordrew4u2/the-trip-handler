@@ -14,6 +14,7 @@ const navItems = [
   { href: "/admin/contributions", label: "Contributions" },
   { href: "/admin/roster", label: "Roster" },
   { href: "/admin/intake", label: "Guest forms" },
+  { href: "/admin/board", label: "Board" },
   { href: "/admin/diagnostics", label: "Diagnostics" },
 ];
 
