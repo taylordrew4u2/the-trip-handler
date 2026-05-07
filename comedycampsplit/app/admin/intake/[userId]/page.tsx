@@ -141,11 +141,8 @@ export default async function AdminIntakeDetail({ params }: { params: Promise<{ 
         <Row label="Structure" value={f.structurePref} />
       </Section>
 
-      <Section title="Payment">
+      <Section title="Budget">
         <Row label="Max budget" value={f.maxBudget} />
-        <Row label="Method" value={[f.paymentMethod, f.paymentMethodOther].filter(Boolean).join(" — ")} />
-        <Row label="Username" value={f.paymentUsername} />
-        <Row label="Acks" value={f.paymentAcks} />
       </Section>
 
       <Section title="House rules">

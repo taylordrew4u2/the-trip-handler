@@ -442,28 +442,6 @@ export function IntakeForm({ userId, defaultEmail, defaultName, defaultPhone, ex
         </Field>
       </Section>
 
-      <Section title="Payment / costs">
-        <Field label="Preferred payment method">
-          <RadioGroup name="paymentMethod" defaultValue={e?.paymentMethod} options={[
-            { value: "Venmo", label: "Venmo" },
-            { value: "Zelle", label: "Zelle" },
-            { value: "Cash App", label: "Cash App" },
-            { value: "PayPal", label: "PayPal" },
-            { value: "Other", label: "Other" },
-          ]} />
-          <div className="mt-2"><TextInput name="paymentMethodOther" defaultValue={e?.paymentMethodOther} placeholder="If other, specify" /></div>
-        </Field>
-        <Field label="Payment username / info"><TextInput name="paymentUsername" defaultValue={e?.paymentUsername} /></Field>
-        <Field label="Payment acknowledgements">
-          <CheckboxGroup name="paymentAcks" defaultValue={e?.paymentAcks} options={[
-            { value: "costs", label: "I understand costs may include the house, vans, food, supplies, and shared activity expenses." },
-            { value: "finalCost", label: "I understand the final cost may depend on the number of people attending." },
-            { value: "nonRefund", label: "I understand that once the house and vans are booked, my spot may not be refundable unless someone replaces me." },
-            { value: "deadlines", label: "I understand payment deadlines need to be followed so one person is not fronting everyone's money." },
-          ]} />
-        </Field>
-      </Section>
-
       <Section title="House rules" intro="All eight required.">
         <Field label="" required>
           <CheckboxGroup name="houseRulesAcks" defaultValue={e?.houseRulesAcks} options={[
