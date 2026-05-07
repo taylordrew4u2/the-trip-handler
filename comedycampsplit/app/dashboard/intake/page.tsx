@@ -16,14 +16,28 @@ export default async function IntakePage() {
 
   if (!user) redirect("/login");
 
+  const isPending = user.status === "PENDING";
+
   return (
-    <div className="max-w-3xl mx-auto">
+    <div>
       <div className="mb-8">
-        <p className="text-xs uppercase tracking-[0.2em] text-stone-500 mb-2">Guest form</p>
+        <p className="text-xs uppercase tracking-[0.2em] text-stone-500 mb-2">
+          {isPending ? "Required before approval" : "Guest form"}
+        </p>
         <h1 className="font-serif text-3xl font-medium text-stone-900">Comedy Summer Camp Guest Form</h1>
         <p className="text-stone-600 mt-3 text-sm leading-relaxed">
-          Fill this out so we can plan food, sleeping arrangements, van transportation, group activities,
-          comedy workshops, and social media content without texting everyone individually 400 times.
+          {isPending ? (
+            <>
+              Admin needs this filled out before approving you for the trip. We use it to plan food, sleeping,
+              van transportation, group activities, comedy workshops, and social-media content — without
+              texting everyone individually 400 times. <strong>Submit this and you&apos;ll be reviewed for approval.</strong>
+            </>
+          ) : (
+            <>
+              Fill this out so we can plan food, sleeping arrangements, van transportation, group activities,
+              comedy workshops, and social-media content without texting everyone individually 400 times.
+            </>
+          )}
         </p>
       </div>
       <IntakeForm
@@ -32,6 +46,7 @@ export default async function IntakePage() {
         defaultName={user.name}
         defaultPhone={user.phone ?? ""}
         existing={existing}
+        isPending={isPending}
       />
     </div>
   );

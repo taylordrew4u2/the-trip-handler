@@ -95,8 +95,8 @@ const YES_NO_ASK = [
   { value: "ask", label: "Ask me first" },
 ];
 
-export function IntakeForm({ userId, defaultEmail, defaultName, defaultPhone, existing }: {
-  userId: string; defaultEmail: string; defaultName: string; defaultPhone: string; existing: Existing;
+export function IntakeForm({ userId, defaultEmail, defaultName, defaultPhone, existing, isPending = false }: {
+  userId: string; defaultEmail: string; defaultName: string; defaultPhone: string; existing: Existing; isPending?: boolean;
 }) {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
@@ -117,7 +117,13 @@ export function IntakeForm({ userId, defaultEmail, defaultName, defaultPhone, ex
       return;
     }
     setSavedAt(new Date().toLocaleString());
-    router.refresh();
+    if (isPending) {
+      // First submission while pending — bounce them to the dashboard which
+      // will show the "Form submitted, awaiting approval" wall.
+      router.push("/dashboard");
+    } else {
+      router.refresh();
+    }
   }
 
   return (
@@ -501,7 +507,13 @@ export function IntakeForm({ userId, defaultEmail, defaultName, defaultPhone, ex
           disabled={submitting}
           className="px-5 py-2.5 bg-stone-900 hover:bg-stone-800 text-white rounded-lg font-medium text-sm transition-colors disabled:opacity-50"
         >
-          {submitting ? "Saving…" : existing ? "Update form" : "Submit form"}
+          {submitting
+            ? "Saving…"
+            : existing
+              ? "Update form"
+              : isPending
+                ? "Submit for approval"
+                : "Submit form"}
         </button>
       </div>
     </form>
