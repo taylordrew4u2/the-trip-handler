@@ -18,16 +18,15 @@ export default async function BoardPage() {
     take: 200,
     include: {
       user: { select: { id: true, name: true, username: true, avatarUrl: true } },
-      reactions: { select: { emoji: true, userId: true } },
     },
   });
 
   return (
     <div className="space-y-6 max-w-2xl">
       <div>
-        <h1 className="font-serif text-3xl font-medium text-stone-900">The Board 🎪</h1>
+        <h1 className="font-serif text-3xl font-medium text-stone-900">The Board</h1>
         <p className="text-stone-500 text-sm mt-1">
-          Hot takes, half-formed jokes, schedule chaos, anything. React with the buttons under each post.
+          Hot takes, half-formed jokes, schedule chaos, anything.
         </p>
       </div>
       <BoardClient comments={comments} currentUserId={userId} />
