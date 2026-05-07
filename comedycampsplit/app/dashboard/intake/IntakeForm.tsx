@@ -451,6 +451,20 @@ export function IntakeForm({ userId, defaultEmail, defaultName, defaultPhone, ex
         </Field>
       </Section>
 
+      <Section
+        title="Security deposit"
+        intro="Everyone pays a $75 security deposit before the trip. If everyone follows the rules and the house comes out clean, you get it back. If you damage the house or break a rule, your deposit is forfeit and you're on the hook for any cost beyond it. The host's name is on the rental — they shouldn't be paying for someone else's mess. All four required."
+      >
+        <Field label="" required>
+          <CheckboxGroup name="securityDepositAcks" defaultValue={e?.securityDepositAcks} options={[
+            { value: "payDeposit", label: "I will send a $75 security deposit before the trip." },
+            { value: "returned", label: "I understand the deposit is returned after the trip if everyone follows the rules and there's no damage." },
+            { value: "forfeitAndCharged", label: "If I break a rule or damage something, I forfeit my deposit and I'm responsible for any additional cost beyond it." },
+            { value: "hostNotLiable", label: "The person whose name is on the rental is not personally liable for damage I cause — that's on me." },
+          ]} />
+        </Field>
+      </Section>
+
       <Section title="House rules" intro="All eight required.">
         <Field label="" required>
           <CheckboxGroup name="houseRulesAcks" defaultValue={e?.houseRulesAcks} options={[

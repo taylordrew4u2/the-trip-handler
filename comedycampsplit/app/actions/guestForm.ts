@@ -13,6 +13,7 @@ const STRING_ARRAY_FIELDS = new Set([
   "contentAcks",
   "jokeProtectionAcks",
   "activitiesInterested",
+  "securityDepositAcks",
   "houseRulesAcks",
 ]);
 
@@ -32,6 +33,8 @@ const REQUIRED_HOUSE_RULES = [
 ];
 
 const REQUIRED_JOKE_PROTECTION = ["noPostMaterial", "workshopPrivate", "groupOk", "noRepeat", "noPost"];
+
+const REQUIRED_SECURITY_DEPOSIT = ["payDeposit", "returned", "forfeitAndCharged", "hostNotLiable"];
 
 export async function submitGuestForm(userId: string, formData: FormData) {
   if (!userId || userId === "admin") {
@@ -83,6 +86,10 @@ export async function submitGuestForm(userId: string, formData: FormData) {
   const jokeProtection = (data.jokeProtectionAcks as string[]) || [];
   for (const rule of REQUIRED_JOKE_PROTECTION) {
     if (!jokeProtection.includes(rule)) return { error: "Please agree to all joke / material protection items." };
+  }
+  const securityDeposit = (data.securityDepositAcks as string[]) || [];
+  for (const rule of REQUIRED_SECURITY_DEPOSIT) {
+    if (!securityDeposit.includes(rule)) return { error: "Please agree to all security deposit terms." };
   }
 
   // Make sure all expected array fields exist (so unchecked groups become [])

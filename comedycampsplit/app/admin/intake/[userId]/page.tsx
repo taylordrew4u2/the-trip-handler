@@ -149,6 +149,10 @@ export default async function AdminIntakeDetail({ params }: { params: Promise<{ 
         <Row label="Max budget" value={f.maxBudget} />
       </Section>
 
+      <Section title="Security deposit">
+        <Row label="Acks" value={f.securityDepositAcks} />
+      </Section>
+
       <Section title="House rules">
         <Row label="Acks" value={f.houseRulesAcks} />
       </Section>
