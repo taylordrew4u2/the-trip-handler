@@ -7,7 +7,10 @@ export default async function AdminBoardPage() {
   const comments = await prisma.comment.findMany({
     orderBy: { createdAt: "desc" },
     take: 500,
-    include: { user: { select: { id: true, name: true, username: true, avatarUrl: true } } },
+    include: {
+      user: { select: { id: true, name: true, username: true, avatarUrl: true } },
+      reactions: { select: { emoji: true } },
+    },
   });
 
   return (

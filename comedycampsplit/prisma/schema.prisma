@@ -27,6 +27,7 @@ model User {
   guestForm     GuestForm?
   bedAssignment BedAssignment?
   comments      Comment[]
+  reactions     Reaction[]
 }
 
 enum UserStatus {
@@ -179,8 +180,22 @@ model Comment {
   body      String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  reactions Reaction[]
 
   @@index([createdAt])
+}
+
+model Reaction {
+  id        String   @id @default(cuid())
+  commentId String
+  comment   Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emoji     String
+  createdAt DateTime @default(now())
+
+  @@unique([commentId, userId, emoji])
+  @@index([commentId])
 }
 
 model BedAssignment {
