@@ -16,15 +16,18 @@ export default async function BoardPage() {
   const comments = await prisma.comment.findMany({
     orderBy: { createdAt: "desc" },
     take: 200,
-    include: { user: { select: { id: true, name: true, username: true, avatarUrl: true } } },
+    include: {
+      user: { select: { id: true, name: true, username: true, avatarUrl: true } },
+      reactions: { select: { emoji: true, userId: true } },
+    },
   });
 
   return (
     <div className="space-y-6 max-w-2xl">
       <div>
-        <h1 className="font-serif text-3xl font-medium text-stone-900">Board</h1>
+        <h1 className="font-serif text-3xl font-medium text-stone-900">The Board 🎪</h1>
         <p className="text-stone-500 text-sm mt-1">
-          Post anything — questions, ideas, schedule conflicts, jokes, whatever.
+          Hot takes, half-formed jokes, schedule chaos, anything. React with the buttons under each post.
         </p>
       </div>
       <BoardClient comments={comments} currentUserId={userId} />

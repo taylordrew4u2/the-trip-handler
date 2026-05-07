@@ -44,5 +44,37 @@ export async function deleteComment(commentId: string) {
 
   await prisma.comment.delete({ where: { id: commentId } });
   revalidatePath("/dashboard/board");
+  revalidatePath("/admin/board");
+  return { success: true };
+}
+
+export const REACTION_EMOJIS = ["👍", "❤️", "😂", "🔥", "💯", "🎭"] as const;
+
+export async function toggleReaction(commentId: string, emoji: string) {
+  const session = await getServerSession(authOptions);
+  const user = session?.user as { id?: string; status?: string; role?: string } | undefined;
+  if (!user?.id || user.id === "admin" || user.role === "ADMIN") {
+    return { error: "Sign in as a participant to react." };
+  }
+  if (!APPROVED.has(user.status ?? "")) {
+    return { error: "Only approved members can react." };
+  }
+  if (!REACTION_EMOJIS.includes(emoji as (typeof REACTION_EMOJIS)[number])) {
+    return { error: "Unsupported reaction." };
+  }
+
+  const existing = await prisma.reaction.findUnique({
+    where: { commentId_userId_emoji: { commentId, userId: user.id, emoji } },
+  });
+
+  if (existing) {
+    await prisma.reaction.delete({ where: { id: existing.id } });
+  } else {
+    await prisma.reaction.create({
+      data: { commentId, userId: user.id, emoji },
+    });
+  }
+  revalidatePath("/dashboard/board");
+  revalidatePath("/admin/board");
   return { success: true };
 }

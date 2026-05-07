@@ -8,6 +8,7 @@ interface Row {
   body: string;
   createdAt: Date;
   user: { id: string; name: string; username: string | null; avatarUrl: string | null };
+  reactions: { emoji: string }[];
 }
 
 function timeAgo(d: Date): string {
@@ -70,6 +71,20 @@ export function AdminBoardClient({ comments }: { comments: Row[] }) {
                   </button>
                 </div>
                 <p className="text-sm text-stone-800 mt-1 whitespace-pre-wrap break-words">{c.body}</p>
+                {c.reactions.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {Object.entries(
+                      c.reactions.reduce<Record<string, number>>((acc, r) => {
+                        acc[r.emoji] = (acc[r.emoji] ?? 0) + 1;
+                        return acc;
+                      }, {})
+                    ).map(([emoji, count]) => (
+                      <span key={emoji} className="text-xs px-2 py-0.5 rounded-full bg-stone-50 border border-stone-200">
+                        {emoji} <span className="tabular-nums">{count}</span>
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>
