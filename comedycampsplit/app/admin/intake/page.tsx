@@ -7,7 +7,7 @@ export default async function AdminIntakeIndexPage() {
   const users = await prisma.user.findMany({
     where: { role: "PARTICIPANT" },
     orderBy: [{ name: "asc" }],
-    include: { guestForm: { select: { id: true, updatedAt: true, locked: true, editRequested: true } } },
+    include: { guestForm: { select: { id: true, updatedAt: true, locked: true, editRequested: true, maxBudget: true } } },
   });
 
   const submitted = users.filter((u) => u.guestForm);
@@ -60,6 +60,11 @@ export default async function AdminIntakeIndexPage() {
                   <p className="text-xs text-stone-500">
                     {u.email} · updated {new Date(u.guestForm!.updatedAt).toLocaleString()}
                   </p>
+                  {u.guestForm!.maxBudget && (
+                    <p className="text-xs text-stone-700 mt-1">
+                      Max budget: <span className="font-medium">{u.guestForm!.maxBudget}</span>
+                    </p>
+                  )}
                 </div>
                 <div className="flex items-center gap-2">
                   {u.guestForm!.editRequested && (

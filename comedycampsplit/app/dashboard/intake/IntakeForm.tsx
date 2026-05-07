@@ -201,6 +201,25 @@ export function IntakeForm({ userId, defaultEmail, defaultName, defaultPhone, ex
       </Section>
 
       <Section
+        title="Budget"
+        intro="The trip price covers travel (rental vans + gas), all meals during the weekend, and lodging. Activity and shared-supply costs are split on top. Be honest — admin uses this to decide who gets approved."
+      >
+        <Field
+          label="Max you're willing to pay (per person)"
+          required
+          hint="Examples: $500, $400-600, no hard cap. Admin reviews this before approving you."
+        >
+          <input
+            name="maxBudget"
+            defaultValue={e?.maxBudget ?? ""}
+            required
+            placeholder="e.g. $500"
+            className={inputCls}
+          />
+        </Field>
+      </Section>
+
+      <Section
         title="Drug- and alcohol-free trip"
         intro="This is a sober weekend. No alcohol, no recreational drugs — full stop. If that's not for you, this isn't the trip."
       >
@@ -503,16 +522,7 @@ export function IntakeForm({ userId, defaultEmail, defaultName, defaultPhone, ex
         </Field>
       </Section>
 
-      <Section
-        title="Payment / costs"
-        intro="The trip price covers travel (rental vans + gas), all meals during the weekend, and lodging. Activity and shared-supply costs are split on top."
-      >
-        <Field
-          label="Max you're willing to pay (per person)"
-          hint="This is your honest cap given travel + meals + lodging are included. Examples: $500, $400-600, no hard cap."
-        >
-          <TextInput name="maxBudget" defaultValue={e?.maxBudget} placeholder="e.g. $500" />
-        </Field>
+      <Section title="Payment / costs">
         <Field label="Preferred payment method">
           <RadioGroup name="paymentMethod" defaultValue={e?.paymentMethod} options={[
             { value: "Venmo", label: "Venmo" },

@@ -7,6 +7,7 @@ export default async function AdminUsersPage() {
     orderBy: { createdAt: "desc" },
     include: {
       payments: { orderBy: { createdAt: "desc" }, take: 1 },
+      guestForm: { select: { id: true, maxBudget: true, substanceFreeAck: true, locked: true, editRequested: true } },
     },
   });
 
