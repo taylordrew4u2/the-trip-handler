@@ -24,11 +24,11 @@ export default async function RosterPage() {
   ]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-3xl">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">👥 Who&apos;s Coming</h1>
-        <p className="text-gray-500 text-sm mt-1">
-          {totalApproved} Approved • {totalPaid} Confirmed & Paid
+        <h1 className="font-serif text-3xl font-medium text-stone-900">Who&apos;s coming</h1>
+        <p className="text-stone-500 text-sm mt-1">
+          {totalApproved} approved · {totalPaid} confirmed &amp; paid
         </p>
       </div>
       <RosterClientView initialUsers={users} />

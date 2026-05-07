@@ -53,10 +53,7 @@ export function RosterClientView({ initialUsers }: { initialUsers: RosterUser[] 
     <div className="space-y-4">
       <SearchSort search={search} onSearchChange={setSearch} sort={sort} onSortChange={setSort} />
       {filtered.length === 0 ? (
-        <div className="text-center py-12 text-gray-400">
-          <div className="text-5xl mb-3">🎭</div>
-          <p>No campers found yet!</p>
-        </div>
+        <p className="text-center text-stone-500 py-12 text-sm">No campers found.</p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {filtered.map((user) => (
