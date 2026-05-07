@@ -10,10 +10,10 @@ This is the **Next.js app** for organizing the comedian summer camp trip (roster
 
 The site is live at <https://comedysummercamp.vercel.app> and the auth + database backbone is working. Verified end-to-end:
 
-- Page loads return **200** and redirect to `/login`
+- Public pages (`/`, `/login`, `/signup`) return **200**; unauthenticated `/dashboard` correctly redirects to `/login`
 - NextAuth endpoints respond (`NEXTAUTH_SECRET` and `NEXTAUTH_URL` are set correctly)
 - Postgres is connected and the schema has been pushed (build runs `prisma db push` on every deploy)
-- `/admin/dashboard` renders for the admin user (`Taylor` / `weed69`)
+- Admin login (`Taylor` / `weed69`) succeeds and **all six admin pages render 200**: dashboard, users, expenses, trip, contributions, roster
 - The Stripe webhook route loads without crashing
 
 **What still needs in-app verification** (can't be probed from outside): Vercel Blob uploads (avatars/receipts), Resend email delivery, and Stripe Checkout end-to-end. Walk through the **Step 12 smoke test** to confirm those.
