@@ -26,6 +26,7 @@ model User {
   expenses      Expense[]     @relation("ExpenseSubmitter")
   guestForm     GuestForm?
   bedAssignment BedAssignment?
+  comments      Comment[]
 }
 
 enum UserStatus {
@@ -137,6 +138,17 @@ model Bed {
 enum BedType {
   SINGLE
   DOUBLE
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  body      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([createdAt])
 }
 
 model BedAssignment {
