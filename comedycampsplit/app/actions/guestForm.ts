@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { notifyAdmin } from "@/lib/resend";
 
 const STRING_ARRAY_FIELDS = new Set([
   "bringingItems",
@@ -109,6 +110,24 @@ export async function submitGuestForm(userId: string, formData: FormData) {
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/intake");
   revalidatePath("/admin/intake");
+
+  if (!existing) {
+    // First-time submission — let admin know there's a new application to review.
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
+    await notifyAdmin({
+      subject: `${user.name} submitted their guest form`,
+      intro: `A new applicant just finished the pre-approval form. Review it and approve or reject.`,
+      details: {
+        Name: user.name,
+        Email: user.email,
+        "Max budget": (data.maxBudget as string | null) ?? null,
+        "Substance-free ack": data.substanceFreeAck ? "Agreed" : "NOT AGREED",
+      },
+      actionLabel: "Review application",
+      actionUrl: `${baseUrl}/admin/intake/${userId}`,
+    });
+  }
+
   return { success: true };
 }
 
@@ -125,6 +144,18 @@ export async function requestFormEditAccess(userId: string) {
   });
   revalidatePath("/dashboard/intake");
   revalidatePath("/admin/intake");
+
+  const u = await prisma.user.findUnique({ where: { id: userId }, select: { name: true, email: true } });
+  if (u) {
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
+    await notifyAdmin({
+      subject: `${u.name} requested edit access to their guest form`,
+      intro: `They want to make changes to a previously submitted form. Unlock it from the admin page if that's fine.`,
+      details: { Name: u.name, Email: u.email },
+      actionLabel: "Open & unlock",
+      actionUrl: `${baseUrl}/admin/intake/${userId}`,
+    });
+  }
   return { success: true };
 }
 
