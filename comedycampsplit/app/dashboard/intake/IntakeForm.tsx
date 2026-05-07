@@ -259,8 +259,6 @@ export function IntakeForm({ userId, defaultEmail, defaultName, defaultPhone, ex
           ]} />
           <div className="mt-2"><TextInput name="preferredAreaOther" defaultValue={e?.preferredAreaOther} placeholder="If other, specify" /></div>
         </Field>
-        <Field label="What time can you be ready to leave on Day 1?"><TextInput name="readyTimeDay1" defaultValue={e?.readyTimeDay1} placeholder="e.g. 9:00 AM" /></Field>
-        <Field label="What time do you absolutely need to be back on Day 3?"><TextInput name="returnByDay3" defaultValue={e?.returnByDay3} placeholder="e.g. 6:00 PM" /></Field>
         <Field label="Do you get carsick?"><RadioGroup name="carsick" defaultValue={e?.carsick} options={YES_NO_SOMETIMES} /></Field>
         <Field label="Do you need the front seat for medical, anxiety, or motion sickness reasons?">
           <RadioGroup name="needsFrontSeat" defaultValue={e?.needsFrontSeat} options={YES_NO} />
