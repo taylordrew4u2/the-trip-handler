@@ -26,19 +26,20 @@ export default function SignupPage() {
   if (success) {
     return (
       <div className="min-h-screen bg-stone-50 flex items-center justify-center p-4">
-        <div className="w-full max-w-sm text-center">
-          <p className="text-xs uppercase tracking-[0.2em] text-stone-500 mb-3">Submitted</p>
+        <div className="w-full max-w-md text-center">
+          <p className="text-xs uppercase tracking-[0.2em] text-stone-500 mb-3">Account created</p>
           <h1 className="font-serif text-3xl font-medium text-stone-900 mb-3">
-            You&apos;re on the list.
+            One more step.
           </h1>
-          <p className="text-stone-600 mb-8">
-            Your application is awaiting admin approval. We&apos;ll email you as soon as you&apos;re in.
+          <p className="text-stone-600 mb-8 leading-relaxed">
+            Sign in and complete the <strong>guest form</strong> — admin reviews this before
+            approving you for the trip. We&apos;ll email you once you&apos;re in.
           </p>
           <Link
             href="/login"
             className="inline-block px-5 py-2.5 bg-stone-900 hover:bg-stone-800 text-white rounded-lg text-sm font-medium transition-colors"
           >
-            Back to sign in
+            Sign in to continue
           </Link>
         </div>
       </div>
