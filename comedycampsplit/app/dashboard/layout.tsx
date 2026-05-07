@@ -12,12 +12,12 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   if (user.status === "PENDING") {
     return (
-      <div className="min-h-screen bg-purple-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-3xl shadow-xl p-8 max-w-md text-center">
-          <div className="text-5xl mb-4">⏳</div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Pending Approval</h2>
-          <p className="text-gray-500">
-            Your application is being reviewed by the admin. You&apos;ll receive an email once approved!
+      <div className="min-h-screen bg-stone-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-xl border border-stone-200 p-8 max-w-md text-center">
+          <p className="text-xs uppercase tracking-[0.2em] text-stone-500 mb-3">In review</p>
+          <h2 className="font-serif text-2xl font-medium text-stone-900 mb-3">Pending approval</h2>
+          <p className="text-stone-600">
+            Your application is being reviewed. We&apos;ll email you as soon as you&apos;re approved.
           </p>
         </div>
       </div>
@@ -26,12 +26,12 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   if (user.status === "CANCELLED") {
     return (
-      <div className="min-h-screen bg-purple-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-3xl shadow-xl p-8 max-w-md text-center">
-          <div className="text-5xl mb-4">❌</div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Application Declined</h2>
-          <p className="text-gray-500">
-            Unfortunately your application was not approved. Contact the admin for more info.
+      <div className="min-h-screen bg-stone-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-xl border border-stone-200 p-8 max-w-md text-center">
+          <p className="text-xs uppercase tracking-[0.2em] text-stone-500 mb-3">Declined</p>
+          <h2 className="font-serif text-2xl font-medium text-stone-900 mb-3">Application not approved</h2>
+          <p className="text-stone-600">
+            Unfortunately your application was not approved. Reach out to the admin for details.
           </p>
         </div>
       </div>
@@ -39,9 +39,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
   }
 
   return (
-    <div className="min-h-screen bg-purple-50">
+    <div className="min-h-screen bg-stone-50">
       <DashboardNav />
-      <main className="max-w-6xl mx-auto px-4 py-6">{children}</main>
+      <main className="max-w-6xl mx-auto px-4 py-8">{children}</main>
     </div>
   );
 }

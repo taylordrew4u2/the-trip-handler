@@ -13,74 +13,88 @@ export default async function DashboardPage() {
     prisma.user.count({ where: { status: "CONFIRMED_PAID", role: "PARTICIPANT" } }),
   ]);
 
+  const dateRange =
+    trip?.startDate || trip?.endDate
+      ? [
+          trip.startDate && new Date(trip.startDate).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }),
+          trip.endDate && new Date(trip.endDate).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }),
+        ]
+          .filter(Boolean)
+          .join(" – ")
+      : null;
+
   return (
-    <div className="space-y-6">
-      <div className="bg-gradient-to-r from-purple-600 to-pink-600 rounded-3xl p-8 text-white">
-        <h1 className="text-3xl font-bold mb-2">
-          🎪 {trip?.name ?? "Comedy Summer Camp"}
+    <div className="space-y-8">
+      <header className="bg-stone-900 text-stone-100 rounded-2xl p-8 md:p-10">
+        <p className="text-xs uppercase tracking-[0.2em] text-stone-400 mb-3">
+          {trip?.isLocked ? "Locked · Payment due" : "The Roster"}
+        </p>
+        <h1 className="font-serif text-4xl md:text-5xl font-medium leading-tight">
+          {trip?.name ?? "Comedy Summer Camp"}
         </h1>
-        {trip?.destination && (
-          <p className="text-purple-100 text-lg">📍 {trip.destination}</p>
-        )}
-        {(trip?.startDate || trip?.endDate) && (
-          <p className="text-purple-100 mt-1">
-            📅{" "}
-            {trip.startDate && new Date(trip.startDate).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
-            {trip.startDate && trip.endDate && " – "}
-            {trip.endDate && new Date(trip.endDate).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+        {(trip?.destination || dateRange) && (
+          <p className="text-stone-300 mt-3 text-base">
+            {trip?.destination}
+            {trip?.destination && dateRange && " · "}
+            {dateRange}
           </p>
         )}
-        <div className="flex gap-6 mt-4">
-          <div className="bg-white/20 rounded-2xl px-4 py-3">
-            <p className="text-2xl font-bold">{totalApproved}</p>
-            <p className="text-sm text-purple-100">Approved</p>
+        <div className="flex flex-wrap gap-3 mt-6">
+          <div className="bg-stone-800/60 border border-stone-700 rounded-lg px-4 py-2.5">
+            <p className="text-xl font-semibold tabular-nums">{totalApproved}</p>
+            <p className="text-xs uppercase tracking-wide text-stone-400 mt-0.5">Approved</p>
           </div>
-          <div className="bg-white/20 rounded-2xl px-4 py-3">
-            <p className="text-2xl font-bold">{totalPaid}</p>
-            <p className="text-sm text-purple-100">Confirmed & Paid</p>
+          <div className="bg-stone-800/60 border border-stone-700 rounded-lg px-4 py-2.5">
+            <p className="text-xl font-semibold tabular-nums">{totalPaid}</p>
+            <p className="text-xs uppercase tracking-wide text-stone-400 mt-0.5">Confirmed</p>
           </div>
           {trip?.isLocked && (
-            <div className="bg-green-400/30 rounded-2xl px-4 py-3">
-              <p className="text-2xl font-bold">🔒</p>
-              <p className="text-sm text-purple-100">Trip Locked</p>
+            <div className="bg-emerald-900/40 border border-emerald-700/60 rounded-lg px-4 py-2.5">
+              <p className="text-xl font-semibold text-emerald-300">Locked</p>
+              <p className="text-xs uppercase tracking-wide text-emerald-400/80 mt-0.5">Status</p>
             </div>
           )}
         </div>
-      </div>
+      </header>
 
       {user && (
-        <div className="bg-white rounded-2xl border border-purple-100 p-6">
-          <h2 className="font-semibold text-gray-900 mb-1">Welcome back, {user.name}! 👋</h2>
-          <p className="text-gray-500 text-sm">Status: <span className="font-medium text-purple-700">{user.status.replace("_", " ")}</span></p>
+        <div className="bg-white rounded-xl border border-stone-200 p-6">
+          <h2 className="font-medium text-stone-900">Welcome back, {user.name}.</h2>
+          <p className="text-stone-500 text-sm mt-1">
+            Status: <span className="font-medium text-stone-900">{user.status.replace("_", " ").toLowerCase()}</span>
+          </p>
           {user.status === "PENDING_PAYMENT" && trip?.isLocked && (
-            <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-xl text-sm text-yellow-800">
-              💰 The trip is locked and payment is due. Head to the <a href="/dashboard/payment" className="underline font-medium">Payment page</a> to confirm your spot!
+            <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-900">
+              The trip is locked and payment is due.{" "}
+              <a href="/dashboard/payment" className="underline underline-offset-2 font-medium">
+                Confirm your spot →
+              </a>
             </div>
           )}
         </div>
       )}
 
       {trip?.description && (
-        <div className="bg-white rounded-2xl border border-purple-100 p-6">
-          <h2 className="font-semibold text-gray-900 mb-3">About the Trip</h2>
-          <p className="text-gray-600">{trip.description}</p>
+        <div className="bg-white rounded-xl border border-stone-200 p-6">
+          <h2 className="text-xs uppercase tracking-[0.15em] text-stone-500 mb-2">About</h2>
+          <p className="text-stone-700 leading-relaxed">{trip.description}</p>
         </div>
       )}
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { href: "/dashboard/roster", emoji: "👥", label: "Roster" },
-          { href: "/dashboard/itinerary", emoji: "🗓️", label: "Itinerary" },
-          { href: "/dashboard/expenses", emoji: "💸", label: "Expenses" },
-          { href: "/dashboard/contributions", emoji: "🎭", label: "Contributions" },
+          { href: "/dashboard/roster", label: "Roster" },
+          { href: "/dashboard/itinerary", label: "Itinerary" },
+          { href: "/dashboard/expenses", label: "Expenses" },
+          { href: "/dashboard/contributions", label: "Contributions" },
         ].map((item) => (
           <a
             key={item.href}
             href={item.href}
-            className="bg-white rounded-2xl border border-purple-100 p-5 text-center hover:border-purple-300 hover:shadow-sm transition-all"
+            className="group bg-white rounded-xl border border-stone-200 p-5 hover:border-stone-900 transition-colors"
           >
-            <div className="text-3xl mb-2">{item.emoji}</div>
-            <p className="font-medium text-gray-800 text-sm">{item.label}</p>
+            <p className="font-medium text-stone-900 text-sm">{item.label}</p>
+            <p className="text-xs text-stone-500 mt-1 group-hover:text-stone-900">View →</p>
           </a>
         ))}
       </div>
