@@ -197,12 +197,12 @@ export function IntakeForm({ userId, defaultEmail, defaultName, defaultPhone, ex
 
       <Section
         title="Budget"
-        intro="The trip price covers travel (rental vans + gas), all meals during the weekend, and lodging. Activity and shared-supply costs are split on top. Be honest — admin uses this to decide who gets approved."
+        intro="The trip price covers travel (rental vans + gas), all meals during the weekend, and lodging. Activity and shared-supply costs are split on top. Heads up: there's also a refundable $75 security deposit billed at payment time — that's separate from your trip share. Be honest with the cap — admin uses it to decide who gets approved."
       >
         <Field
-          label="Max you're willing to pay (per person)"
+          label="Max trip share you're willing to pay (per person, before the $75 deposit)"
           required
-          hint="Examples: $500, $400-600, no hard cap. Admin reviews this before approving you."
+          hint="Examples: $500, $400-600, no hard cap. The $75 deposit is on top and refundable, so don't include it here."
         >
           <input
             name="maxBudget"
