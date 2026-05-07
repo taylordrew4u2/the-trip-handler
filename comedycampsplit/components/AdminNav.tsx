@@ -10,6 +10,7 @@ const navItems = [
   { href: "/admin/expenses", label: "Expenses" },
   { href: "/admin/contributions", label: "Contributions" },
   { href: "/admin/roster", label: "Roster" },
+  { href: "/admin/intake", label: "Guest forms" },
   { href: "/admin/diagnostics", label: "Diagnostics" },
 ];
 
