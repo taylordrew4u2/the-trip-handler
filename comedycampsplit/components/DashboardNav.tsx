@@ -12,6 +12,7 @@ const navItems = [
   { href: "/dashboard/contributions", label: "Contributions" },
   { href: "/dashboard/intake", label: "Guest form" },
   { href: "/dashboard/payment", label: "Payment" },
+  { href: "/dashboard/profile", label: "Profile" },
 ];
 
 export function DashboardNav() {
