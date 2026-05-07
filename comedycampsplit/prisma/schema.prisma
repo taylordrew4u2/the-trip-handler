@@ -61,6 +61,8 @@ model Trip {
   expenses        Expense[]
   contributions   Contribution[]
   beds            Bed[]
+  days            Day[]
+  lodgingPhotos   LodgingPhoto[]
 }
 
 model Expense {
@@ -120,6 +122,36 @@ enum PaymentStatus {
   COMPLETED
   REFUNDED
   FAILED
+}
+
+model Day {
+  id        String   @id @default(cuid())
+  tripId    String
+  trip      Trip     @relation(fields: [tripId], references: [id])
+  dayNumber Int
+  date      DateTime?
+  title     String?
+  schedule  String?
+  breakfast String?
+  lunch     String?
+  dinner    String?
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([tripId, dayNumber])
+}
+
+model LodgingPhoto {
+  id        String   @id @default(cuid())
+  tripId    String
+  trip      Trip     @relation(fields: [tripId], references: [id])
+  url       String
+  caption   String?
+  position  Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([tripId, position])
 }
 
 model Bed {
