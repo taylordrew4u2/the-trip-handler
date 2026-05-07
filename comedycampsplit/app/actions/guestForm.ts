@@ -13,7 +13,6 @@ const STRING_ARRAY_FIELDS = new Set([
   "contentAcks",
   "jokeProtectionAcks",
   "activitiesInterested",
-  "paymentAcks",
   "houseRulesAcks",
 ]);
 
