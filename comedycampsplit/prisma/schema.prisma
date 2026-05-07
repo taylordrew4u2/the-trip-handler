@@ -25,6 +25,7 @@ model User {
   contributions UserContribution[]
   expenses      Expense[]     @relation("ExpenseSubmitter")
   guestForm     GuestForm?
+  bedAssignment BedAssignment?
 }
 
 enum UserStatus {
@@ -58,6 +59,7 @@ model Trip {
   updatedAt       DateTime    @updatedAt
   expenses        Expense[]
   contributions   Contribution[]
+  beds            Bed[]
 }
 
 model Expense {
@@ -117,6 +119,33 @@ enum PaymentStatus {
   COMPLETED
   REFUNDED
   FAILED
+}
+
+model Bed {
+  id          String          @id @default(cuid())
+  tripId      String
+  trip        Trip            @relation(fields: [tripId], references: [id])
+  label       String
+  room        String?
+  type        BedType         @default(DOUBLE)
+  womenOnly   Boolean         @default(false)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  assignments BedAssignment[]
+}
+
+enum BedType {
+  SINGLE
+  DOUBLE
+}
+
+model BedAssignment {
+  id        String   @id @default(cuid())
+  bedId     String
+  bed       Bed      @relation(fields: [bedId], references: [id], onDelete: Cascade)
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
 }
 
 model GuestForm {

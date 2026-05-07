@@ -10,6 +10,7 @@ const navItems: NavItem[] = [
   { href: "/dashboard", label: "Home", exact: true },
   { href: "/dashboard/roster", label: "Roster", gated: true },
   { href: "/dashboard/itinerary", label: "Itinerary", gated: true },
+  { href: "/dashboard/sleeping", label: "Sleeping", gated: true },
   { href: "/dashboard/expenses", label: "Expenses", gated: true },
   { href: "/dashboard/contributions", label: "Contributions", gated: true },
   { href: "/dashboard/intake", label: "Guest form" },
