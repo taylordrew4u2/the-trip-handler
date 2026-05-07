@@ -121,7 +121,7 @@ export default async function AdminIntakeDetail({ params }: { params: Promise<{ 
       </Section>
 
       <Section title="Comedy / workshop">
-        <Row label="Working on" value={f.workOnOther ?? (f.workOnGoals ?? []).join(", ") || null} />
+        <Row label="Working on" value={f.workOnOther || (f.workOnGoals ?? []).join(", ") || null} />
       </Section>
 
       <Section title="Content / social media">
