@@ -285,29 +285,6 @@ export function IntakeForm({ userId, defaultEmail, defaultName, defaultPhone, ex
         </Field>
       </Section>
 
-      <Section title="Sleeping / house setup">
-        <Field label="Are you okay sharing a room?"><RadioGroup name="shareRoom" defaultValue={e?.shareRoom} options={[
-          { value: "yes", label: "Yes" },
-          { value: "no", label: "No" },
-          { value: "depends", label: "Depends who with" },
-        ]} /></Field>
-        <Field label="Are you okay sharing a bed?"><RadioGroup name="shareBed" defaultValue={e?.shareBed} options={YES_NO} /></Field>
-        <Field label="Do you need your own bed?"><RadioGroup name="needOwnBed" defaultValue={e?.needOwnBed} options={YES_NO} /></Field>
-        <Field label="Are you bringing any of the following?">
-          <CheckboxGroup name="bringingItems" defaultValue={e?.bringingItems} options={[
-            { value: "Pillow", label: "Pillow" },
-            { value: "Blanket", label: "Blanket" },
-            { value: "Towel", label: "Towel" },
-            { value: "Sleeping bag", label: "Sleeping bag" },
-            { value: "Air mattress", label: "Air mattress" },
-            { value: "None of the above", label: "None of the above" },
-          ]} />
-        </Field>
-        <Field label="Anything we should know about your sleep situation?" hint="Snoring, light sleeper, CPAP, early riser, needs quiet, etc.">
-          <TextArea name="sleepNotes" defaultValue={e?.sleepNotes} />
-        </Field>
-      </Section>
-
       <Section title="Food / allergies" intro="I'll be buying groceries and planning meals, so list everything clearly.">
         <Field label="Do you have any food allergies?"><RadioGroup name="hasAllergies" defaultValue={e?.hasAllergies} options={YES_NO} /></Field>
         <Field label="If yes, list them here"><TextArea name="allergiesList" defaultValue={e?.allergiesList} /></Field>
