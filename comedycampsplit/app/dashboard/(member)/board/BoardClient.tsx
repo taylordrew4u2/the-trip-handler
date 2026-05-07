@@ -2,12 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { postComment, deleteComment, toggleReaction, REACTION_EMOJIS } from "@/app/actions/board";
-
-interface Reaction {
-  emoji: string;
-  userId: string;
-}
+import { postComment, deleteComment } from "@/app/actions/board";
 
 interface CommentRow {
   id: string;
@@ -19,7 +14,6 @@ interface CommentRow {
     username: string | null;
     avatarUrl: string | null;
   };
-  reactions: Reaction[];
 }
 
 const MAX_LEN = 2000;
@@ -54,9 +48,7 @@ export function BoardClient({ comments, currentUserId }: { comments: CommentRow[
   const [body, setBody] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const [reacting, setReacting] = useState<string | null>(null);
 
-  // Pick a placeholder + label once per mount — feels alive, not random per keystroke.
   const [placeholder] = useState(() => PLACEHOLDERS[Math.floor(Math.random() * PLACEHOLDERS.length)]);
   const [postLabel] = useState(() => POST_LABELS[Math.floor(Math.random() * POST_LABELS.length)]);
 
@@ -78,17 +70,6 @@ export function BoardClient({ comments, currentUserId }: { comments: CommentRow[
   async function handleDelete(id: string) {
     if (!confirm("Delete this post?")) return;
     await deleteComment(id);
-    router.refresh();
-  }
-
-  async function handleReact(commentId: string, emoji: string) {
-    setReacting(commentId + emoji);
-    const result = await toggleReaction(commentId, emoji);
-    setReacting(null);
-    if (result?.error) {
-      setError(result.error);
-      return;
-    }
     router.refresh();
   }
 
@@ -126,8 +107,7 @@ export function BoardClient({ comments, currentUserId }: { comments: CommentRow[
 
       {comments.length === 0 ? (
         <div className="bg-white border border-stone-200 rounded-xl p-10 text-center">
-          <p className="text-3xl">🎪</p>
-          <p className="text-stone-700 mt-3 font-medium">Empty board.</p>
+          <p className="text-stone-700 font-medium">Empty board.</p>
           <p className="text-stone-500 text-sm mt-1">Be the first to post — set the tone.</p>
         </div>
       ) : (
@@ -135,15 +115,6 @@ export function BoardClient({ comments, currentUserId }: { comments: CommentRow[
           {comments.map((c) => {
             const isMine = c.user.id === currentUserId;
             const initials = c.user.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
-
-            // Aggregate reactions: { emoji → { count, mine } }
-            const tally: Record<string, { count: number; mine: boolean }> = {};
-            for (const r of c.reactions) {
-              if (!tally[r.emoji]) tally[r.emoji] = { count: 0, mine: false };
-              tally[r.emoji].count += 1;
-              if (r.userId === currentUserId) tally[r.emoji].mine = true;
-            }
-
             return (
               <div key={c.id} className="bg-white border border-stone-200 rounded-xl p-4 shadow-sm hover:shadow transition-shadow">
                 <div className="flex items-start gap-3">
@@ -173,55 +144,6 @@ export function BoardClient({ comments, currentUserId }: { comments: CommentRow[
                       )}
                     </div>
                     <p className="text-base text-stone-800 mt-1 whitespace-pre-wrap break-words leading-relaxed">{c.body}</p>
-
-                    <div className="mt-3 flex flex-wrap items-center gap-1.5">
-                      {REACTION_EMOJIS.map((emoji) => {
-                        const t = tally[emoji];
-                        const count = t?.count ?? 0;
-                        const mine = t?.mine ?? false;
-                        const busy = reacting === c.id + emoji;
-                        // Only show the "all six" rail if the post has zero reactions
-                        // OR this is one of the existing reactions. Hides clutter for
-                        // posts that already have a reaction set.
-                        const shown = count > 0 || Object.keys(tally).length === 0;
-                        if (!shown) return null;
-                        return (
-                          <button
-                            key={emoji}
-                            onClick={() => handleReact(c.id, emoji)}
-                            disabled={busy}
-                            className={`text-sm px-2 py-0.5 rounded-full border transition-colors disabled:opacity-50 ${
-                              mine
-                                ? "bg-amber-100 border-amber-300 text-amber-900"
-                                : "bg-stone-50 border-stone-200 hover:bg-stone-100 text-stone-700"
-                            }`}
-                            title={mine ? "Remove reaction" : "React"}
-                          >
-                            <span className="mr-1">{emoji}</span>
-                            {count > 0 && <span className="tabular-nums text-xs font-medium">{count}</span>}
-                          </button>
-                        );
-                      })}
-                      {/* If post has reactions, also render any unreacted emojis as a small "+ react" hover */}
-                      {Object.keys(tally).length > 0 && (
-                        <div className="flex gap-1 ml-1">
-                          {REACTION_EMOJIS.filter((e) => !tally[e]).map((emoji) => {
-                            const busy = reacting === c.id + emoji;
-                            return (
-                              <button
-                                key={emoji}
-                                onClick={() => handleReact(c.id, emoji)}
-                                disabled={busy}
-                                className="text-sm px-1.5 py-0.5 rounded-full text-stone-400 hover:bg-stone-100 hover:text-stone-700 transition-colors disabled:opacity-50"
-                                title="React"
-                              >
-                                {emoji}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
                   </div>
                 </div>
               </div>

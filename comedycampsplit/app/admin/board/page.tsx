@@ -9,7 +9,6 @@ export default async function AdminBoardPage() {
     take: 500,
     include: {
       user: { select: { id: true, name: true, username: true, avatarUrl: true } },
-      reactions: { select: { emoji: true } },
     },
   });
 
