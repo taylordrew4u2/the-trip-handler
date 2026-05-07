@@ -7,7 +7,7 @@ interface ExpenseCardProps {
     notes: string | null;
     approved: boolean;
     receiptUrl: string | null;
-    submitter: { name: string };
+    submitter: { name: string } | null;
     createdAt: Date;
   };
   isAdmin?: boolean;
@@ -32,7 +32,7 @@ export function ExpenseCard({ expense, isAdmin, onApprove, onDelete }: ExpenseCa
             )}
           </div>
           <p className="text-sm text-gray-500 mt-1">
-            Submitted by {expense.submitter.name} • {new Date(expense.createdAt).toLocaleDateString()}
+            {expense.submitter ? `Submitted by ${expense.submitter.name}` : "Added by admin"} • {new Date(expense.createdAt).toLocaleDateString()}
           </p>
           {expense.notes && <p className="text-sm text-gray-600 mt-1">{expense.notes}</p>}
           {expense.receiptUrl && (

@@ -8,12 +8,21 @@ export async function addContribution(formData: FormData) {
   const title = formData.get("title") as string;
   const description = (formData.get("description") as string) || null;
   const category = (formData.get("category") as string) || null;
+  const rawCreatorId = formData.get("creatorUserId") as string | null;
+  const creatorUserId = rawCreatorId && rawCreatorId !== "admin" ? rawCreatorId : null;
 
   if (!tripId || !title) return { error: "Missing fields" };
 
-  await prisma.contribution.create({
+  const contribution = await prisma.contribution.create({
     data: { tripId, title, description: description || undefined, category: category || undefined },
   });
+
+  // If a real user created this, auto-sign them up — they're claiming it.
+  if (creatorUserId) {
+    await prisma.userContribution.create({
+      data: { userId: creatorUserId, contributionId: contribution.id },
+    });
+  }
 
   revalidatePath("/dashboard/contributions");
   revalidatePath("/admin/contributions");
