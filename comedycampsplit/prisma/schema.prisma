@@ -254,6 +254,9 @@ model GuestForm {
   paymentUsername          String?
   paymentAcks              String[]
 
+  // Security deposit (required acknowledgements)
+  securityDepositAcks      String[]
+
   // House Rules (required acknowledgements)
   houseRulesAcks           String[]
 
