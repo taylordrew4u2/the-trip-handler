@@ -24,6 +24,7 @@ model User {
   payments      Payment[]
   contributions UserContribution[]
   expenses      Expense[]     @relation("ExpenseSubmitter")
+  guestForm     GuestForm?
 }
 
 enum UserStatus {
@@ -116,4 +117,110 @@ enum PaymentStatus {
   COMPLETED
   REFUNDED
   FAILED
+}
+
+model GuestForm {
+  id                       String   @id @default(cuid())
+  userId                   String   @unique
+  user                     User     @relation(fields: [userId], references: [id])
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+
+  // Basic Info
+  fullName                 String
+  stageName                String?
+  phoneNumber              String
+  pronouns                 String?
+  age21Confirmed           Boolean  @default(false)
+  emergencyName            String
+  emergencyPhone           String
+
+  // Van Transportation
+  comingFrom               String?
+  centralPickup            String?
+  preferredArea            String?
+  preferredAreaOther       String?
+  readyTimeDay1            String?
+  returnByDay3             String?
+  carsick                  String?
+  needsFrontSeat           String?
+  luggageSize              String?
+  bulkyItems               String?
+  willingToDrive           String?
+  vanAck                   Boolean  @default(false)
+
+  // Sleeping / House
+  shareRoom                String?
+  shareBed                 String?
+  needOwnBed               String?
+  bringingItems            String[]
+  sleepNotes               String?
+
+  // Food / Allergies
+  hasAllergies             String?
+  allergiesList            String?
+  allergySeverity          String?
+  dietaryRestrictions      String[]
+  dietaryOther             String?
+  willNotEat               String?
+  likedFoods               String?
+  snackRequests            String?
+  drinkPrefs               String[]
+  drinkOther               String?
+  alcoholPrefs             String?
+  communalMeals            String?
+  helpCookClean            String?
+
+  // Medical / Safety
+  medicalConditions        String?
+  refrigeratedMeds         String?
+  emergencyMedItem         String?
+  mobilityNeeds            String?
+  cannotDo                 String?
+  safetyNotes              String?
+
+  // Comedy / Workshop
+  workOnGoals              String[]
+  workOnOther              String?
+  materialAmount           String?
+  comfortPerforming        String?
+  comfortReceivingFb       String?
+  comfortGivingFb          String?
+  feedbackOptOut           String?
+  usefulFeedback           String?
+
+  // Content / Social Media
+  instagram                String?
+  tiktok                   String?
+  otherHandles             String?
+  comfortGroupPhotos       String?
+  comfortGroupVideos       String?
+  comfortTagged            String?
+  comfortPlannedContent    String?
+  contentComfort           String?
+  contentOptOut            String?
+  approveClipsBeforePost   String?
+  contentAcks              String[]
+
+  // Joke / Material Protection (required acknowledgements)
+  jokeProtectionAcks       String[]
+
+  // Group Activities
+  activitiesInterested     String[]
+  activitiesOtherText      String?
+  activitiesOptOut         String?
+  structurePref            String?
+
+  // Payment / Costs
+  paymentMethod            String?
+  paymentMethodOther       String?
+  paymentUsername          String?
+  paymentAcks              String[]
+
+  // House Rules (required acknowledgements)
+  houseRulesAcks           String[]
+
+  // Final Notes
+  finalNotes               String?
+  whatWouldMakeFun         String?
 }
