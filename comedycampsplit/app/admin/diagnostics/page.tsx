@@ -163,7 +163,7 @@ export default async function DiagnosticsPage() {
             </tbody>
           </table>
         </div>
-        <p className="text-xs text-gray-500 mt-2">Values are never displayed — only whether they're present.</p>
+        <p className="text-xs text-gray-500 mt-2">Values are never displayed — only whether they&apos;re present.</p>
       </section>
     </div>
   );
