@@ -24,13 +24,14 @@ export default async function PaymentPage() {
 
   if (!trip?.isLocked) {
     return (
-      <div className="space-y-6">
-        <h1 className="text-2xl font-bold text-gray-900">💳 Payment</h1>
-        <div className="bg-white rounded-2xl border border-purple-100 p-8 text-center">
-          <div className="text-5xl mb-4">🔓</div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Trip Not Yet Finalized</h2>
-          <p className="text-gray-500">
-            Payment will be available once the admin locks the trip and sets the final price.
+      <div className="space-y-6 max-w-2xl">
+        <h1 className="font-serif text-3xl font-medium text-stone-900">Payment</h1>
+        <div className="bg-white rounded-xl border border-stone-200 p-8 text-center">
+          <p className="text-xs uppercase tracking-[0.2em] text-stone-500 mb-3">Not yet</p>
+          <h2 className="font-serif text-xl font-medium text-stone-900 mb-2">Trip isn&apos;t finalized</h2>
+          <p className="text-stone-600 text-sm">
+            Payment will open once admin locks the trip and sets the final price. You&apos;ll get
+            an email at that point.
           </p>
         </div>
       </div>
@@ -38,8 +39,8 @@ export default async function PaymentPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">💳 Payment</h1>
+    <div className="space-y-6 max-w-2xl">
+      <h1 className="font-serif text-3xl font-medium text-stone-900">Payment</h1>
       <PaymentClient
         trip={trip}
         user={user}
