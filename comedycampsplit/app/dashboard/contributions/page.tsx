@@ -2,34 +2,61 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { ContributionItem } from "@/components/ContributionItem";
+import { AddContributionForm } from "@/components/AddContributionForm";
 
 export default async function ContributionsPage() {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as { id?: string })?.id ?? "";
 
-  const contributions = await prisma.contribution.findMany({
-    orderBy: { createdAt: "asc" },
-    include: {
-      users: { include: { user: { select: { name: true, username: true } } } },
-    },
-  });
+  const [trip, contributions] = await Promise.all([
+    prisma.trip.findFirst(),
+    prisma.contribution.findMany({
+      orderBy: { createdAt: "asc" },
+      include: {
+        users: { include: { user: { select: { name: true, username: true } } } },
+      },
+    }),
+  ]);
+
+  const suggestions = contributions.filter((c) => c.users.length === 0);
+  const claimed = contributions.filter((c) => c.users.length > 0);
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">🎭 Contributions</h1>
-      <p className="text-gray-500 text-sm">Sign up for things you want to bring or help with!</p>
+      <div>
+        <h1 className="font-serif text-3xl font-medium text-stone-900">Contributions</h1>
+        <p className="text-stone-500 text-sm mt-1">
+          Add what you&apos;re bringing, or sign up for one of admin&apos;s suggestions.
+        </p>
+      </div>
 
-      {contributions.length === 0 ? (
-        <div className="text-center py-12 text-gray-400">
-          <div className="text-5xl mb-3">🎪</div>
-          <p>No contribution items yet.</p>
-          <p className="text-sm mt-2">The admin will add items to sign up for!</p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {contributions.map((item) => (
-            <ContributionItem key={item.id} item={item} currentUserId={userId} />
-          ))}
+      <AddContributionForm tripId={trip?.id ?? ""} userId={userId} />
+
+      {suggestions.length > 0 && (
+        <section className="space-y-3">
+          <h2 className="text-xs uppercase tracking-[0.15em] text-stone-500">Suggestions from admin</h2>
+          <div className="space-y-3">
+            {suggestions.map((item) => (
+              <ContributionItem key={item.id} item={item} currentUserId={userId} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {claimed.length > 0 && (
+        <section className="space-y-3">
+          <h2 className="text-xs uppercase tracking-[0.15em] text-stone-500">Already claimed</h2>
+          <div className="space-y-3">
+            {claimed.map((item) => (
+              <ContributionItem key={item.id} item={item} currentUserId={userId} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {contributions.length === 0 && (
+        <div className="text-center py-12 text-stone-500">
+          <p>No contributions yet — be the first.</p>
         </div>
       )}
     </div>

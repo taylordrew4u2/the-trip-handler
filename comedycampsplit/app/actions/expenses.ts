@@ -6,14 +6,15 @@ import { revalidatePath } from "next/cache";
 
 export async function addExpense(formData: FormData) {
   const tripId = formData.get("tripId") as string;
-  const userId = formData.get("userId") as string;
+  const rawUserId = formData.get("userId") as string | null;
+  const userId = rawUserId && rawUserId !== "admin" ? rawUserId : null;
   const title = formData.get("title") as string;
   const amount = parseFloat(formData.get("amount") as string);
   const category = formData.get("category") as string;
   const notes = (formData.get("notes") as string) || null;
   const receipt = formData.get("receipt");
 
-  if (!tripId || !userId || !title || isNaN(amount)) {
+  if (!tripId || !title || isNaN(amount)) {
     return { error: "Missing required fields" };
   }
 
@@ -32,11 +33,12 @@ export async function addExpense(formData: FormData) {
   const expense = await prisma.expense.create({
     data: {
       tripId,
-      submittedBy: userId,
+      submittedBy: userId ?? undefined,
       title,
       amount,
       category,
       notes: notes || undefined,
+      approved: userId === null, // admin-added expenses are auto-approved
     },
   });
 
