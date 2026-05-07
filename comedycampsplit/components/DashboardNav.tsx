@@ -15,6 +15,7 @@ const navItems: NavItem[] = [
   { href: "/dashboard/contributions", label: "Contributions", gated: true },
   { href: "/dashboard/board", label: "Board", gated: true },
   { href: "/dashboard/intake", label: "Guest form" },
+  { href: "/dashboard/preferences", label: "Preferences", gated: true },
   { href: "/dashboard/payment", label: "Payment", gated: true },
   { href: "/dashboard/profile", label: "Profile" },
 ];

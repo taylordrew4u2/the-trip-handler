@@ -38,20 +38,27 @@ function TextInput({ name, defaultValue, placeholder, type = "text", required }:
   return <input name={name} type={type} defaultValue={defaultValue ?? ""} placeholder={placeholder} required={required} className={inputCls} />;
 }
 
-function TextArea({ name, defaultValue, placeholder, rows = 3 }: {
-  name: string; defaultValue?: string | null; placeholder?: string; rows?: number;
+function TextArea({ name, defaultValue, placeholder, rows = 3, required }: {
+  name: string; defaultValue?: string | null; placeholder?: string; rows?: number; required?: boolean;
 }) {
-  return <textarea name={name} defaultValue={defaultValue ?? ""} placeholder={placeholder} rows={rows} className={`${inputCls} resize-none`} />;
+  return <textarea name={name} defaultValue={defaultValue ?? ""} placeholder={placeholder} rows={rows} required={required} className={`${inputCls} resize-none`} />;
 }
 
-function RadioGroup({ name, options, defaultValue }: {
-  name: string; options: { value: string; label: string }[]; defaultValue?: string | null;
+function RadioGroup({ name, options, defaultValue, required }: {
+  name: string; options: { value: string; label: string }[]; defaultValue?: string | null; required?: boolean;
 }) {
   return (
     <div className="space-y-1.5">
-      {options.map((opt) => (
+      {options.map((opt, i) => (
         <label key={opt.value} className="flex items-center gap-2.5 text-sm text-stone-800 cursor-pointer">
-          <input type="radio" name={name} value={opt.value} defaultChecked={defaultValue === opt.value} className="h-4 w-4 accent-stone-900" />
+          <input
+            type="radio"
+            name={name}
+            value={opt.value}
+            defaultChecked={defaultValue === opt.value}
+            required={required && i === 0}
+            className="h-4 w-4 accent-stone-900"
+          />
           {opt.label}
         </label>
       ))}
@@ -78,11 +85,6 @@ function CheckboxGroup({ name, options, defaultValue }: {
 const YES_NO = [
   { value: "yes", label: "Yes" },
   { value: "no", label: "No" },
-];
-const YES_NO_SOMETIMES = [
-  { value: "yes", label: "Yes" },
-  { value: "no", label: "No" },
-  { value: "sometimes", label: "Sometimes" },
 ];
 const YES_NO_ASK = [
   { value: "yes", label: "Yes" },
@@ -181,18 +183,16 @@ export function IntakeForm({ userId, defaultEmail, defaultName, defaultPhone, ex
 
       <Section title="Basic info">
         <Field label="Full name" required><TextInput name="fullName" defaultValue={e?.fullName ?? defaultName} required /></Field>
-        <Field label="Stage name, if different"><TextInput name="stageName" defaultValue={e?.stageName} /></Field>
+        <Field label="Stage name (or N/A)" required><TextInput name="stageName" defaultValue={e?.stageName} required placeholder="N/A if you don't use one" /></Field>
         <Field label="Phone number" required><TextInput name="phoneNumber" type="tel" defaultValue={e?.phoneNumber ?? defaultPhone} required /></Field>
         <Field label="Email"><input type="email" value={defaultEmail} disabled className={`${inputCls} bg-stone-100 text-stone-500 cursor-not-allowed`} /></Field>
-        <Field label="Pronouns"><TextInput name="pronouns" defaultValue={e?.pronouns} placeholder="e.g. she/her, they/them" /></Field>
+        <Field label="Pronouns" required><TextInput name="pronouns" defaultValue={e?.pronouns} required placeholder="e.g. she/her, they/them, N/A" /></Field>
         <Field label="Age confirmation" required>
           <label className="flex items-center gap-2.5 text-sm text-stone-800 cursor-pointer">
             <input type="checkbox" name="age21Confirmed" defaultChecked={e?.age21Confirmed} required className="h-4 w-4 accent-stone-900" />
             I confirm I am 21 or older.
           </label>
         </Field>
-        <Field label="Emergency contact name" required><TextInput name="emergencyName" defaultValue={e?.emergencyName} required /></Field>
-        <Field label="Emergency contact phone number" required><TextInput name="emergencyPhone" type="tel" defaultValue={e?.emergencyPhone} required /></Field>
       </Section>
 
       <Section
@@ -240,162 +240,40 @@ export function IntakeForm({ userId, defaultEmail, defaultName, defaultPhone, ex
         intro="Heads up — you'll probably have to share a bed. You'll be able to choose who you share with. And if you're a dude, the odds are very high you'll be sharing."
       >
         <Field label="Are you OK with that?" required>
-          <RadioGroup name="shareBed" defaultValue={e?.shareBed} options={YES_NO} />
+          <RadioGroup name="shareBed" defaultValue={e?.shareBed} options={YES_NO} required />
         </Field>
       </Section>
 
-      <Section title="Van transportation" intro="Transportation will be handled by rental vans. Everyone needs to be on time for pickup and departure.">
-        <Field label="Where will you be coming from?"><TextInput name="comingFrom" defaultValue={e?.comingFrom} /></Field>
-        <Field label="Can you meet at one central pickup location?">
-          <RadioGroup name="centralPickup" defaultValue={e?.centralPickup} options={[
-            { value: "yes", label: "Yes" },
-            { value: "no", label: "No" },
-            { value: "depends", label: "Depends where it is" },
-          ]} />
+      <Section title="Medical / safety" intro="Only share what would be useful in an emergency or for planning the house. If something doesn't apply to you, just write “N/A”.">
+        <Field label="Any medical conditions we should know about in case of emergency?" required>
+          <TextArea name="medicalConditions" defaultValue={e?.medicalConditions} required placeholder="Write N/A if you don't have any" />
         </Field>
-        <Field label="Preferred pickup area">
-          <RadioGroup name="preferredArea" defaultValue={e?.preferredArea} options={[
-            { value: "Manhattan", label: "Manhattan" },
-            { value: "Brooklyn", label: "Brooklyn" },
-            { value: "Queens", label: "Queens" },
-            { value: "New Jersey", label: "New Jersey" },
-            { value: "Other", label: "Other" },
-          ]} />
-          <div className="mt-2"><TextInput name="preferredAreaOther" defaultValue={e?.preferredAreaOther} placeholder="If other, specify" /></div>
+        <Field label="Any medications that need refrigeration?" required><RadioGroup name="refrigeratedMeds" defaultValue={e?.refrigeratedMeds} options={YES_NO} required /></Field>
+        <Field label="Do you carry an EpiPen, inhaler, or other emergency medical item?" required>
+          <RadioGroup name="emergencyMedItem" defaultValue={e?.emergencyMedItem} options={YES_NO} required />
         </Field>
-        <Field label="Do you get carsick?"><RadioGroup name="carsick" defaultValue={e?.carsick} options={YES_NO_SOMETIMES} /></Field>
-        <Field label="Do you need the front seat for medical, anxiety, or motion sickness reasons?">
-          <RadioGroup name="needsFrontSeat" defaultValue={e?.needsFrontSeat} options={YES_NO} />
+        <Field label="Any mobility or accessibility needs?" required><TextArea name="mobilityNeeds" defaultValue={e?.mobilityNeeds} rows={2} required placeholder="N/A if none" /></Field>
+        <Field label="Anything you cannot or should not do?" hint="Hiking, swimming, drinking, late nights, stairs, etc." required>
+          <TextArea name="cannotDo" defaultValue={e?.cannotDo} rows={2} required placeholder="N/A if none" />
         </Field>
-        <Field label="Are you bringing luggage?">
-          <RadioGroup name="luggageSize" defaultValue={e?.luggageSize} options={[
-            { value: "Backpack only", label: "Backpack only" },
-            { value: "Small overnight bag", label: "Small overnight bag" },
-            { value: "Suitcase", label: "Suitcase" },
-            { value: "Too much", label: "Too much" },
-          ]} />
-        </Field>
-        <Field label="Are you bringing anything bulky?" hint="Camera gear, guitar, cooler, sleeping bag, air mattress, etc.">
-          <TextInput name="bulkyItems" defaultValue={e?.bulkyItems} />
-        </Field>
-        <Field label="Are you willing to drive one of the rental vans if needed?">
-          <RadioGroup name="willingToDrive" defaultValue={e?.willingToDrive} options={YES_NO} />
-        </Field>
-        <Field label="Acknowledgement" required>
-          <label className="flex items-start gap-2.5 text-sm text-stone-800 cursor-pointer">
-            <input type="checkbox" name="vanAck" defaultChecked={e?.vanAck} required className="h-4 w-4 mt-0.5 accent-stone-900" />
-            I understand transportation is being coordinated by van and I need to be on time for pickup and departure.
-          </label>
-        </Field>
-      </Section>
-
-      <Section title="Food / allergies" intro="I'll be buying groceries and planning meals, so list everything clearly.">
-        <Field label="Do you have any food allergies?"><RadioGroup name="hasAllergies" defaultValue={e?.hasAllergies} options={YES_NO} /></Field>
-        <Field label="If yes, list them here"><TextArea name="allergiesList" defaultValue={e?.allergiesList} /></Field>
-        <Field label="How serious is the allergy?">
-          <RadioGroup name="allergySeverity" defaultValue={e?.allergySeverity} options={[
-            { value: "mild", label: "Mild" },
-            { value: "serious", label: "Serious" },
-            { value: "cross-contamination", label: "Cross-contamination issue" },
-            { value: "airborne", label: "Airborne allergy" },
-            { value: "epipen", label: "EpiPen needed" },
-            { value: "n/a", label: "Not applicable" },
-          ]} />
-        </Field>
-        <Field label="Do you have any dietary restrictions?">
-          <CheckboxGroup name="dietaryRestrictions" defaultValue={e?.dietaryRestrictions} options={[
-            { value: "Vegetarian", label: "Vegetarian" },
-            { value: "Vegan", label: "Vegan" },
-            { value: "Gluten-free", label: "Gluten-free" },
-            { value: "Dairy-free", label: "Dairy-free" },
-            { value: "Kosher", label: "Kosher" },
-            { value: "Halal", label: "Halal" },
-            { value: "No pork", label: "No pork" },
-            { value: "No red meat", label: "No red meat" },
-            { value: "None", label: "None" },
-          ]} />
-          <div className="mt-2"><TextInput name="dietaryOther" defaultValue={e?.dietaryOther} placeholder="Other" /></div>
-        </Field>
-        <Field label="Foods you absolutely will not eat"><TextArea name="willNotEat" defaultValue={e?.willNotEat} rows={2} /></Field>
-        <Field label="Foods you actually like"><TextArea name="likedFoods" defaultValue={e?.likedFoods} rows={2} /></Field>
-        <Field label="Snack requests"><TextArea name="snackRequests" defaultValue={e?.snackRequests} rows={2} /></Field>
-        <Field label="Drink preferences">
-          <CheckboxGroup name="drinkPrefs" defaultValue={e?.drinkPrefs} options={[
-            { value: "Coffee", label: "Coffee" },
-            { value: "Tea", label: "Tea" },
-            { value: "Seltzer", label: "Seltzer" },
-            { value: "Soda", label: "Soda" },
-            { value: "Juice", label: "Juice" },
-            { value: "Energy drinks", label: "Energy drinks" },
-            { value: "Water", label: "Water" },
-          ]} />
-          <div className="mt-2"><TextInput name="drinkOther" defaultValue={e?.drinkOther} placeholder="Other" /></div>
-        </Field>
-        <Field label="Are you okay with communal meals?">
-          <RadioGroup name="communalMeals" defaultValue={e?.communalMeals} options={[
-            { value: "yes", label: "Yes" },
-            { value: "no", label: "No" },
-            { value: "some", label: "Some meals only" },
-          ]} />
-        </Field>
-        <Field label="Are you willing to help cook or clean?">
-          <RadioGroup name="helpCookClean" defaultValue={e?.helpCookClean} options={[
-            { value: "yes", label: "Yes" },
-            { value: "no", label: "No" },
-            { value: "cleanOnly", label: "I can help clean but not cook" },
-            { value: "cookOnly", label: "I can help cook but not clean" },
-          ]} />
-        </Field>
-      </Section>
-
-      <Section title="Medical / safety" intro="Only share what would be useful in an emergency or for planning the house.">
-        <Field label="Any medical conditions we should know about in case of emergency?">
-          <TextArea name="medicalConditions" defaultValue={e?.medicalConditions} />
-        </Field>
-        <Field label="Any medications that need refrigeration?"><RadioGroup name="refrigeratedMeds" defaultValue={e?.refrigeratedMeds} options={YES_NO} /></Field>
-        <Field label="Do you carry an EpiPen, inhaler, or other emergency medical item?">
-          <RadioGroup name="emergencyMedItem" defaultValue={e?.emergencyMedItem} options={YES_NO} />
-        </Field>
-        <Field label="Any mobility or accessibility needs?"><TextArea name="mobilityNeeds" defaultValue={e?.mobilityNeeds} rows={2} /></Field>
-        <Field label="Anything you cannot or should not do?" hint="Hiking, swimming, drinking, late nights, stairs, etc.">
-          <TextArea name="cannotDo" defaultValue={e?.cannotDo} rows={2} />
-        </Field>
-        <Field label="Anything that would make the weekend safer, easier, or less annoying for you?">
-          <TextArea name="safetyNotes" defaultValue={e?.safetyNotes} />
-        </Field>
-      </Section>
-
-      <Section title="Comedy / workshop info" intro="This is a comedy summer camp, so we'll be writing, workshopping, performing, and doing group creative activities. Your answers here help plan the itinerary.">
-        <Field label="What are you hoping to work on?">
-          <CheckboxGroup name="workOnGoals" defaultValue={e?.workOnGoals} options={[
-            { value: "New jokes", label: "New jokes" },
-            { value: "Existing set", label: "Existing set" },
-            { value: "Longer set", label: "Longer set" },
-            { value: "Crowd work", label: "Crowd work" },
-            { value: "Characters", label: "Characters" },
-            { value: "Sketches", label: "Sketches" },
-            { value: "Roast jokes", label: "Roast jokes" },
-            { value: "Social media ideas", label: "Social media ideas" },
-            { value: "Podcast ideas", label: "Podcast ideas" },
-            { value: "Writing discipline", label: "Writing discipline" },
-          ]} />
-          <div className="mt-2"><TextInput name="workOnOther" defaultValue={e?.workOnOther} placeholder="Other" /></div>
+        <Field label="Anything that would make the weekend safer, easier, or less annoying for you?" required>
+          <TextArea name="safetyNotes" defaultValue={e?.safetyNotes} required placeholder="N/A if nothing" />
         </Field>
       </Section>
 
       <Section title="Content / social media" intro="We'll be making content for social media during the weekend. This may include group videos, photos, sketches, recap clips, behind-the-scenes footage, and other planned content.">
-        <Field label="Instagram handle"><TextInput name="instagram" defaultValue={e?.instagram} placeholder="@handle" /></Field>
-        <Field label="TikTok handle"><TextInput name="tiktok" defaultValue={e?.tiktok} placeholder="@handle" /></Field>
-        <Field label="Any other handle you want promoted"><TextInput name="otherHandles" defaultValue={e?.otherHandles} /></Field>
-        <Field label="Are you comfortable appearing in group photos?"><RadioGroup name="comfortGroupPhotos" defaultValue={e?.comfortGroupPhotos} options={YES_NO_ASK} /></Field>
-        <Field label="Are you comfortable appearing in group videos?"><RadioGroup name="comfortGroupVideos" defaultValue={e?.comfortGroupVideos} options={YES_NO_ASK} /></Field>
-        <Field label="Are you comfortable being tagged on social media?"><RadioGroup name="comfortTagged" defaultValue={e?.comfortTagged} options={YES_NO_ASK} /></Field>
-        <Field label="Are you comfortable being part of planned group content?">
+        <Field label="Instagram handle" required><TextInput name="instagram" defaultValue={e?.instagram} required placeholder="@handle or N/A" /></Field>
+        <Field label="TikTok handle" required><TextInput name="tiktok" defaultValue={e?.tiktok} required placeholder="@handle or N/A" /></Field>
+        <Field label="Any other handle you want promoted" required><TextInput name="otherHandles" defaultValue={e?.otherHandles} required placeholder="N/A if none" /></Field>
+        <Field label="Are you comfortable appearing in group photos?" required><RadioGroup name="comfortGroupPhotos" defaultValue={e?.comfortGroupPhotos} options={YES_NO_ASK} required /></Field>
+        <Field label="Are you comfortable appearing in group videos?" required><RadioGroup name="comfortGroupVideos" defaultValue={e?.comfortGroupVideos} options={YES_NO_ASK} required /></Field>
+        <Field label="Are you comfortable being tagged on social media?" required><RadioGroup name="comfortTagged" defaultValue={e?.comfortTagged} options={YES_NO_ASK} required /></Field>
+        <Field label="Are you comfortable being part of planned group content?" required>
           <RadioGroup name="comfortPlannedContent" defaultValue={e?.comfortPlannedContent} options={[
             { value: "yes", label: "Yes" },
             { value: "no", label: "No" },
             { value: "depends", label: "Depends on the idea" },
-          ]} />
+          ]} required />
         </Field>
         <Field label="Content acknowledgements">
           <CheckboxGroup name="contentAcks" defaultValue={e?.contentAcks} options={[
@@ -439,15 +317,15 @@ export function IntakeForm({ userId, defaultEmail, defaultName, defaultPhone, ex
             { value: "Cooking together", label: "Cooking together" },
             { value: "Quiet writing time", label: "Quiet writing time" },
           ]} />
-          <div className="mt-2"><TextInput name="activitiesOtherText" defaultValue={e?.activitiesOtherText} placeholder="Other" /></div>
+          <div className="mt-2"><TextInput name="activitiesOtherText" defaultValue={e?.activitiesOtherText} placeholder="Other (or N/A)" required /></div>
         </Field>
-        <Field label="Any activities you do not want to do?"><TextArea name="activitiesOptOut" defaultValue={e?.activitiesOptOut} rows={2} /></Field>
-        <Field label="Are you okay with structured activities, or do you prefer more free time?">
+        <Field label="Any activities you do not want to do?" required><TextArea name="activitiesOptOut" defaultValue={e?.activitiesOptOut} rows={2} required placeholder="N/A if you're up for anything" /></Field>
+        <Field label="Are you okay with structured activities, or do you prefer more free time?" required>
           <RadioGroup name="structurePref" defaultValue={e?.structurePref} options={[
             { value: "structure", label: "I like structure" },
             { value: "mix", label: "I want a mix" },
             { value: "freeTime", label: "I prefer mostly free time" },
-          ]} />
+          ]} required />
         </Field>
       </Section>
 
@@ -481,8 +359,12 @@ export function IntakeForm({ userId, defaultEmail, defaultName, defaultPhone, ex
       </Section>
 
       <Section title="Final notes">
-        <Field label="Anything else we should know before planning the weekend?"><TextArea name="finalNotes" defaultValue={e?.finalNotes} /></Field>
-        <Field label="What would make this weekend actually fun for you?"><TextArea name="whatWouldMakeFun" defaultValue={e?.whatWouldMakeFun} /></Field>
+        <Field label="Anything else we should know before planning the weekend?" required>
+          <TextArea name="finalNotes" defaultValue={e?.finalNotes} required placeholder="N/A if nothing comes to mind" />
+        </Field>
+        <Field label="What would make this weekend actually fun for you?" required>
+          <TextArea name="whatWouldMakeFun" defaultValue={e?.whatWouldMakeFun} required placeholder="N/A if not sure" />
+        </Field>
       </Section>
 
       </fieldset>

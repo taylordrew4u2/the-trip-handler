@@ -19,7 +19,7 @@ const STRING_ARRAY_FIELDS = new Set([
 
 const BOOL_FIELDS = new Set(["age21Confirmed", "vanAck", "substanceFreeAck"]);
 
-const REQUIRED_STRING_FIELDS = ["fullName", "phoneNumber", "emergencyName", "emergencyPhone", "maxBudget"];
+const REQUIRED_STRING_FIELDS = ["fullName", "phoneNumber", "maxBudget"];
 
 const REQUIRED_HOUSE_RULES = [
   "shared",
@@ -77,7 +77,6 @@ export async function submitGuestForm(userId: string, formData: FormData) {
   }
   if (!data.age21Confirmed) return { error: "You must confirm you're 21 or older." };
   if (!data.substanceFreeAck) return { error: "You must agree this is a drug- and alcohol-free trip." };
-  if (!data.vanAck) return { error: "Please acknowledge the van transportation expectations." };
 
   const houseRules = (data.houseRulesAcks as string[]) || [];
   for (const rule of REQUIRED_HOUSE_RULES) {
@@ -144,5 +143,116 @@ export async function unlockGuestForm(userId: string) {
   revalidatePath("/dashboard/intake");
   revalidatePath("/admin/intake");
   revalidatePath(`/admin/intake/${userId}`);
+  return { success: true };
+}
+
+const PREFERENCES_STRING_FIELDS = [
+  // Emergency contact
+  "emergencyName",
+  "emergencyPhone",
+  // Van
+  "comingFrom",
+  "centralPickup",
+  "preferredArea",
+  "preferredAreaOther",
+  "carsick",
+  "needsFrontSeat",
+  "luggageSize",
+  "bulkyItems",
+  "willingToDrive",
+  // Food
+  "hasAllergies",
+  "allergiesList",
+  "allergySeverity",
+  "dietaryOther",
+  "willNotEat",
+  "likedFoods",
+  "snackRequests",
+  "drinkOther",
+  "communalMeals",
+  "helpCookClean",
+  // Comedy
+  "workOnOther",
+];
+
+const PREFERENCES_ARRAY_FIELDS = new Set([
+  "dietaryRestrictions",
+  "drinkPrefs",
+  "workOnGoals",
+]);
+
+const PREFERENCES_BOOL_FIELDS = new Set(["vanAck"]);
+
+const PREFERENCES_REQUIRED = [
+  "emergencyName",
+  "emergencyPhone",
+  "comingFrom",
+  "centralPickup",
+  "preferredArea",
+  "carsick",
+  "needsFrontSeat",
+  "luggageSize",
+  "bulkyItems",
+  "willingToDrive",
+  "hasAllergies",
+  "allergiesList",
+  "allergySeverity",
+  "willNotEat",
+  "likedFoods",
+  "snackRequests",
+  "communalMeals",
+  "helpCookClean",
+];
+
+export async function updatePreferences(formData: FormData) {
+  const session = await getServerSession(authOptions);
+  const sessionUser = session?.user as { id?: string; status?: string; role?: string } | undefined;
+  if (!sessionUser?.id || sessionUser.id === "admin" || sessionUser.role === "ADMIN") {
+    return { error: "Sign in as a participant first." };
+  }
+  if (!["APPROVED", "PENDING_PAYMENT", "CONFIRMED_PAID"].includes(sessionUser.status ?? "")) {
+    return { error: "You need to be approved first." };
+  }
+
+  const data: Record<string, string | string[] | boolean | null | Date> = {};
+
+  for (const f of PREFERENCES_STRING_FIELDS) {
+    const v = (formData.get(f) as string | null)?.trim() ?? "";
+    data[f] = v || null;
+  }
+  for (const f of PREFERENCES_ARRAY_FIELDS) {
+    data[f] = formData.getAll(`${f}[]`).map((v) => v.toString()).filter(Boolean);
+    // Also accept the non-bracketed key (for safety)
+    if ((data[f] as string[]).length === 0) {
+      data[f] = formData.getAll(f).map((v) => v.toString()).filter(Boolean);
+    }
+  }
+  for (const f of PREFERENCES_BOOL_FIELDS) {
+    const v = formData.get(f);
+    data[f] = v === "on" || v === "true";
+  }
+
+  // Required-field validation: every text field must be filled (use "N/A" if it doesn't apply).
+  for (const f of PREFERENCES_REQUIRED) {
+    if (!data[f]) {
+      return { error: `Please answer "${f}" — use "N/A" if it doesn't apply.` };
+    }
+  }
+  if (!data.vanAck) {
+    return { error: "Please acknowledge the van transportation expectations." };
+  }
+
+  data.preferencesSubmittedAt = new Date();
+
+  type UpdateInput = Parameters<typeof prisma.guestForm.update>[0];
+  const updateInput = data as UpdateInput["data"];
+  await prisma.guestForm.update({
+    where: { userId: sessionUser.id },
+    data: updateInput,
+  });
+
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/preferences");
+  revalidatePath(`/admin/intake/${sessionUser.id}`);
   return { success: true };
 }
