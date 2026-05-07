@@ -25,18 +25,20 @@ export default function SignupPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 flex items-center justify-center p-4">
-        <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-md text-center">
-          <div className="text-6xl mb-4">🎉</div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Application Submitted!</h2>
-          <p className="text-gray-500 mb-6">
-            Your request is pending admin approval. You&apos;ll receive an email once approved!
+      <div className="min-h-screen bg-stone-50 flex items-center justify-center p-4">
+        <div className="w-full max-w-sm text-center">
+          <p className="text-xs uppercase tracking-[0.2em] text-stone-500 mb-3">Submitted</p>
+          <h1 className="font-serif text-3xl font-medium text-stone-900 mb-3">
+            You&apos;re on the list.
+          </h1>
+          <p className="text-stone-600 mb-8">
+            Your application is awaiting admin approval. We&apos;ll email you as soon as you&apos;re in.
           </p>
           <Link
             href="/login"
-            className="inline-block px-6 py-3 bg-purple-600 text-white rounded-xl font-semibold hover:bg-purple-700 transition-colors"
+            className="inline-block px-5 py-2.5 bg-stone-900 hover:bg-stone-800 text-white rounded-lg text-sm font-medium transition-colors"
           >
-            Back to Login
+            Back to sign in
           </Link>
         </div>
       </div>
@@ -44,92 +46,98 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-md">
+    <div className="min-h-screen bg-stone-50 flex items-center justify-center p-4 py-10">
+      <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="text-5xl mb-3">🎭</div>
-          <h1 className="text-2xl font-bold text-gray-900">Join Comedy Camp</h1>
-          <p className="text-gray-500 mt-2 text-sm">Sign up — admin will approve you shortly</p>
+          <Link href="/" className="inline-block">
+            <p className="text-xs uppercase tracking-[0.2em] text-stone-500 mb-2">Apply</p>
+            <h1 className="font-serif text-4xl font-medium text-stone-900 leading-tight">
+              Comedy<br />Summer Camp
+            </h1>
+          </Link>
+          <p className="text-stone-600 mt-4 text-sm">Tell us about yourself — admin will approve shortly.</p>
         </div>
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 mb-6 text-sm">
-            {error}
-          </div>
-        )}
+        <div className="bg-white rounded-xl border border-stone-200 p-7">
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2 mb-4 text-sm">
+              {error}
+            </div>
+          )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-stone-700 mb-1.5 tracking-wide">NAME *</label>
+                <input
+                  name="name"
+                  required
+                  minLength={2}
+                  className="w-full px-3 py-2.5 rounded-lg border border-stone-300 bg-white focus:outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900 text-sm"
+                  placeholder="Your name"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-stone-700 mb-1.5 tracking-wide">USERNAME</label>
+                <input
+                  name="username"
+                  className="w-full px-3 py-2.5 rounded-lg border border-stone-300 bg-white focus:outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900 text-sm"
+                  placeholder="@handle"
+                />
+              </div>
+            </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+              <label className="block text-xs font-medium text-stone-700 mb-1.5 tracking-wide">EMAIL *</label>
               <input
-                name="name"
+                name="email"
+                type="email"
                 required
-                minLength={2}
-                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-400 text-sm"
-                placeholder="Your name"
+                className="w-full px-3 py-2.5 rounded-lg border border-stone-300 bg-white focus:outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900 text-sm"
+                placeholder="you@example.com"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
+              <label className="block text-xs font-medium text-stone-700 mb-1.5 tracking-wide">PASSWORD *</label>
               <input
-                name="username"
-                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-400 text-sm"
-                placeholder="@handle"
+                name="password"
+                type="password"
+                required
+                minLength={6}
+                className="w-full px-3 py-2.5 rounded-lg border border-stone-300 bg-white focus:outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900 text-sm"
+                placeholder="At least 6 characters"
               />
             </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
-            <input
-              name="email"
-              type="email"
-              required
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-400 text-sm"
-              placeholder="your@email.com"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Password *</label>
-            <input
-              name="password"
-              type="password"
-              required
-              minLength={6}
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-400 text-sm"
-              placeholder="Min 6 characters"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-            <input
-              name="phone"
-              type="tel"
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-400 text-sm"
-              placeholder="(optional)"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Comedy Bio</label>
-            <textarea
-              name="bio"
-              rows={3}
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-400 text-sm resize-none"
-              placeholder="Tell us your best joke or your comedy style..."
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 px-4 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-semibold text-sm transition-colors disabled:opacity-50"
-          >
-            {loading ? "Submitting..." : "🎪 Apply for Camp"}
-          </button>
-        </form>
+            <div>
+              <label className="block text-xs font-medium text-stone-700 mb-1.5 tracking-wide">PHONE</label>
+              <input
+                name="phone"
+                type="tel"
+                className="w-full px-3 py-2.5 rounded-lg border border-stone-300 bg-white focus:outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900 text-sm"
+                placeholder="Optional"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-stone-700 mb-1.5 tracking-wide">COMEDY BIO</label>
+              <textarea
+                name="bio"
+                rows={3}
+                className="w-full px-3 py-2.5 rounded-lg border border-stone-300 bg-white focus:outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900 text-sm resize-none"
+                placeholder="Your style, a one-liner, anything…"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-2.5 px-4 bg-stone-900 hover:bg-stone-800 text-white rounded-lg font-medium text-sm transition-colors disabled:opacity-50 mt-2"
+            >
+              {loading ? "Submitting…" : "Apply for camp"}
+            </button>
+          </form>
+        </div>
 
-        <p className="mt-6 text-center text-sm text-gray-500">
+        <p className="mt-6 text-center text-sm text-stone-600">
           Already have an account?{" "}
-          <Link href="/login" className="text-purple-600 font-medium hover:underline">
+          <Link href="/login" className="text-stone-900 font-medium underline underline-offset-2 decoration-stone-300 hover:decoration-stone-900">
             Sign in
           </Link>
         </p>
