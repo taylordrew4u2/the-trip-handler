@@ -118,12 +118,6 @@ export default async function AdminIntakeDetail({ params }: { params: Promise<{ 
 
       <Section title="Comedy / workshop">
         <Row label="Working on" value={[...(f.workOnGoals ?? []), f.workOnOther].filter(Boolean) as string[]} />
-        <Row label="Material amount" value={f.materialAmount} />
-        <Row label="Performing" value={f.comfortPerforming} />
-        <Row label="Receiving feedback" value={f.comfortReceivingFb} />
-        <Row label="Giving feedback" value={f.comfortGivingFb} />
-        <Row label="Don't want feedback on" value={f.feedbackOptOut} />
-        <Row label="Useful feedback" value={f.usefulFeedback} />
       </Section>
 
       <Section title="Content / social media">
@@ -134,9 +128,6 @@ export default async function AdminIntakeDetail({ params }: { params: Promise<{ 
         <Row label="Group videos" value={f.comfortGroupVideos} />
         <Row label="Tagged" value={f.comfortTagged} />
         <Row label="Planned content" value={f.comfortPlannedContent} />
-        <Row label="Comfort level" value={f.contentComfort} />
-        <Row label="Opt-out content" value={f.contentOptOut} />
-        <Row label="Approve clips" value={f.approveClipsBeforePost} />
         <Row label="Acks" value={f.contentAcks} />
       </Section>
 

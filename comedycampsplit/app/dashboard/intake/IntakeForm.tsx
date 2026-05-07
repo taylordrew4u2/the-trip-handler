@@ -79,11 +79,6 @@ const YES_NO = [
   { value: "yes", label: "Yes" },
   { value: "no", label: "No" },
 ];
-const YES_NO_DEPENDS = [
-  { value: "yes", label: "Yes" },
-  { value: "no", label: "No" },
-  { value: "depends", label: "Depends on the setup" },
-];
 const YES_NO_SOMETIMES = [
   { value: "yes", label: "Yes" },
   { value: "no", label: "No" },
@@ -377,37 +372,6 @@ export function IntakeForm({ userId, defaultEmail, defaultName, defaultPhone, ex
           ]} />
           <div className="mt-2"><TextInput name="workOnOther" defaultValue={e?.workOnOther} placeholder="Other" /></div>
         </Field>
-        <Field label="How much material do you want to workshop?">
-          <RadioGroup name="materialAmount" defaultValue={e?.materialAmount} options={[
-            { value: "premises", label: "A few premises" },
-            { value: "3-5", label: "3–5 minutes" },
-            { value: "5-10", label: "5–10 minutes" },
-            { value: "fullSet", label: "A full set" },
-            { value: "unsure", label: "Not sure yet" },
-          ]} />
-        </Field>
-        <Field label="Are you comfortable performing in front of the group?">
-          <RadioGroup name="comfortPerforming" defaultValue={e?.comfortPerforming} options={YES_NO_DEPENDS} />
-        </Field>
-        <Field label="Are you comfortable receiving feedback from the group?">
-          <RadioGroup name="comfortReceivingFb" defaultValue={e?.comfortReceivingFb} options={[
-            { value: "yes", label: "Yes" },
-            { value: "no", label: "No" },
-            { value: "certainPeople", label: "Only from certain people" },
-            { value: "ifAsked", label: "Only if I ask for it" },
-          ]} />
-        </Field>
-        <Field label="Are you comfortable giving feedback to others?">
-          <RadioGroup name="comfortGivingFb" defaultValue={e?.comfortGivingFb} options={[
-            { value: "yes", label: "Yes" },
-            { value: "no", label: "No" },
-            { value: "casually", label: "Only casually" },
-          ]} />
-        </Field>
-        <Field label="Is there anything you do not want feedback on?"><TextArea name="feedbackOptOut" defaultValue={e?.feedbackOptOut} rows={2} /></Field>
-        <Field label="What kind of feedback is actually useful to you?" hint="Tags, structure, honesty, punch-up, performance notes, premise clarity, etc.">
-          <TextArea name="usefulFeedback" defaultValue={e?.usefulFeedback} />
-        </Field>
       </Section>
 
       <Section title="Content / social media" intro="We'll be making content for social media during the weekend. This may include group videos, photos, sketches, recap clips, behind-the-scenes footage, and other planned content.">
@@ -422,25 +386,6 @@ export function IntakeForm({ userId, defaultEmail, defaultName, defaultPhone, ex
             { value: "yes", label: "Yes" },
             { value: "no", label: "No" },
             { value: "depends", label: "Depends on the idea" },
-          ]} />
-        </Field>
-        <Field label="Content comfort level">
-          <RadioGroup name="contentComfort" defaultValue={e?.contentComfort} options={[
-            { value: "asMuch", label: "Film me as much as possible" },
-            { value: "groupOnly", label: "I'm okay being in group content, but don't make me the focus" },
-            { value: "askFirst", label: "Ask me before filming me directly" },
-            { value: "plannedOnly", label: "I only want to be in planned/group photos" },
-            { value: "doNot", label: "Do not film or photograph me" },
-          ]} />
-        </Field>
-        <Field label="Are there any types of content you do not want to be part of?" hint="Drinking content, swimsuit content, dating/sex jokes, prank content, anything messy, etc.">
-          <TextArea name="contentOptOut" defaultValue={e?.contentOptOut} />
-        </Field>
-        <Field label="Do you want to approve clips before they are posted?">
-          <RadioGroup name="approveClipsBeforePost" defaultValue={e?.approveClipsBeforePost} options={[
-            { value: "yes", label: "Yes" },
-            { value: "no", label: "No" },
-            { value: "ifMain", label: "Only if I'm the main focus" },
           ]} />
         </Field>
         <Field label="Content acknowledgements">
