@@ -24,40 +24,39 @@ export function RosterCard({ user }: RosterCardProps) {
     .slice(0, 2);
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-purple-100 p-5 hover:shadow-md transition-shadow">
+    <div className="bg-white rounded-xl border border-stone-200 p-5">
       <div className="flex items-start gap-4">
         <div className="flex-shrink-0">
           {user.avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
             <img
               src={user.avatarUrl}
               alt={user.name}
-              className="w-14 h-14 rounded-full object-cover border-2 border-purple-200"
+              className="w-14 h-14 rounded-full object-cover border border-stone-300"
             />
           ) : (
-            <div className="w-14 h-14 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white font-bold text-lg border-2 border-purple-200">
+            <div className="w-14 h-14 rounded-full bg-stone-900 text-stone-100 flex items-center justify-center font-medium text-lg border border-stone-300">
               {initials}
             </div>
           )}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <h3 className="font-semibold text-gray-900 text-lg">{user.name}</h3>
+            <h3 className="font-medium text-stone-900 text-lg">{user.name}</h3>
             <StatusBadge status={user.status} />
           </div>
-          {user.username && (
-            <p className="text-sm text-purple-500">@{user.username}</p>
-          )}
+          {user.username && <p className="text-sm text-stone-500">@{user.username}</p>}
           {user.bio && (
-            <p className="text-sm text-gray-600 mt-2 line-clamp-3">{user.bio}</p>
+            <p className="text-sm text-stone-700 mt-2 line-clamp-3">{user.bio}</p>
           )}
           {user.contributions.length > 0 && (
             <div className="mt-3 flex flex-wrap gap-1.5">
               {user.contributions.map((uc, i) => (
                 <span
                   key={i}
-                  className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-purple-50 text-purple-700 border border-purple-200"
+                  className="inline-flex items-center px-2 py-0.5 rounded-md text-xs bg-stone-100 text-stone-700"
                 >
-                  🎭 {uc.contribution.title}
+                  {uc.contribution.title}
                 </span>
               ))}
             </div>
