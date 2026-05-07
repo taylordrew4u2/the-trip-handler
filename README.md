@@ -12,10 +12,11 @@ The site is live at <https://comedysummercamp.vercel.app> and the auth + databas
 
 - Page loads return **200** and redirect to `/login`
 - NextAuth endpoints respond (`NEXTAUTH_SECRET` and `NEXTAUTH_URL` are set correctly)
-- Postgres is connected and the `User` table exists (the schema has been pushed)
+- Postgres is connected and the schema has been pushed (build runs `prisma db push` on every deploy)
+- `/admin/dashboard` renders for the admin user (`Taylor` / `weed69`)
 - The Stripe webhook route loads without crashing
 
-**What still needs in-app verification** (can't be probed from outside): Vercel Blob uploads (avatars/receipts), Resend email delivery, Stripe Checkout end-to-end, and whether the seed ran (admin user present). Walk through the **Step 12 smoke test** to confirm those.
+**What still needs in-app verification** (can't be probed from outside): Vercel Blob uploads (avatars/receipts), Resend email delivery, and Stripe Checkout end-to-end. Walk through the **Step 12 smoke test** to confirm those.
 
 ---
 
@@ -31,10 +32,10 @@ Copy this into a notes app and tick each box yourself. **All boxes must be ticke
 - [ ] **6.** Resend account created, sender domain verified, API key copied — verify by triggering an email in Step 12
 - [x] **7.** Core environment variables present in Vercel ✅ (`NEXTAUTH_SECRET`, `NEXTAUTH_URL`, `DATABASE_URL` confirmed working). Still scan the Step 7 table for `STRIPE_*`, `RESEND_API_KEY`, `EMAIL_FROM`, `BLOB_READ_WRITE_TOKEN` if any feature below fails.
 - [x] **8a.** Build succeeds in Vercel ✅
-- [x] **8b.** Deployed site loads without 500s ✅ (returns 200 → `/login`)
+- [x] **8b.** Deployed site loads without 500s ✅ (returns 200 → `/login`, admin dashboard renders)
 - [ ] **9.** Stripe webhook created and `STRIPE_WEBHOOK_SECRET` added to Vercel
-- [x] **10a.** Database schema pushed (`npx prisma db push`) ✅ (verified: `User` table exists in production)
-- [ ] **10b.** Database seeded (`npm run db:seed`) — run it from your laptop if you can't log in as the admin user yet
+- [x] **10a.** Database schema pushed ✅ (the build now runs `prisma db push` automatically — see Step 10 below)
+- [ ] **10b.** Trip row seeded (`npm run db:seed`) — optional, the dashboard renders without it. Note: the admin user is hardcoded in `lib/auth.ts`, not seeded.
 - [ ] **11.** (Optional) Custom domain attached and `NEXTAUTH_URL` / `NEXT_PUBLIC_APP_URL` updated
 - [ ] **12.** Smoke test passed (full list at the bottom)
 
@@ -45,13 +46,12 @@ Copy this into a notes app and tick each box yourself. **All boxes must be ticke
 The hosting/auth/database layer is working in production. **What's left is exercising the third-party integrations end-to-end and verifying they're configured.** In priority order:
 
 1. **Run the smoke test (Step 12)** against <https://comedysummercamp.vercel.app>. Each item that fails points at exactly which integration still needs work.
-2. **Confirm the seed ran (Step 10b).** Try logging in as the default admin (`Taylor` / `weed69`). If that fails, run `npm run db:seed` from your laptop — see Step 10.
-3. **Vercel Blob (Step 4):** uploading an avatar in Step 12 will fail if `BLOB_READ_WRITE_TOKEN` is missing.
-4. **Resend (Step 6):** triggering an email (e.g. lock the trip in `/admin/trip`) will fail if `RESEND_API_KEY` or `EMAIL_FROM` is missing or the sender domain isn't verified.
-5. **Stripe Checkout (Step 5):** a test purchase will fail if `STRIPE_SECRET_KEY` / `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` are missing or use the wrong mode.
-6. **Stripe webhook (Step 9):** even after a successful checkout, the trip status only flips to *Confirmed & Paid* once the webhook is wired. Add the endpoint and paste `STRIPE_WEBHOOK_SECRET`, then redeploy.
-7. **Switch Stripe to live keys** once the test-mode smoke test passes end-to-end — and create a *new* webhook in live mode (Step 12).
-8. *(Optional)* Attach a **custom domain** and update both URL env vars + the Stripe webhook URL (Step 11).
+2. **Vercel Blob (Step 4):** uploading an avatar in Step 12 will fail if `BLOB_READ_WRITE_TOKEN` is missing.
+3. **Resend (Step 6):** triggering an email (e.g. lock the trip in `/admin/trip`) will fail if `RESEND_API_KEY` or `EMAIL_FROM` is missing or the sender domain isn't verified.
+4. **Stripe Checkout (Step 5):** a test purchase will fail if `STRIPE_SECRET_KEY` / `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` are missing or use the wrong mode.
+5. **Stripe webhook (Step 9):** even after a successful checkout, the trip status only flips to *Confirmed & Paid* once the webhook is wired. Add the endpoint and paste `STRIPE_WEBHOOK_SECRET`, then redeploy.
+6. **Switch Stripe to live keys** once the test-mode smoke test passes end-to-end — and create a *new* webhook in live mode (Step 12).
+7. *(Optional)* Attach a **custom domain** and update both URL env vars + the Stripe webhook URL (Step 11).
 
 > To audit env vars directly: Vercel → **Settings → Environment Variables**. Compare against the Step 7 table.
 
@@ -217,29 +217,22 @@ The app listens at `/api/webhooks/stripe`. Stripe needs to know to POST events t
 
 ---
 
-## Step 10 — Database schema + seed (do this from your laptop, ONCE)
+## Step 10 — Database schema + seed
 
-Vercel doesn't run `prisma db push` automatically. You have to.
+**Schema (automatic):** the Vercel build runs `prisma db push --skip-generate --accept-data-loss` on every deploy. Whenever `comedycampsplit/prisma/schema.prisma` changes, just commit and push — the next deploy syncs the production database. No laptop steps needed.
+
+**Seed (optional, manual):** the seed only inserts a default `Trip` row. The admin user is **not** seeded — it's hardcoded in `lib/auth.ts` (`Taylor` / `weed69`). The admin dashboard works without seeding (the trip name just falls back to "Comedy Summer Camp"). If you want a real Trip row in the DB:
 
 ```bash
 # On your laptop:
 cd comedycampsplit
 npm install
-
-# Link this folder to the Vercel project, then download production env vars
 npx vercel link
 npx vercel env pull .env
-
-# Create all the database tables
-npx prisma db push
-
-# Insert the trip row + admin user
 npm run db:seed
 ```
 
-**How to know it worked:** running `npx prisma studio` opens a browser showing tables (User, Trip, Expense, etc.) with at least the seeded admin user in `User`.
-
-> **You only re-run `npx prisma db push` if `comedycampsplit/prisma/schema.prisma` changes.** You don't re-seed unless you wipe the database.
+> **Heads up — `--accept-data-loss`:** this flag is on so deploys aren't blocked when a column is dropped. It does what it says: if you remove a field from `schema.prisma`, the column (and its data) goes away on the next deploy. If you ever need destructive-change protection, swap to `prisma migrate deploy` with a `prisma/migrations/` folder.
 
 ---
 
