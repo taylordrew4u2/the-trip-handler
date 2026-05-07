@@ -2,81 +2,130 @@ import { prisma } from "@/lib/db";
 import { ApprovalRequired } from "@/components/ApprovalRequired";
 import { getUserStatus, isApproved } from "@/lib/approval";
 
+export const dynamic = "force-dynamic";
+
 export default async function ItineraryPage() {
   if (!isApproved(await getUserStatus())) return <ApprovalRequired what="The itinerary" />;
 
-  const trip = await prisma.trip.findFirst();
+  const [trip, days, photos] = await Promise.all([
+    prisma.trip.findFirst(),
+    prisma.day.findMany({ orderBy: { dayNumber: "asc" } }),
+    (async () => {
+      const t = await prisma.trip.findFirst({ select: { id: true } });
+      if (!t) return [];
+      return prisma.lodgingPhoto.findMany({ where: { tripId: t.id }, orderBy: { position: "asc" } });
+    })(),
+  ]);
+
+  if (!trip) {
+    return <p className="text-stone-500 text-sm">No trip found yet.</p>;
+  }
+
+  const dateRange = [
+    trip.startDate && new Date(trip.startDate).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }),
+    trip.endDate && new Date(trip.endDate).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }),
+  ]
+    .filter(Boolean)
+    .join(" – ");
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">🗓️ Trip Itinerary</h1>
+    <div className="space-y-8 max-w-3xl">
+      <header>
+        <h1 className="font-serif text-3xl font-medium text-stone-900">{trip.name}</h1>
+        <p className="text-stone-600 text-sm mt-1">
+          {[trip.destination, dateRange].filter(Boolean).join(" · ")}
+        </p>
+      </header>
 
-      {trip ? (
-        <div className="space-y-4">
-          <div className="bg-white rounded-2xl border border-purple-100 p-6">
-            <h2 className="text-xl font-bold text-purple-700 mb-4">{trip.name}</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {trip.destination && (
+      {days.length > 0 ? (
+        <section className="space-y-4">
+          <h2 className="text-xs uppercase tracking-[0.2em] text-stone-500">Schedule</h2>
+          <div className="space-y-4">
+            {days.map((d) => (
+              <article key={d.id} className="bg-white rounded-xl border border-stone-200 p-5">
                 <div>
-                  <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Destination</p>
-                  <p className="font-medium text-gray-800">📍 {trip.destination}</p>
-                </div>
-              )}
-              {(trip.startDate || trip.endDate) && (
-                <div>
-                  <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Dates</p>
-                  <p className="font-medium text-gray-800">
-                    📅{" "}
-                    {trip.startDate && new Date(trip.startDate).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
-                    {trip.startDate && trip.endDate && " – "}
-                    {trip.endDate && new Date(trip.endDate).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+                  <p className="text-xs uppercase tracking-[0.15em] text-stone-500">
+                    Day {d.dayNumber}
+                    {d.date && ` · ${new Date(d.date).toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })}`}
                   </p>
+                  <h3 className="font-serif text-xl font-medium text-stone-900 mt-1">
+                    {d.title || `Day ${d.dayNumber}`}
+                  </h3>
                 </div>
-              )}
-            </div>
+                {d.schedule && (
+                  <pre className="mt-3 text-sm text-stone-700 whitespace-pre-wrap font-mono bg-stone-50 rounded-md p-3">
+                    {d.schedule}
+                  </pre>
+                )}
+                {(d.breakfast || d.lunch || d.dinner) && (
+                  <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+                    {d.breakfast && (
+                      <div>
+                        <p className="text-xs uppercase tracking-wide text-stone-500">Breakfast</p>
+                        <p className="text-stone-700 mt-0.5 whitespace-pre-wrap">{d.breakfast}</p>
+                      </div>
+                    )}
+                    {d.lunch && (
+                      <div>
+                        <p className="text-xs uppercase tracking-wide text-stone-500">Lunch</p>
+                        <p className="text-stone-700 mt-0.5 whitespace-pre-wrap">{d.lunch}</p>
+                      </div>
+                    )}
+                    {d.dinner && (
+                      <div>
+                        <p className="text-xs uppercase tracking-wide text-stone-500">Dinner</p>
+                        <p className="text-stone-700 mt-0.5 whitespace-pre-wrap">{d.dinner}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+                {d.notes && <p className="mt-3 text-sm text-stone-600 italic">{d.notes}</p>}
+              </article>
+            ))}
           </div>
-
-          {trip.description && (
-            <div className="bg-white rounded-2xl border border-purple-100 p-6">
-              <h3 className="font-semibold text-gray-900 mb-3">📝 About</h3>
-              <p className="text-gray-600 whitespace-pre-wrap">{trip.description}</p>
-            </div>
-          )}
-
-          {trip.itinerary && (
-            <div className="bg-white rounded-2xl border border-purple-100 p-6">
-              <h3 className="font-semibold text-gray-900 mb-3">📋 Schedule</h3>
-              <p className="text-gray-600 whitespace-pre-wrap">{trip.itinerary}</p>
-            </div>
-          )}
-
-          {trip.lodging && (
-            <div className="bg-white rounded-2xl border border-purple-100 p-6">
-              <h3 className="font-semibold text-gray-900 mb-3">🏠 Lodging</h3>
-              <p className="text-gray-600 whitespace-pre-wrap">{trip.lodging}</p>
-            </div>
-          )}
-
-          {trip.meals && (
-            <div className="bg-white rounded-2xl border border-purple-100 p-6">
-              <h3 className="font-semibold text-gray-900 mb-3">🍕 Meals</h3>
-              <p className="text-gray-600 whitespace-pre-wrap">{trip.meals}</p>
-            </div>
-          )}
-
-          {!trip.itinerary && !trip.lodging && !trip.meals && !trip.description && (
-            <div className="text-center py-12 text-gray-400">
-              <div className="text-5xl mb-3">🏕️</div>
-              <p>Itinerary details coming soon!</p>
-              <p className="text-sm mt-2">The admin is still planning the adventure.</p>
-            </div>
-          )}
-        </div>
+        </section>
       ) : (
-        <div className="text-center py-12 text-gray-400">
-          <div className="text-5xl mb-3">🏕️</div>
-          <p>No trip found yet.</p>
-        </div>
+        trip.itinerary && (
+          <section className="bg-white rounded-xl border border-stone-200 p-5">
+            <h2 className="text-xs uppercase tracking-[0.15em] text-stone-500">Schedule (overview)</h2>
+            <p className="text-stone-700 mt-2 whitespace-pre-wrap">{trip.itinerary}</p>
+          </section>
+        )
+      )}
+
+      {trip.description && (
+        <section className="bg-white rounded-xl border border-stone-200 p-5">
+          <h2 className="text-xs uppercase tracking-[0.15em] text-stone-500">About</h2>
+          <p className="text-stone-700 mt-2 whitespace-pre-wrap">{trip.description}</p>
+        </section>
+      )}
+
+      {(trip.lodging || photos.length > 0) && (
+        <section className="space-y-3">
+          <h2 className="text-xs uppercase tracking-[0.2em] text-stone-500">Lodging</h2>
+          {trip.lodging && (
+            <div className="bg-white rounded-xl border border-stone-200 p-5">
+              <p className="text-stone-700 whitespace-pre-wrap">{trip.lodging}</p>
+            </div>
+          )}
+          {photos.length > 0 && (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {photos.map((p) => (
+                <figure key={p.id} className="bg-white border border-stone-200 rounded-xl overflow-hidden">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={p.url} alt={p.caption ?? "Lodging photo"} className="w-full aspect-square object-cover" />
+                  {p.caption && (
+                    <figcaption className="px-3 py-2 text-xs text-stone-600">{p.caption}</figcaption>
+                  )}
+                </figure>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
+      {days.length === 0 && !trip.itinerary && !trip.description && !trip.lodging && photos.length === 0 && (
+        <p className="text-stone-500 text-sm">Itinerary details coming soon.</p>
       )}
     </div>
   );
