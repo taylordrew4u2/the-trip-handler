@@ -3,10 +3,14 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { ContributionItem } from "@/components/ContributionItem";
 import { AddContributionForm } from "@/components/AddContributionForm";
+import { ApprovalRequired } from "@/components/ApprovalRequired";
+import { isApproved } from "@/lib/approval";
 
 export default async function ContributionsPage() {
   const session = await getServerSession(authOptions);
-  const userId = (session?.user as { id?: string })?.id ?? "";
+  const sessionUser = session?.user as { id?: string; status?: string } | undefined;
+  if (!isApproved(sessionUser?.status)) return <ApprovalRequired what="Contributions" />;
+  const userId = sessionUser?.id ?? "";
 
   const [trip, contributions] = await Promise.all([
     prisma.trip.findFirst(),

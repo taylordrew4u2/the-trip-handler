@@ -1,7 +1,11 @@
 import { prisma } from "@/lib/db";
 import { ExpensesClient } from "./ExpensesClient";
+import { ApprovalRequired } from "@/components/ApprovalRequired";
+import { getUserStatus, isApproved } from "@/lib/approval";
 
 export default async function ExpensesPage() {
+  if (!isApproved(await getUserStatus())) return <ApprovalRequired what="Expenses" />;
+
   const expenses = await prisma.expense.findMany({
     orderBy: { createdAt: "desc" },
     include: { submitter: { select: { name: true } } },

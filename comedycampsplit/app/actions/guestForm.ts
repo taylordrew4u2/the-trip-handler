@@ -2,6 +2,8 @@
 
 import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 const STRING_ARRAY_FIELDS = new Set([
   "bringingItems",
@@ -39,6 +41,11 @@ export async function submitGuestForm(userId: string, formData: FormData) {
 
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) return { error: "User not found." };
+
+  const existing = await prisma.guestForm.findUnique({ where: { userId } });
+  if (existing?.locked) {
+    return { error: "Your form is locked. Request edit access from admin before resubmitting." };
+  }
 
   // Build the data object from form fields
   const data: Record<string, string | string[] | boolean | null> = {};
@@ -84,14 +91,52 @@ export async function submitGuestForm(userId: string, formData: FormData) {
     if (!(f in data)) data[f] = [];
   }
 
+  // Lock the form after every successful submit so the user can't keep
+  // changing things without admin approval.
+  const dataWithLock = { ...data, locked: true, editRequested: false };
   type UpsertInput = Parameters<typeof prisma.guestForm.upsert>[0];
   await prisma.guestForm.upsert({
     where: { userId },
-    create: { ...data, userId } as UpsertInput["create"],
-    update: data as UpsertInput["update"],
+    create: { ...dataWithLock, userId } as UpsertInput["create"],
+    update: dataWithLock as UpsertInput["update"],
   });
 
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/intake");
+  revalidatePath("/admin/intake");
+  return { success: true };
+}
+
+export async function requestFormEditAccess(userId: string) {
+  if (!userId || userId === "admin") return { error: "Sign in first." };
+  const form = await prisma.guestForm.findUnique({ where: { userId } });
+  if (!form) return { error: "Submit your form first." };
+  if (!form.locked) return { error: "Your form is already editable." };
+  if (form.editRequested) return { success: true };
+
+  await prisma.guestForm.update({
+    where: { userId },
+    data: { editRequested: true },
+  });
+  revalidatePath("/dashboard/intake");
+  revalidatePath("/admin/intake");
+  return { success: true };
+}
+
+export async function unlockGuestForm(userId: string) {
+  const session = await getServerSession(authOptions);
+  const role = (session?.user as { role?: string } | undefined)?.role;
+  if (role !== "ADMIN") return { error: "Admin only." };
+
+  const form = await prisma.guestForm.findUnique({ where: { userId } });
+  if (!form) return { error: "No form to unlock." };
+
+  await prisma.guestForm.update({
+    where: { userId },
+    data: { locked: false, editRequested: false },
+  });
+  revalidatePath("/dashboard/intake");
+  revalidatePath("/admin/intake");
+  revalidatePath(`/admin/intake/${userId}`);
   return { success: true };
 }

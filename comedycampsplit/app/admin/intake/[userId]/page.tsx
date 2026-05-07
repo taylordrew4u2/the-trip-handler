@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { UnlockFormButton } from "./UnlockFormButton";
 
 export const dynamic = "force-dynamic";
 
@@ -50,6 +51,18 @@ export default async function AdminIntakeDetail({ params }: { params: Promise<{ 
         <h1 className="font-serif text-3xl font-medium text-stone-900 mt-2">{user.name}</h1>
         <p className="text-stone-500 text-sm">
           {user.email} · last updated {new Date(f.updatedAt).toLocaleString()}
+          {f.locked ? " · 🔒 locked" : " · 🔓 editable"}
+        </p>
+        <div className="mt-3 flex items-center gap-3">
+          {f.editRequested && (
+            <span className="inline-block text-xs px-2 py-1 rounded bg-amber-100 text-amber-900 font-medium">
+              ⚠ Edit access requested
+            </span>
+          )}
+          {f.locked && <UnlockFormButton userId={user.id} />}
+        </div>
+        <p className="text-stone-500 text-sm hidden">
+          {user.email}
         </p>
       </div>
 
@@ -142,6 +155,7 @@ export default async function AdminIntakeDetail({ params }: { params: Promise<{ 
       </Section>
 
       <Section title="Payment">
+        <Row label="Max budget" value={f.maxBudget} />
         <Row label="Method" value={[f.paymentMethod, f.paymentMethodOther].filter(Boolean).join(" — ")} />
         <Row label="Username" value={f.paymentUsername} />
         <Row label="Acks" value={f.paymentAcks} />

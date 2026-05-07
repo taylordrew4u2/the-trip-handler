@@ -7,11 +7,12 @@ export default async function AdminIntakeIndexPage() {
   const users = await prisma.user.findMany({
     where: { role: "PARTICIPANT" },
     orderBy: [{ name: "asc" }],
-    include: { guestForm: { select: { id: true, updatedAt: true } } },
+    include: { guestForm: { select: { id: true, updatedAt: true, locked: true, editRequested: true } } },
   });
 
   const submitted = users.filter((u) => u.guestForm);
   const missing = users.filter((u) => !u.guestForm);
+  const editRequested = submitted.filter((u) => u.guestForm!.editRequested);
 
   return (
     <div className="space-y-6">
@@ -19,6 +20,11 @@ export default async function AdminIntakeIndexPage() {
         <h1 className="font-serif text-3xl font-medium text-stone-900">Guest forms</h1>
         <p className="text-stone-500 text-sm mt-1">
           {submitted.length} of {users.length} participants have submitted.
+          {editRequested.length > 0 && (
+            <span className="ml-2 inline-block text-xs px-2 py-0.5 rounded bg-amber-100 text-amber-900 font-medium">
+              {editRequested.length} edit request{editRequested.length > 1 ? "s" : ""} pending
+            </span>
+          )}
         </p>
       </div>
 
@@ -55,7 +61,19 @@ export default async function AdminIntakeIndexPage() {
                     {u.email} · updated {new Date(u.guestForm!.updatedAt).toLocaleString()}
                   </p>
                 </div>
-                <span className="text-xs text-stone-500">View →</span>
+                <div className="flex items-center gap-2">
+                  {u.guestForm!.editRequested && (
+                    <span className="text-xs px-2 py-1 rounded bg-amber-100 text-amber-900 font-medium">
+                      Edit requested
+                    </span>
+                  )}
+                  {!u.guestForm!.locked && (
+                    <span className="text-xs px-2 py-1 rounded bg-stone-100 text-stone-700">
+                      Unlocked
+                    </span>
+                  )}
+                  <span className="text-xs text-stone-500">View →</span>
+                </div>
               </Link>
             ))}
           </div>

@@ -1,9 +1,13 @@
 import { prisma } from "@/lib/db";
 import { RosterClientView } from "./RosterClientView";
+import { ApprovalRequired } from "@/components/ApprovalRequired";
+import { getUserStatus, isApproved } from "@/lib/approval";
 
 export const dynamic = "force-dynamic";
 
 export default async function RosterPage() {
+  if (!isApproved(await getUserStatus())) return <ApprovalRequired what="The roster" />;
+
   const [users, totalApproved, totalPaid] = await Promise.all([
     prisma.user.findMany({
       where: {
