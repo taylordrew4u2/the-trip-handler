@@ -20,9 +20,12 @@ export default async function MemberLayout({ children }: { children: React.React
     return (
       <div className="min-h-screen bg-stone-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-xl border border-stone-200 p-8 max-w-md text-center">
-          <p className="text-xs uppercase tracking-[0.2em] text-stone-500 mb-3">Declined</p>
-          <h2 className="font-serif text-2xl font-medium text-stone-900 mb-3">Application not approved</h2>
-          <p className="text-stone-600">Reach out to the admin for details.</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-stone-500 mb-3">Cancelled</p>
+          <h2 className="font-serif text-2xl font-medium text-stone-900 mb-3">You&apos;re not on the trip</h2>
+          <p className="text-stone-600">
+            Either you withdrew or the application wasn&apos;t approved. Reach out to admin if you
+            want to come back.
+          </p>
           <div className="mt-6"><SignOutLink /></div>
         </div>
       </div>

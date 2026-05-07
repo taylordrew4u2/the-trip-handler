@@ -1,6 +1,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { WithdrawButton } from "@/components/WithdrawButton";
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
@@ -134,6 +135,17 @@ export default async function DashboardPage() {
           </a>
         ))}
       </div>
+      )}
+
+      {user && user.status !== "CANCELLED" && (
+        <div className="border-t border-stone-200 pt-6">
+          <p className="text-xs uppercase tracking-[0.15em] text-stone-500 mb-2">Need to drop out?</p>
+          <p className="text-sm text-stone-600 mb-3">
+            Life happens. You can pull out before paying — your bed and contributions get released
+            so someone else can take your spot.
+          </p>
+          <WithdrawButton canWithdraw={user.status !== "CONFIRMED_PAID"} />
+        </div>
       )}
     </div>
   );
