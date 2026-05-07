@@ -3,10 +3,14 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { PaymentClient } from "./PaymentClient";
 import { redirect } from "next/navigation";
+import { ApprovalRequired } from "@/components/ApprovalRequired";
+import { isApproved } from "@/lib/approval";
 
 export default async function PaymentPage() {
   const session = await getServerSession(authOptions);
-  const userId = (session?.user as { id?: string })?.id ?? "";
+  const sessionUser = session?.user as { id?: string; status?: string } | undefined;
+  if (!isApproved(sessionUser?.status)) return <ApprovalRequired what="Payment" />;
+  const userId = sessionUser?.id ?? "";
   if (!userId) redirect("/login");
 
   const [trip, user, payment] = await Promise.all([

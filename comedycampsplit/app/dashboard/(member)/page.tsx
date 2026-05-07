@@ -101,6 +101,7 @@ export default async function DashboardPage() {
         </div>
       )}
 
+      {user?.status !== "PENDING" && (
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
           { href: "/dashboard/roster", label: "Roster" },
@@ -118,6 +119,7 @@ export default async function DashboardPage() {
           </a>
         ))}
       </div>
+      )}
     </div>
   );
 }

@@ -126,6 +126,11 @@ model GuestForm {
   createdAt                DateTime @default(now())
   updatedAt                DateTime @updatedAt
 
+  // Form is locked after first submission — admin must grant edit access
+  // before the user can re-submit.
+  locked                   Boolean  @default(true)
+  editRequested            Boolean  @default(false)
+
   // Basic Info
   fullName                 String
   stageName                String?
@@ -214,6 +219,7 @@ model GuestForm {
   structurePref            String?
 
   // Payment / Costs
+  maxBudget                String?
   paymentMethod            String?
   paymentMethodOther       String?
   paymentUsername          String?

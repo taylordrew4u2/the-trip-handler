@@ -10,33 +10,10 @@ export default async function MemberLayout({ children }: { children: React.React
   const sessionUser = session?.user as { id?: string; status?: string } | undefined;
   if (!sessionUser?.id) redirect("/login");
 
-  // PENDING users: must complete intake form first; if already submitted,
-  // they wait here until admin approval.
+  // PENDING users with no form must finish the intake first.
   if (sessionUser.status === "PENDING") {
     const form = await prisma.guestForm.findUnique({ where: { userId: sessionUser.id } });
     if (!form) redirect("/dashboard/intake");
-
-    return (
-      <div className="min-h-screen bg-stone-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-xl border border-stone-200 p-8 max-w-md text-center">
-          <p className="text-xs uppercase tracking-[0.2em] text-stone-500 mb-3">In review</p>
-          <h2 className="font-serif text-2xl font-medium text-stone-900 mb-3">Form submitted</h2>
-          <p className="text-stone-600 leading-relaxed">
-            Thanks — admin has your guest form and will review your application. You&apos;ll get
-            an email once you&apos;re approved.
-          </p>
-          <div className="mt-6 flex flex-col items-center gap-3">
-            <a
-              href="/dashboard/intake"
-              className="text-sm text-stone-700 underline underline-offset-2 hover:text-stone-900"
-            >
-              Edit your form →
-            </a>
-            <SignOutLink />
-          </div>
-        </div>
-      </div>
-    );
   }
 
   if (sessionUser.status === "CANCELLED") {
@@ -52,10 +29,21 @@ export default async function MemberLayout({ children }: { children: React.React
     );
   }
 
+  const isPending = sessionUser.status === "PENDING";
+
   return (
     <div className="min-h-screen bg-stone-50">
-      <DashboardNav />
-      <main className="max-w-6xl mx-auto px-4 py-8">{children}</main>
+      <DashboardNav status={sessionUser.status ?? null} />
+      <main className="max-w-6xl mx-auto px-4 py-8">
+        {isPending && (
+          <div className="bg-amber-50 border border-amber-300 rounded-xl px-4 py-3 mb-6 text-sm text-amber-900">
+            <strong>You&apos;re pending admin approval.</strong> You can browse trip basics here, but
+            you won&apos;t see the roster or be able to sign up for contributions, submit anything, or
+            pay until you&apos;re approved.
+          </div>
+        )}
+        {children}
+      </main>
     </div>
   );
 }

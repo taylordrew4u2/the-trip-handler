@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { submitGuestForm } from "@/app/actions/guestForm";
+import { submitGuestForm, requestFormEditAccess } from "@/app/actions/guestForm";
 import type { GuestForm } from "@prisma/client";
 
 type Existing = GuestForm | null;
@@ -102,7 +102,23 @@ export function IntakeForm({ userId, defaultEmail, defaultName, defaultPhone, ex
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [savedAt, setSavedAt] = useState<string | null>(existing ? new Date(existing.updatedAt).toLocaleString() : null);
+  const [editRequested, setEditRequested] = useState(existing?.editRequested ?? false);
+  const [requesting, setRequesting] = useState(false);
+  const locked = Boolean(existing?.locked);
   const e = existing;
+
+  async function handleRequestEdit() {
+    setRequesting(true);
+    const result = await requestFormEditAccess(userId);
+    setRequesting(false);
+    if (result?.error) {
+      setError(result.error);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    setEditRequested(true);
+    router.refresh();
+  }
 
   async function handleSubmit(ev: React.FormEvent<HTMLFormElement>) {
     ev.preventDefault();
@@ -133,11 +149,40 @@ export function IntakeForm({ userId, defaultEmail, defaultName, defaultPhone, ex
           {error}
         </div>
       )}
-      {savedAt && !error && (
+      {savedAt && !error && !locked && (
         <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg px-3 py-2 mb-6 text-sm">
-          Saved {savedAt}. You can edit any field and re-submit at any time.
+          Saved {savedAt}.
         </div>
       )}
+      {locked && (
+        <div className="bg-stone-100 border border-stone-300 rounded-lg p-4 mb-6 flex items-start gap-3">
+          <div className="flex-1">
+            <p className="font-medium text-stone-900 text-sm">Form locked</p>
+            <p className="text-xs text-stone-600 mt-0.5">
+              {savedAt && <>Submitted {savedAt}. </>}
+              {editRequested
+                ? "Edit access requested — admin will review and unlock for changes."
+                : "Submitted. To make changes, request edit access from admin."}
+            </p>
+          </div>
+          {!editRequested && (
+            <button
+              type="button"
+              onClick={handleRequestEdit}
+              disabled={requesting}
+              className="text-xs px-3 py-1.5 border border-stone-700 text-stone-900 rounded-md font-medium hover:bg-stone-900 hover:text-white disabled:opacity-50 whitespace-nowrap"
+            >
+              {requesting ? "Sending…" : "Request edit access"}
+            </button>
+          )}
+          {editRequested && (
+            <span className="text-xs px-2 py-1 rounded bg-amber-200 text-amber-900 font-medium whitespace-nowrap">
+              Pending admin
+            </span>
+          )}
+        </div>
+      )}
+      <fieldset disabled={locked} className={locked ? "opacity-60" : ""}>
 
       <Section title="Basic info">
         <Field label="Full name" required><TextInput name="fullName" defaultValue={e?.fullName ?? defaultName} required /></Field>
@@ -458,7 +503,16 @@ export function IntakeForm({ userId, defaultEmail, defaultName, defaultPhone, ex
         </Field>
       </Section>
 
-      <Section title="Payment / costs">
+      <Section
+        title="Payment / costs"
+        intro="The trip price covers travel (rental vans + gas), all meals during the weekend, and lodging. Activity and shared-supply costs are split on top."
+      >
+        <Field
+          label="Max you're willing to pay (per person)"
+          hint="This is your honest cap given travel + meals + lodging are included. Examples: $500, $400-600, no hard cap."
+        >
+          <TextInput name="maxBudget" defaultValue={e?.maxBudget} placeholder="e.g. $500" />
+        </Field>
         <Field label="Preferred payment method">
           <RadioGroup name="paymentMethod" defaultValue={e?.paymentMethod} options={[
             { value: "Venmo", label: "Venmo" },
@@ -500,22 +554,26 @@ export function IntakeForm({ userId, defaultEmail, defaultName, defaultPhone, ex
         <Field label="What would make this weekend actually fun for you?"><TextArea name="whatWouldMakeFun" defaultValue={e?.whatWouldMakeFun} /></Field>
       </Section>
 
-      <div className="border-t border-stone-200 mt-10 pt-6 flex items-center justify-between">
-        <p className="text-xs text-stone-500">Required fields marked with <span className="text-red-600">*</span>.</p>
-        <button
-          type="submit"
-          disabled={submitting}
-          className="px-5 py-2.5 bg-stone-900 hover:bg-stone-800 text-white rounded-lg font-medium text-sm transition-colors disabled:opacity-50"
-        >
-          {submitting
-            ? "Saving…"
-            : existing
-              ? "Update form"
-              : isPending
-                ? "Submit for approval"
-                : "Submit form"}
-        </button>
-      </div>
+      </fieldset>
+
+      {!locked && (
+        <div className="border-t border-stone-200 mt-10 pt-6 flex items-center justify-between">
+          <p className="text-xs text-stone-500">Required fields marked with <span className="text-red-600">*</span>.</p>
+          <button
+            type="submit"
+            disabled={submitting}
+            className="px-5 py-2.5 bg-stone-900 hover:bg-stone-800 text-white rounded-lg font-medium text-sm transition-colors disabled:opacity-50"
+          >
+            {submitting
+              ? "Saving…"
+              : existing
+                ? "Update form"
+                : isPending
+                  ? "Submit for approval"
+                  : "Submit form"}
+          </button>
+        </div>
+      )}
     </form>
   );
 }

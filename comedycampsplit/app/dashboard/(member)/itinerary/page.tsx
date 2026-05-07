@@ -1,6 +1,10 @@
 import { prisma } from "@/lib/db";
+import { ApprovalRequired } from "@/components/ApprovalRequired";
+import { getUserStatus, isApproved } from "@/lib/approval";
 
 export default async function ItineraryPage() {
+  if (!isApproved(await getUserStatus())) return <ApprovalRequired what="The itinerary" />;
+
   const trip = await prisma.trip.findFirst();
 
   return (
