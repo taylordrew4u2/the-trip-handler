@@ -178,7 +178,6 @@ const PREFERENCES_STRING_FIELDS = [
 const PREFERENCES_ARRAY_FIELDS = new Set([
   "dietaryRestrictions",
   "drinkPrefs",
-  "workOnGoals",
 ]);
 
 const PREFERENCES_BOOL_FIELDS = new Set(["vanAck"]);

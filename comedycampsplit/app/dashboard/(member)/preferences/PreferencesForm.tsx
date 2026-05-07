@@ -320,26 +320,18 @@ export function PreferencesForm({ existing }: { existing: GuestForm | null }) {
       </Section>
 
       <Section title="Comedy / workshop" intro="Helps shape the itinerary.">
-        <Field label="What are you hoping to work on?">
-          <CheckboxGroup
-            name="workOnGoals"
-            defaultValue={e?.workOnGoals}
-            options={[
-              { value: "New jokes", label: "New jokes" },
-              { value: "Existing set", label: "Existing set" },
-              { value: "Longer set", label: "Longer set" },
-              { value: "Crowd work", label: "Crowd work" },
-              { value: "Characters", label: "Characters" },
-              { value: "Sketches", label: "Sketches" },
-              { value: "Roast jokes", label: "Roast jokes" },
-              { value: "Social media ideas", label: "Social media ideas" },
-              { value: "Podcast ideas", label: "Podcast ideas" },
-              { value: "Writing discipline", label: "Writing discipline" },
-            ]}
+        <Field
+          label="What are you hoping to work on?"
+          required
+          hint="Examples: new jokes, existing set, longer set, crowd work, characters, sketches, roast jokes, social-media ideas, podcast ideas, writing discipline."
+        >
+          <TextArea
+            name="workOnOther"
+            defaultValue={e?.workOnOther}
+            rows={3}
+            required
+            placeholder="Type whatever — e.g. “tightening my 5-minute set” or “sketch ideas with a partner”. N/A if you're just here to vibe."
           />
-          <div className="mt-2">
-            <TextInput name="workOnOther" defaultValue={e?.workOnOther} placeholder="Other (or N/A)" />
-          </div>
         </Field>
       </Section>
 
