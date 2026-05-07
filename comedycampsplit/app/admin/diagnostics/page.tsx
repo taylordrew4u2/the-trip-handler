@@ -97,65 +97,65 @@ export default async function DiagnosticsPage() {
   }));
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-3xl">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Diagnostics</h1>
-        <p className="text-gray-500 text-sm mt-1">Live status of integrations and configuration. Refresh to re-run.</p>
+        <h1 className="font-serif text-3xl font-medium text-stone-900">Diagnostics</h1>
+        <p className="text-stone-500 text-sm mt-1">Live status of integrations and configuration. Refresh to re-run.</p>
       </div>
 
       <section>
-        <h2 className="text-lg font-semibold text-gray-800 mb-3">Integrations</h2>
+        <h2 className="text-xs uppercase tracking-[0.15em] text-stone-500 mb-3">Integrations</h2>
         <div className="grid gap-3">
           {integrationChecks.map((c) => (
             <div
               key={c.name}
-              className={`rounded-2xl border p-4 ${
+              className={`rounded-xl border p-4 ${
                 c.status === "ok"
-                  ? "bg-green-50 border-green-200"
+                  ? "bg-emerald-50 border-emerald-200"
                   : c.status === "warn"
-                  ? "bg-yellow-50 border-yellow-200"
+                  ? "bg-amber-50 border-amber-200"
                   : "bg-red-50 border-red-200"
               }`}
             >
               <div className="flex items-center justify-between">
-                <h3 className="font-semibold text-gray-900">{c.name}</h3>
+                <h3 className="font-medium text-stone-900">{c.name}</h3>
                 <span
-                  className={`text-xs font-bold uppercase px-2 py-1 rounded ${
+                  className={`text-xs font-medium uppercase tracking-wide px-2 py-0.5 rounded-md ${
                     c.status === "ok"
-                      ? "bg-green-200 text-green-900"
+                      ? "bg-emerald-200 text-emerald-900"
                       : c.status === "warn"
-                      ? "bg-yellow-200 text-yellow-900"
+                      ? "bg-amber-200 text-amber-900"
                       : "bg-red-200 text-red-900"
                   }`}
                 >
                   {c.status}
                 </span>
               </div>
-              <p className="text-sm text-gray-700 mt-1 font-mono break-all">{c.detail}</p>
+              <p className="text-sm text-stone-700 mt-1.5 font-mono break-all">{c.detail}</p>
             </div>
           ))}
         </div>
       </section>
 
       <section>
-        <h2 className="text-lg font-semibold text-gray-800 mb-3">Environment variables</h2>
-        <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+        <h2 className="text-xs uppercase tracking-[0.15em] text-stone-500 mb-3">Environment variables</h2>
+        <div className="bg-white rounded-xl border border-stone-200 overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 text-gray-600 text-left">
+            <thead className="bg-stone-50 text-stone-600 text-left">
               <tr>
-                <th className="px-4 py-2 font-medium">Variable</th>
-                <th className="px-4 py-2 font-medium">Set?</th>
+                <th className="px-4 py-2 font-medium text-xs uppercase tracking-wide">Variable</th>
+                <th className="px-4 py-2 font-medium text-xs uppercase tracking-wide">Set?</th>
               </tr>
             </thead>
             <tbody>
               {envRows.map((row) => (
-                <tr key={row.name} className="border-t border-gray-100">
-                  <td className="px-4 py-2 font-mono">{row.name}</td>
+                <tr key={row.name} className="border-t border-stone-100">
+                  <td className="px-4 py-2 font-mono text-stone-800">{row.name}</td>
                   <td className="px-4 py-2">
                     {row.set ? (
-                      <span className="text-green-700 font-semibold">✓ set</span>
+                      <span className="text-emerald-700 font-medium">✓ set</span>
                     ) : (
-                      <span className="text-red-700 font-semibold">✗ missing</span>
+                      <span className="text-red-700 font-medium">✗ missing</span>
                     )}
                   </td>
                 </tr>
@@ -163,7 +163,7 @@ export default async function DiagnosticsPage() {
             </tbody>
           </table>
         </div>
-        <p className="text-xs text-gray-500 mt-2">Values are never displayed — only whether they&apos;re present.</p>
+        <p className="text-xs text-stone-500 mt-2">Values are never displayed — only whether they&apos;re present.</p>
       </section>
     </div>
   );
