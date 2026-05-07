@@ -1,7 +1,12 @@
 "use server";
 
 import { prisma } from "@/lib/db";
-import { sendApprovalEmail, sendTripLockedEmail } from "@/lib/resend";
+import {
+  sendApprovalEmail,
+  sendCancellationEmail,
+  sendRejectionEmail,
+  sendTripLockedEmail,
+} from "@/lib/resend";
 import { revalidatePath } from "next/cache";
 
 export async function approveUser(userId: string) {
@@ -20,20 +25,27 @@ export async function approveUser(userId: string) {
 }
 
 export async function rejectUser(userId: string) {
-  await prisma.user.update({
+  const user = await prisma.user.update({
     where: { id: userId },
     data: { status: "CANCELLED" },
   });
+  await sendRejectionEmail(user.email, user.name);
   revalidatePath("/admin/users");
   return { success: true };
 }
 
 export async function cancelUser(userId: string) {
-  await prisma.user.update({
+  const user = await prisma.user.update({
     where: { id: userId },
     data: { status: "CANCELLED" },
   });
+  // Free their bed and contributions so the slots reopen.
+  await prisma.bedAssignment.deleteMany({ where: { userId } });
+  await prisma.userContribution.deleteMany({ where: { userId } });
+  await sendCancellationEmail(user.email, user.name);
   revalidatePath("/admin/users");
+  revalidatePath("/admin/sleeping");
+  revalidatePath("/dashboard/sleeping");
   return { success: true };
 }
 

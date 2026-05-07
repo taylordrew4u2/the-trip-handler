@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { notifyAdmin } from "@/lib/resend";
+import { notifyAdmin, sendFormUnlockedEmail } from "@/lib/resend";
 
 const STRING_ARRAY_FIELDS = new Set([
   "bringingItems",
@@ -174,6 +174,10 @@ export async function unlockGuestForm(userId: string) {
   revalidatePath("/dashboard/intake");
   revalidatePath("/admin/intake");
   revalidatePath(`/admin/intake/${userId}`);
+
+  const u = await prisma.user.findUnique({ where: { id: userId }, select: { name: true, email: true } });
+  if (u) await sendFormUnlockedEmail(u.email, u.name);
+
   return { success: true };
 }
 
