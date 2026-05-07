@@ -235,6 +235,15 @@ export function IntakeForm({ userId, defaultEmail, defaultName, defaultPhone, ex
         </Field>
       </Section>
 
+      <Section
+        title="Bed sharing"
+        intro="Heads up — you'll probably have to share a bed. You'll be able to choose who you share with. And if you're a dude, the odds are very high you'll be sharing."
+      >
+        <Field label="Are you OK with that?" required>
+          <RadioGroup name="shareBed" defaultValue={e?.shareBed} options={YES_NO} />
+        </Field>
+      </Section>
+
       <Section title="Van transportation" intro="Transportation will be handled by rental vans. Everyone needs to be on time for pickup and departure.">
         <Field label="Where will you be coming from?"><TextInput name="comingFrom" defaultValue={e?.comingFrom} /></Field>
         <Field label="Can you meet at one central pickup location?">

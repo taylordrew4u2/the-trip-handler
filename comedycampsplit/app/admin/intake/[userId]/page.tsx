@@ -82,6 +82,10 @@ export default async function AdminIntakeDetail({ params }: { params: Promise<{ 
         <Row label="Substance-free ack" value={f.substanceFreeAck ? "Agreed" : "NOT AGREED"} />
       </Section>
 
+      <Section title="Bed sharing">
+        <Row label="OK sharing a bed" value={f.shareBed} />
+      </Section>
+
       <Section title="Van transportation">
         <Row label="Coming from" value={f.comingFrom} />
         <Row label="Central pickup" value={f.centralPickup} />
