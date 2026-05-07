@@ -86,8 +86,6 @@ export default async function AdminIntakeDetail({ params }: { params: Promise<{ 
         <Row label="Coming from" value={f.comingFrom} />
         <Row label="Central pickup" value={f.centralPickup} />
         <Row label="Preferred area" value={[f.preferredArea, f.preferredAreaOther].filter(Boolean).join(" — ")} />
-        <Row label="Ready Day 1" value={f.readyTimeDay1} />
-        <Row label="Back by Day 3" value={f.returnByDay3} />
         <Row label="Carsick" value={f.carsick} />
         <Row label="Needs front seat" value={f.needsFrontSeat} />
         <Row label="Luggage" value={f.luggageSize} />
