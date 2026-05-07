@@ -116,15 +116,6 @@ export default function SignupPage() {
                 placeholder="Optional"
               />
             </div>
-            <div>
-              <label className="block text-xs font-medium text-stone-700 mb-1.5 tracking-wide">COMEDY BIO</label>
-              <textarea
-                name="bio"
-                rows={3}
-                className="w-full px-3 py-2.5 rounded-lg border border-stone-300 bg-white focus:outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900 text-sm resize-none"
-                placeholder="Your style, a one-liner, anything…"
-              />
-            </div>
             <button
               type="submit"
               disabled={loading}
