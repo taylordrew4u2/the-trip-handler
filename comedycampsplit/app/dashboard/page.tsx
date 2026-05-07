@@ -6,11 +6,12 @@ export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as { id?: string })?.id;
 
-  const [user, trip, totalApproved, totalPaid] = await Promise.all([
+  const [user, trip, totalApproved, totalPaid, guestForm] = await Promise.all([
     userId && userId !== "admin" ? prisma.user.findUnique({ where: { id: userId } }) : null,
     prisma.trip.findFirst(),
     prisma.user.count({ where: { status: { in: ["APPROVED", "CONFIRMED_PAID", "PENDING_PAYMENT"] }, role: "PARTICIPANT" } }),
     prisma.user.count({ where: { status: "CONFIRMED_PAID", role: "PARTICIPANT" } }),
+    userId && userId !== "admin" ? prisma.guestForm.findUnique({ where: { userId } }) : null,
   ]);
 
   const dateRange =
@@ -57,11 +58,30 @@ export default async function DashboardPage() {
         </div>
       </header>
 
+      {user && !guestForm && (
+        <div className="bg-amber-50 border border-amber-300 rounded-xl p-5">
+          <p className="text-xs uppercase tracking-[0.15em] text-amber-800">Action required</p>
+          <h2 className="font-serif text-xl font-medium text-stone-900 mt-1">Fill out your guest form</h2>
+          <p className="text-sm text-stone-700 mt-2 leading-relaxed">
+            We need your transportation, sleeping, food, allergy, and content preferences to plan the weekend.
+          </p>
+          <a href="/dashboard/intake" className="inline-block mt-4 px-4 py-2 bg-stone-900 hover:bg-stone-800 text-white rounded-lg text-sm font-medium">
+            Open the guest form →
+          </a>
+        </div>
+      )}
+
       {user && (
         <div className="bg-white rounded-xl border border-stone-200 p-6">
           <h2 className="font-medium text-stone-900">Welcome back, {user.name}.</h2>
           <p className="text-stone-500 text-sm mt-1">
             Status: <span className="font-medium text-stone-900">{user.status.replace("_", " ").toLowerCase()}</span>
+            {guestForm && (
+              <>
+                {" · "}
+                <a href="/dashboard/intake" className="underline underline-offset-2 hover:text-stone-900">Edit your guest form</a>
+              </>
+            )}
           </p>
           {user.status === "PENDING_PAYMENT" && trip?.isLocked && (
             <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-900">
