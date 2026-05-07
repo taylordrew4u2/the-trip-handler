@@ -13,8 +13,13 @@ export default async function AdminContributionsPage() {
   ]);
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">🎭 Contributions</h1>
+    <div className="space-y-6 max-w-3xl">
+      <div>
+        <h1 className="font-serif text-3xl font-medium text-stone-900">Contributions</h1>
+        <p className="text-stone-500 text-sm mt-1">
+          Suggestions you add appear under &ldquo;Suggestions from admin&rdquo; on the member side until someone signs up.
+        </p>
+      </div>
       <AdminContributionsClient contributions={contributions} tripId={trip?.id ?? ""} />
     </div>
   );
