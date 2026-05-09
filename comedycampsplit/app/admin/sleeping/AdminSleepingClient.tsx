@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { addBed, deleteBed, adminUnassignBed, seedDefaultHouseLayout } from "@/app/actions/sleeping";
+import { addBed, deleteBed, editBed, adminUnassignBed, seedDefaultHouseLayout } from "@/app/actions/sleeping";
 
 interface BedRow {
   id: string;
@@ -22,6 +22,7 @@ export function AdminSleepingClient({ tripId, beds }: { tripId: string; beds: Be
   const [submitting, setSubmitting] = useState(false);
   const [type, setType] = useState<"SINGLE" | "DOUBLE">("DOUBLE");
   const [error, setError] = useState("");
+  const [editingBedId, setEditingBedId] = useState<string | null>(null);
 
   async function handleAdd(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -173,12 +174,19 @@ export function AdminSleepingClient({ tripId, beds }: { tripId: string; beds: Be
         <p className="text-stone-500 text-sm">No beds yet. Add one above to get started.</p>
       )}
 
+      {Object.entries(grouped).length > 0 && (
+        <p className="text-xs text-stone-500">
+          Tap <strong>Edit</strong> on any bed to change its label, room, type, or women-only flag.
+        </p>
+      )}
+
       {Object.entries(grouped).map(([room, roomBeds]) => (
         <section key={room} className="bg-white rounded-xl border border-stone-200 overflow-hidden">
           <h3 className="font-medium text-stone-900 px-5 pt-4 pb-3 border-b border-stone-200">{room}</h3>
           <div className="divide-y divide-stone-100">
             {roomBeds.map((bed) => {
               const capacity = bed.type === "DOUBLE" ? 2 : 1;
+              const isEditing = editingBedId === bed.id;
               return (
                 <div key={bed.id} className="px-5 py-4">
                   <div className="flex items-center justify-between gap-3">
@@ -198,13 +206,31 @@ export function AdminSleepingClient({ tripId, beds }: { tripId: string; beds: Be
                         </span>
                       </div>
                     </div>
-                    <button
-                      onClick={() => handleDelete(bed.id)}
-                      className="text-xs px-2.5 py-1 border border-red-300 text-red-700 rounded-md hover:bg-red-50"
-                    >
-                      Delete
-                    </button>
+                    <div className="flex gap-1.5">
+                      <button
+                        onClick={() => setEditingBedId(isEditing ? null : bed.id)}
+                        className="text-xs px-2.5 py-1 border border-stone-300 text-stone-700 rounded-md hover:bg-stone-100"
+                      >
+                        {isEditing ? "Cancel" : "Edit"}
+                      </button>
+                      <button
+                        onClick={() => handleDelete(bed.id)}
+                        className="text-xs px-2.5 py-1 border border-red-300 text-red-700 rounded-md hover:bg-red-50"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
+                  {isEditing && (
+                    <BedEditForm
+                      bed={bed}
+                      onCancel={() => setEditingBedId(null)}
+                      onSaved={() => {
+                        setEditingBedId(null);
+                        router.refresh();
+                      }}
+                    />
+                  )}
                   {bed.assignments.length > 0 && (
                     <ul className="mt-3 space-y-1.5">
                       {bed.assignments.map((a) => (
@@ -230,5 +256,85 @@ export function AdminSleepingClient({ tripId, beds }: { tripId: string; beds: Be
         </section>
       ))}
     </div>
+  );
+}
+
+function BedEditForm({
+  bed,
+  onCancel,
+  onSaved,
+}: {
+  bed: BedRow;
+  onCancel: () => void;
+  onSaved: () => void;
+}) {
+  const [type, setType] = useState<"SINGLE" | "DOUBLE">(bed.type);
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState("");
+
+  async function handleSave(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setSaving(true);
+    setErr("");
+    const fd = new FormData(e.currentTarget);
+    const result = await editBed(bed.id, fd);
+    setSaving(false);
+    if (result?.error) {
+      setErr(result.error);
+      return;
+    }
+    onSaved();
+  }
+
+  const inputCls =
+    "w-full px-3 py-2 rounded-lg border border-stone-300 text-sm focus:outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900";
+
+  return (
+    <form onSubmit={handleSave} className="mt-3 bg-stone-50 border border-stone-200 rounded-lg p-4 space-y-3">
+      {err && <p className="text-red-600 text-sm">{err}</p>}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div>
+          <label className="block text-xs font-medium text-stone-700 mb-1.5 tracking-wide">LABEL *</label>
+          <input name="label" required defaultValue={bed.label} className={inputCls} />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-stone-700 mb-1.5 tracking-wide">ROOM</label>
+          <input name="room" defaultValue={bed.room ?? ""} className={inputCls} placeholder="e.g. Bedroom 1" />
+        </div>
+      </div>
+      <div>
+        <label className="block text-xs font-medium text-stone-700 mb-1.5 tracking-wide">TYPE</label>
+        <div className="flex gap-4 text-sm">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input type="radio" name="type" value="DOUBLE" checked={type === "DOUBLE"} onChange={() => setType("DOUBLE")} />
+            Double (2 slots)
+          </label>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input type="radio" name="type" value="SINGLE" checked={type === "SINGLE"} onChange={() => setType("SINGLE")} />
+            Single (1 slot)
+          </label>
+        </div>
+      </div>
+      <label className="flex items-center gap-2 text-sm text-stone-700 cursor-pointer">
+        <input type="checkbox" name="womenOnly" defaultChecked={bed.womenOnly} />
+        Women-only
+      </label>
+      <div className="flex gap-2">
+        <button
+          type="submit"
+          disabled={saving}
+          className="text-xs px-3 py-1.5 bg-stone-900 text-white rounded-md font-medium hover:bg-stone-800 disabled:opacity-50"
+        >
+          {saving ? "Saving…" : "Save changes"}
+        </button>
+        <button
+          type="button"
+          onClick={onCancel}
+          className="text-xs px-3 py-1.5 border border-stone-300 text-stone-700 rounded-md hover:bg-stone-100"
+        >
+          Cancel
+        </button>
+      </div>
+    </form>
   );
 }
