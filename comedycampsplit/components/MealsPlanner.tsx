@@ -12,8 +12,8 @@ import {
   addGroceryItem,
   toggleBought,
   deleteGroceryItem,
-  type Phase,
 } from "@/app/actions/meals";
+import type { Phase } from "@/lib/meals";
 
 interface Suggestion {
   id: string;
