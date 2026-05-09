@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { createCheckoutSession } from "@/app/actions/payments";
 import { useSearchParams } from "next/navigation";
-import { SECURITY_DEPOSIT_USD } from "@/lib/pricing";
+import { SECURITY_DEPOSIT_USD, TRIP_CAPACITY } from "@/lib/pricing";
 
 interface PaymentClientProps {
   trip: {
@@ -53,15 +53,16 @@ export function PaymentClient({ trip, user, payment, userId }: PaymentClientProp
   }
 
   const lineRows = LINES.map((l) => {
-    if (l.key === "housing") return { ...l, amount: trip.housingPrice, locked: trip.housingLocked };
-    if (l.key === "transport") return { ...l, amount: trip.transportPrice, locked: trip.transportLocked };
-    return { ...l, amount: trip.mealsPrice, locked: trip.mealsLocked };
+    if (l.key === "housing") return { ...l, total: trip.housingPrice, locked: trip.housingLocked };
+    if (l.key === "transport") return { ...l, total: trip.transportPrice, locked: trip.transportLocked };
+    return { ...l, total: trip.mealsPrice, locked: trip.mealsLocked };
   });
 
-  const tripShare =
+  const grandTotal =
     (trip.housingPrice ?? 0) +
     (trip.transportPrice ?? 0) +
     (trip.mealsPrice ?? 0);
+  const tripShare = grandTotal / TRIP_CAPACITY;
   const total = tripShare + SECURITY_DEPOSIT_USD;
   const allLocked = trip.housingLocked && trip.transportLocked && trip.mealsLocked;
   const anySet = trip.housingPrice != null || trip.transportPrice != null || trip.mealsPrice != null;
@@ -92,6 +93,9 @@ export function PaymentClient({ trip, user, payment, userId }: PaymentClientProp
             ? "Estimated trip cost so far"
             : "Trip cost not set yet"}
         </h2>
+        <p className="text-xs text-stone-500 mt-1.5">
+          Costs are entered as totals for the trip and split {TRIP_CAPACITY} ways.
+        </p>
       </div>
 
       {error && (
@@ -104,37 +108,48 @@ export function PaymentClient({ trip, user, payment, userId }: PaymentClientProp
         {lineRows.map((row, i) => (
           <div
             key={row.key}
-            className={`px-4 py-3 flex justify-between items-center ${
-              i < lineRows.length - 1 ? "border-b border-stone-100" : ""
-            }`}
+            className={`px-4 py-3 ${i < lineRows.length - 1 ? "border-b border-stone-100" : ""}`}
           >
-            <div>
-              <p className="text-sm font-medium text-stone-900">{row.label}</p>
-              <p className="text-xs text-stone-500 mt-0.5">
-                {row.amount == null
-                  ? "Not set yet"
-                  : row.locked
-                  ? "Locked in (final)"
-                  : "Estimate — not finalized"}
-              </p>
+            <div className="flex justify-between items-start">
+              <div className="flex-1">
+                <p className="text-sm font-medium text-stone-900">{row.label}</p>
+                <p className="text-xs text-stone-500 mt-0.5">
+                  {row.total == null
+                    ? "Not set yet"
+                    : row.locked
+                    ? "Locked in (final)"
+                    : "Estimate — not finalized"}
+                </p>
+              </div>
+              <div className="text-right">
+                <p
+                  className={`font-medium tabular-nums ${
+                    row.total == null ? "text-stone-400 italic" : "text-stone-900"
+                  }`}
+                >
+                  {row.total == null ? "TBD" : `$${row.total.toFixed(2)}`}
+                  {row.total != null && (
+                    <span className="text-xs text-stone-400"> total</span>
+                  )}
+                </p>
+                {row.total != null && (
+                  <p className="text-xs text-stone-500 mt-0.5 tabular-nums">
+                    ÷ {TRIP_CAPACITY} = ${(row.total / TRIP_CAPACITY).toFixed(2)} each
+                  </p>
+                )}
+              </div>
             </div>
-            <p
-              className={`font-medium tabular-nums ${
-                row.amount == null ? "text-stone-400 italic" : "text-stone-900"
-              }`}
-            >
-              {row.amount == null ? "TBD" : `$${row.amount.toFixed(2)}`}
-            </p>
           </div>
         ))}
-        <div className="px-4 py-3 flex justify-between items-center bg-stone-50 border-t border-stone-200">
+
+        <div className="px-4 py-3 flex justify-between items-start bg-stone-50 border-t border-stone-200">
           <div>
-            <p className="text-sm font-medium text-stone-900">Trip share</p>
+            <p className="text-sm font-medium text-stone-900">Your trip share</p>
             <p className="text-xs text-stone-500 mt-0.5">
               {allLocked
-                ? "Final"
+                ? `Final · $${grandTotal.toFixed(2)} ÷ ${TRIP_CAPACITY}`
                 : anySet
-                ? "Running estimate · not final until all three lines lock"
+                ? `Running estimate · $${grandTotal.toFixed(2)} ÷ ${TRIP_CAPACITY}`
                 : "Waiting on admin"}
             </p>
           </div>
@@ -174,8 +189,8 @@ export function PaymentClient({ trip, user, payment, userId }: PaymentClientProp
       ) : (
         <p className="text-xs text-stone-500 leading-relaxed">
           Numbers above are estimates while admin lines up housing, transport, and meals. Once each
-          line is locked the total is final and you&apos;ll get an email asking you to pay (trip
-          share + the refundable ${SECURITY_DEPOSIT_USD} deposit).
+          line is locked the total is final and you&apos;ll get an email asking you to pay (your
+          1/{TRIP_CAPACITY} share + the refundable ${SECURITY_DEPOSIT_USD} deposit).
         </p>
       )}
     </div>
