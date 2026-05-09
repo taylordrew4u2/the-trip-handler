@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { addBed, deleteBed, adminUnassignBed } from "@/app/actions/sleeping";
+import { addBed, deleteBed, adminUnassignBed, seedDefaultHouseLayout } from "@/app/actions/sleeping";
 
 interface BedRow {
   id: string;
@@ -53,6 +53,18 @@ export function AdminSleepingClient({ tripId, beds }: { tripId: string; beds: Be
     router.refresh();
   }
 
+  async function handleSeed() {
+    if (!confirm("Add the default 5-bedroom layout? You can edit, add, or delete beds after.")) return;
+    setSubmitting(true);
+    const result = await seedDefaultHouseLayout(tripId);
+    setSubmitting(false);
+    if (result?.error) {
+      setError(result.error);
+      return;
+    }
+    router.refresh();
+  }
+
   if (!tripId) {
     return <p className="text-sm text-stone-500">No trip yet — create one first.</p>;
   }
@@ -66,6 +78,22 @@ export function AdminSleepingClient({ tripId, beds }: { tripId: string; beds: Be
 
   return (
     <div className="space-y-6">
+      {beds.length === 0 && (
+        <div className="bg-stone-50 border border-stone-200 rounded-xl p-4">
+          <p className="text-sm font-medium text-stone-900">Quick start</p>
+          <p className="text-xs text-stone-500 mt-1 leading-relaxed">
+            Use the default house layout: Bedroom 1 (1 Queen) · Bedroom 2 (1 Queen) · Bedroom 3 (1 King + 1 Twin) · Bedroom 4 (5 Twins) · Bedroom 5 (1 Queen). You can edit, add, or delete beds after.
+          </p>
+          <button
+            onClick={handleSeed}
+            disabled={submitting}
+            className="mt-3 text-xs px-3 py-1.5 bg-stone-900 text-white rounded-md font-medium hover:bg-stone-800 disabled:opacity-50"
+          >
+            {submitting ? "Adding…" : "Use default house layout"}
+          </button>
+        </div>
+      )}
+
       <button
         onClick={() => setShowForm(!showForm)}
         className="px-4 py-2 bg-stone-900 text-white rounded-lg text-sm font-medium hover:bg-stone-800"
