@@ -13,6 +13,7 @@ const navItems: NavItem[] = [
   { href: "/dashboard/sleeping", label: "Sleeping", gated: true },
   { href: "/dashboard/expenses", label: "Expenses", gated: true },
   { href: "/dashboard/contributions", label: "Contributions", gated: true },
+  { href: "/dashboard/meals", label: "Meals", gated: true },
   { href: "/dashboard/board", label: "Board", gated: true },
   { href: "/dashboard/intake", label: "Guest form" },
   { href: "/dashboard/preferences", label: "Preferences", gated: true },
