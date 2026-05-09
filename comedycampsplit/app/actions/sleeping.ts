@@ -376,6 +376,11 @@ export async function respondToBedmateRequest(requestId: string, accept: boolean
       },
       data: { status: "DECLINED", respondedAt: new Date() },
     }),
+    // Any other pending requests sent by the requester are now stale too.
+    prisma.bedmateRequest.updateMany({
+      where: { fromUserId: req.fromUserId, status: "PENDING", id: { not: requestId } },
+      data: { status: "DECLINED", respondedAt: new Date() },
+    }),
   ]);
 
   revalidatePath("/dashboard/sleeping");
