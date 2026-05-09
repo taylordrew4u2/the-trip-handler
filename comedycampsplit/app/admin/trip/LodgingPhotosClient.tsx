@@ -2,12 +2,14 @@
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { upload } from "@vercel/blob/client";
 import { addLodgingPhoto, deleteLodgingPhoto, updateLodgingPhotoCaption } from "@/app/actions/itinerary";
 import type { LodgingPhoto } from "@prisma/client";
 
 export function LodgingPhotosClient({ tripId, photos }: { tripId: string; photos: LodgingPhoto[] }) {
   const router = useRouter();
   const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState<string | null>(null);
   const [error, setError] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -17,22 +19,35 @@ export function LodgingPhotosClient({ tripId, photos }: { tripId: string; photos
     setError("");
     setUploading(true);
     try {
+      let i = 0;
       for (const file of Array.from(files)) {
-        const fd = new FormData();
-        fd.append("file", file);
-        fd.append("tripId", tripId);
-        const res = await fetch("/api/upload-lodging-photo", { method: "POST", body: fd });
-        const data = (await res.json()) as { url?: string; error?: string };
-        if (!res.ok || !data.url) {
-          setError(data.error ?? `Upload failed for ${file.name}`);
-          continue;
+        i += 1;
+        setProgress(`Uploading ${i}/${files.length}: ${file.name}`);
+        try {
+          if (file.size > 10 * 1024 * 1024) {
+            setError(`${file.name} is over 10MB. Skipping.`);
+            continue;
+          }
+          if (file.type && !file.type.startsWith("image/")) {
+            setError(`${file.name} isn't an image. Skipping.`);
+            continue;
+          }
+          const ext = file.name.split(".").pop() ?? "jpg";
+          const pathname = `lodging/${tripId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+          const blob = await upload(pathname, file, {
+            access: "public",
+            handleUploadUrl: "/api/upload-lodging-photo",
+          });
+          const result = await addLodgingPhoto(tripId, blob.url);
+          if (result?.error) setError(result.error);
+        } catch (err) {
+          setError(`${file.name}: ${(err as Error).message}`);
         }
-        const result = await addLodgingPhoto(tripId, data.url);
-        if (result?.error) setError(result.error);
       }
       router.refresh();
     } finally {
       setUploading(false);
+      setProgress(null);
       if (fileRef.current) fileRef.current.value = "";
     }
   }
@@ -52,10 +67,12 @@ export function LodgingPhotosClient({ tripId, photos }: { tripId: string; photos
 
   return (
     <div className="bg-white rounded-xl border border-stone-200 p-6 space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
           <h2 className="font-serif text-xl font-medium text-stone-900">Lodging photos</h2>
-          <p className="text-sm text-stone-500 mt-1">Show participants where they&apos;ll be staying.</p>
+          <p className="text-sm text-stone-500 mt-1">
+            Show participants where they&apos;ll be staying. Up to 10MB per photo.
+          </p>
         </div>
         <div>
           <input
@@ -76,6 +93,11 @@ export function LodgingPhotosClient({ tripId, photos }: { tripId: string; photos
         </div>
       </div>
 
+      {progress && (
+        <div className="bg-stone-50 border border-stone-200 text-stone-700 rounded-lg px-3 py-2 text-sm">
+          {progress}
+        </div>
+      )}
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2 text-sm">
           {error}
@@ -91,7 +113,9 @@ export function LodgingPhotosClient({ tripId, photos }: { tripId: string; photos
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={p.url} alt={p.caption ?? "Lodging photo"} className="w-full aspect-square object-cover" />
               <div className="p-2 space-y-1.5">
-                <p className="text-xs text-stone-700 break-words min-h-[2em]">{p.caption ?? <span className="text-stone-400 italic">No caption</span>}</p>
+                <p className="text-xs text-stone-700 break-words min-h-[2em]">
+                  {p.caption ?? <span className="text-stone-400 italic">No caption</span>}
+                </p>
                 <div className="flex gap-2 text-xs">
                   <button
                     onClick={() => handleCaption(p.id, p.caption)}
