@@ -5,6 +5,7 @@ import { ApprovalRequired } from "@/components/ApprovalRequired";
 import { isApproved } from "@/lib/approval";
 import { ensureMealPlanSetup, votingCompletionSummary } from "@/app/actions/meals";
 import { MealsPlanner } from "@/components/MealsPlanner";
+import { SignOutButton } from "@/components/SignOutButton";
 
 export const dynamic = "force-dynamic";
 
@@ -37,13 +38,20 @@ export default async function MealsPage() {
   ]);
 
   return (
-    <MealsPlanner
-      currentUserId={userId}
-      isAdmin={false}
-      tripId={trip?.id ?? ""}
-      slots={slots}
-      phase={(phase?.currentPhase ?? "suggestions_open") as "suggestions_open" | "voting_open" | "admin_finalizing" | "finalized"}
-      completion={completion}
-    />
+    <div className="space-y-6">
+      <MealsPlanner
+        currentUserId={userId}
+        isAdmin={false}
+        tripId={trip?.id ?? ""}
+        slots={slots}
+        phase={(phase?.currentPhase ?? "suggestions_open") as "suggestions_open" | "voting_open" | "admin_finalizing" | "finalized"}
+        completion={completion}
+      />
+
+      <div className="bg-white border border-stone-200 rounded-xl p-5 flex items-center justify-between">
+        <p className="text-sm text-stone-600">Done for now? You can sign out.</p>
+        <SignOutButton />
+      </div>
+    </div>
   );
 }

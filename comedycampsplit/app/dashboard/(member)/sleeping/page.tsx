@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { ApprovalRequired } from "@/components/ApprovalRequired";
 import { isApproved } from "@/lib/approval";
 import { SleepingClient } from "./SleepingClient";
+import { SignOutButton } from "@/components/SignOutButton";
 
 export const dynamic = "force-dynamic";
 
@@ -35,6 +36,11 @@ export default async function SleepingPage() {
         </p>
       </div>
       <SleepingClient beds={beds} userId={userId} myGender={me?.gender ?? null} />
+
+      <div className="bg-white border border-stone-200 rounded-xl p-5 flex items-center justify-between">
+        <p className="text-sm text-stone-600">Done picking? You can sign out.</p>
+        <SignOutButton />
+      </div>
     </div>
   );
 }
