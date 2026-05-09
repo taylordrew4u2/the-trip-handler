@@ -69,7 +69,10 @@ export function SleepingClient({
     setBusy(label);
     try {
       const r = (await fn()) as { error?: string } | undefined;
-      if (r && "error" in r && r.error) setError(r.error);
+      if (r && "error" in r && r.error) {
+        setError(r.error);
+        return;
+      }
       router.refresh();
     } finally {
       setBusy(null);
