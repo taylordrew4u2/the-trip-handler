@@ -125,6 +125,29 @@ export async function sendRejectionEmail(email: string, name: string) {
   }
 }
 
+export async function sendBedBumpEmail(email: string, name: string, bedLabel: string) {
+  try {
+    await resend.emails.send({
+      from: FROM_ADDRESS,
+      to: email,
+      subject: "Bed reassigned — pick another spot",
+      html: `
+        <div style="font-family: ui-sans-serif, system-ui, sans-serif; max-width: 560px; margin: 0 auto; color: #1c1917;">
+          <p style="font-size: 12px; text-transform: uppercase; letter-spacing: 2px; color: #888; margin: 0 0 8px;">Comedy Summer Camp</p>
+          <h1 style="font-size: 22px; margin: 0 0 12px;">Hey ${name},</h1>
+          <p style="font-size: 14px; line-height: 1.5; color: #444;">
+            A female member has claimed <strong>${escapeHtml(bedLabel)}</strong> (a single bed). Singles can be requested by
+            female members, so you&apos;ve been moved out. No worries — head back to the dashboard and pick another bed.
+          </p>
+          <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard/sleeping" style="background:#1c1917;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;display:inline-block;margin-top:16px;font-size:14px;">Pick a new bed</a>
+        </div>
+      `,
+    });
+  } catch (err) {
+    console.error("sendBedBumpEmail failed:", err);
+  }
+}
+
 export async function sendCancellationEmail(email: string, name: string) {
   try {
     await resend.emails.send({

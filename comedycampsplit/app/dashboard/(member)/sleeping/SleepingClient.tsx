@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { claimBedSlot, leaveBedSlot } from "@/app/actions/sleeping";
+import { claimBedSlot, leaveBedSlot, bumpFromSingle } from "@/app/actions/sleeping";
 
 interface BedRow {
   id: string;
@@ -16,10 +16,20 @@ interface BedRow {
   }[];
 }
 
-export function SleepingClient({ beds, userId }: { beds: BedRow[]; userId: string }) {
+export function SleepingClient({
+  beds,
+  userId,
+  myGender,
+}: {
+  beds: BedRow[];
+  userId: string;
+  myGender: string | null;
+}) {
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState("");
+
+  const isFemale = myGender === "female";
 
   async function handleClaim(bedId: string, womenOnly: boolean) {
     setError("");
@@ -28,6 +38,24 @@ export function SleepingClient({ beds, userId }: { beds: BedRow[]; userId: strin
     }
     setBusy(bedId);
     const result = await claimBedSlot(bedId);
+    setBusy(null);
+    if (result?.error) {
+      setError(result.error);
+      return;
+    }
+    router.refresh();
+  }
+
+  async function handleBump(bedId: string, occupantName: string) {
+    setError("");
+    if (
+      !confirm(
+        `Take ${occupantName}'s single bed? They'll be moved out and emailed to pick another spot.`
+      )
+    )
+      return;
+    setBusy(bedId + "bump");
+    const result = await bumpFromSingle(bedId);
     setBusy(null);
     if (result?.error) {
       setError(result.error);
@@ -54,7 +82,6 @@ export function SleepingClient({ beds, userId }: { beds: BedRow[]; userId: strin
 
   const myBedId = beds.find((b) => b.assignments.some((a) => a.userId === userId))?.id;
 
-  // Group by room
   const grouped = beds.reduce<Record<string, BedRow[]>>((acc, bed) => {
     const key = bed.room || "Unassigned room";
     (acc[key] ??= []).push(bed);
@@ -67,6 +94,12 @@ export function SleepingClient({ beds, userId }: { beds: BedRow[]; userId: strin
         <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2 text-sm">
           {error}
         </div>
+      )}
+
+      {!isFemale && (
+        <p className="text-xs text-stone-500">
+          Set your <a href="/dashboard/profile" className="underline underline-offset-2 hover:text-stone-900">profile gender</a> to female if you want to be able to request a single bed.
+        </p>
       )}
 
       {myBedId && (
@@ -93,6 +126,9 @@ export function SleepingClient({ beds, userId }: { beds: BedRow[]; userId: strin
               const taken = bed.assignments.length;
               const full = taken >= capacity;
               const mine = bed.assignments.some((a) => a.userId === userId);
+              const isOccupiedSingle = bed.type === "SINGLE" && taken > 0 && !mine;
+              const occupant = bed.assignments[0];
+              const canBump = isOccupiedSingle && isFemale;
               return (
                 <div key={bed.id} className="px-5 py-4">
                   <div className="flex items-center justify-between gap-3">
@@ -116,6 +152,15 @@ export function SleepingClient({ beds, userId }: { beds: BedRow[]; userId: strin
                       <span className="text-xs px-2.5 py-1 bg-emerald-100 text-emerald-900 rounded-md font-medium">
                         Yours
                       </span>
+                    ) : canBump ? (
+                      <button
+                        onClick={() => handleBump(bed.id, occupant?.user.name ?? "the occupant")}
+                        disabled={busy !== null}
+                        className="text-xs px-3 py-1.5 border border-stone-700 text-stone-900 rounded-md font-medium hover:bg-stone-100 disabled:opacity-50"
+                        title="Female members can take a single from a current occupant"
+                      >
+                        {busy === bed.id + "bump" ? "Requesting…" : "Take this single"}
+                      </button>
                     ) : (
                       <button
                         onClick={() => handleClaim(bed.id, bed.womenOnly)}
