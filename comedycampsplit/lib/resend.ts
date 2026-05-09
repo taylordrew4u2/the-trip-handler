@@ -1,6 +1,6 @@
 import { Resend } from "resend";
 
-export const resend = new Resend(process.env.RESEND_API_KEY);
+export const resend = new Resend(process.env.RESEND_API_KEY ?? "RESEND_KEY_MISSING");
 
 const FROM_ADDRESS = process.env.EMAIL_FROM ?? "onboarding@resend.dev";
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "taylordrew4u@gmail.com";
@@ -58,15 +58,6 @@ function escapeHtml(s: string): string {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
-}
-
-export async function sendHelloWorldEmail(to: string = "taylordrew4u@gmail.com") {
-  await resend.emails.send({
-    from: FROM_ADDRESS,
-    to,
-    subject: "Hello World",
-    html: "<p>Congrats on sending your <strong>first email</strong>!</p>",
-  });
 }
 
 export async function sendHelloWorldEmail(to: string = "taylordrew4u@gmail.com") {
