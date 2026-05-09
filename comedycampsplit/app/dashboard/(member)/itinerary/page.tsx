@@ -7,14 +7,9 @@ export const dynamic = "force-dynamic";
 export default async function ItineraryPage() {
   if (!isApproved(await getUserStatus())) return <ApprovalRequired what="The itinerary" />;
 
-  const [trip, days, photos] = await Promise.all([
+  const [trip, days] = await Promise.all([
     prisma.trip.findFirst(),
     prisma.day.findMany({ orderBy: { dayNumber: "asc" } }),
-    (async () => {
-      const t = await prisma.trip.findFirst({ select: { id: true } });
-      if (!t) return [];
-      return prisma.lodgingPhoto.findMany({ where: { tripId: t.id }, orderBy: { position: "asc" } });
-    })(),
   ]);
 
   if (!trip) {
@@ -100,31 +95,7 @@ export default async function ItineraryPage() {
         </section>
       )}
 
-      {(trip.lodging || photos.length > 0) && (
-        <section className="space-y-3">
-          <h2 className="text-xs uppercase tracking-[0.2em] text-stone-500">Lodging</h2>
-          {trip.lodging && (
-            <div className="bg-white rounded-xl border border-stone-200 p-5">
-              <p className="text-stone-700 whitespace-pre-wrap">{trip.lodging}</p>
-            </div>
-          )}
-          {photos.length > 0 && (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              {photos.map((p) => (
-                <figure key={p.id} className="bg-white border border-stone-200 rounded-xl overflow-hidden">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={p.url} alt={p.caption ?? "Lodging photo"} className="w-full aspect-square object-cover" />
-                  {p.caption && (
-                    <figcaption className="px-3 py-2 text-xs text-stone-600">{p.caption}</figcaption>
-                  )}
-                </figure>
-              ))}
-            </div>
-          )}
-        </section>
-      )}
-
-      {days.length === 0 && !trip.itinerary && !trip.description && !trip.lodging && photos.length === 0 && (
+      {days.length === 0 && !trip.itinerary && !trip.description && (
         <p className="text-stone-500 text-sm">Itinerary details coming soon.</p>
       )}
     </div>
