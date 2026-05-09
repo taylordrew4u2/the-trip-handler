@@ -11,7 +11,7 @@ import {
   unlockTripPriceLine,
   type PriceKind,
 } from "@/app/actions/admin";
-import { SECURITY_DEPOSIT_USD } from "@/lib/pricing";
+import { SECURITY_DEPOSIT_USD, TRIP_CAPACITY } from "@/lib/pricing";
 
 interface Trip {
   id: string;
@@ -115,9 +115,10 @@ export function TripClient({ trip }: { trip: Trip }) {
           (kind === "housing" ? parseFloat(priceDrafts.housing || "0") : trip.housingPrice ?? 0) +
           (kind === "transport" ? parseFloat(priceDrafts.transport || "0") : trip.transportPrice ?? 0) +
           (kind === "meals" ? parseFloat(priceDrafts.meals || "0") : trip.mealsPrice ?? 0);
+        const share = total / TRIP_CAPACITY;
         if (
           !confirm(
-            `Locking ${PRICE_LABEL[kind]} will solidify the trip and email all approved users to pay $${total.toFixed(2)} (+ $${SECURITY_DEPOSIT_USD} deposit). Continue?`
+            `Locking ${PRICE_LABEL[kind]} will solidify the trip and email all approved users to pay $${share.toFixed(2)} each ($${total.toFixed(2)} ÷ ${TRIP_CAPACITY} + $${SECURITY_DEPOSIT_USD} deposit). Continue?`
           )
         )
           return;
@@ -173,9 +174,9 @@ export function TripClient({ trip }: { trip: Trip }) {
         <div>
           <h2 className="font-medium text-stone-900">Pricing breakdown</h2>
           <p className="text-stone-500 text-sm mt-0.5">
-            Enter a per-person guesstimate for each line. Lock a line when its number is final.
-            When all three are locked, the trip is solidified automatically and approved users get
-            payment emails.
+            Enter the <strong>total</strong> for each line (the whole trip). Each user pays their
+            share, divided by {TRIP_CAPACITY}. Lock a line when its number is final. When all three
+            are locked, the trip is solidified automatically and approved users get payment emails.
           </p>
         </div>
 
@@ -198,8 +199,13 @@ export function TripClient({ trip }: { trip: Trip }) {
               <div className="col-span-3 md:col-span-2">
                 <p className="text-sm font-medium text-stone-900">{PRICE_LABEL[kind]}</p>
                 <p className="text-xs text-stone-500 mt-0.5">
-                  {fields.locked ? "Locked" : fields.amount != null ? "Estimate" : "Not set"}
+                  {fields.locked ? "Locked total" : fields.amount != null ? "Estimate · total" : "Not set"}
                 </p>
+                {fields.amount != null && (
+                  <p className="text-xs text-stone-700 mt-1 tabular-nums">
+                    ÷ {TRIP_CAPACITY} = ${(fields.amount / TRIP_CAPACITY).toFixed(2)} each
+                  </p>
+                )}
               </div>
               <div className="col-span-5 md:col-span-5 flex items-center gap-2">
                 <span className="text-stone-500 text-sm">$</span>
@@ -247,21 +253,27 @@ export function TripClient({ trip }: { trip: Trip }) {
           );
         })}
 
-        <div className="flex items-center justify-between border-t border-stone-200 pt-4 text-sm">
-          <div className="text-stone-700">
-            Trip share total{" "}
-            <span className="text-xs text-stone-500">
-              {allLocked
-                ? "(final)"
-                : allLineEstimates
-                ? "(all estimates)"
-                : "(some lines not set)"}
-            </span>
+        <div className="border-t border-stone-200 pt-4 space-y-2 text-sm">
+          <div className="flex items-center justify-between">
+            <div className="text-stone-700">
+              Trip total{" "}
+              <span className="text-xs text-stone-500">
+                {allLocked
+                  ? "(final)"
+                  : allLineEstimates
+                  ? "(all estimates)"
+                  : "(some lines not set)"}
+              </span>
+            </div>
+            <div className="font-semibold text-stone-900 tabular-nums">${total.toFixed(2)}</div>
           </div>
-          <div className="font-semibold text-stone-900 tabular-nums">${total.toFixed(2)}</div>
+          <div className="flex items-center justify-between text-stone-700">
+            <span>÷ {TRIP_CAPACITY} = each user pays</span>
+            <span className="font-semibold tabular-nums">${(total / TRIP_CAPACITY).toFixed(2)}</span>
+          </div>
         </div>
         <p className="text-xs text-stone-500">
-          $75 refundable security deposit is added at checkout automatically.
+          $75 refundable security deposit is added at checkout automatically (on top of the share above).
         </p>
       </div>
 
