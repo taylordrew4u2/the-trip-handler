@@ -12,6 +12,43 @@ async function requireAdmin() {
   return role === "ADMIN";
 }
 
+/**
+ * One-click default house layout — admin can edit / add / delete after.
+ * Bedrooms 1, 2, 5: 1 Queen each. Bedroom 3: 1 King + 1 Twin. Bedroom 4: 5 Twins.
+ * Queens and the King are stored as DOUBLE (2 slots each); Twins are SINGLE.
+ */
+const DEFAULT_HOUSE: { room: string; label: string; type: "SINGLE" | "DOUBLE" }[] = [
+  { room: "Bedroom 1", label: "Queen Bed", type: "DOUBLE" },
+  { room: "Bedroom 2", label: "Queen Bed", type: "DOUBLE" },
+  { room: "Bedroom 3", label: "King Bed", type: "DOUBLE" },
+  { room: "Bedroom 3", label: "Twin Bed", type: "SINGLE" },
+  { room: "Bedroom 4", label: "Twin Bed 1", type: "SINGLE" },
+  { room: "Bedroom 4", label: "Twin Bed 2", type: "SINGLE" },
+  { room: "Bedroom 4", label: "Twin Bed 3", type: "SINGLE" },
+  { room: "Bedroom 4", label: "Twin Bed 4", type: "SINGLE" },
+  { room: "Bedroom 4", label: "Twin Bed 5", type: "SINGLE" },
+  { room: "Bedroom 5", label: "Queen Bed", type: "DOUBLE" },
+];
+
+export async function seedDefaultHouseLayout(tripId: string) {
+  if (!(await requireAdmin())) return { error: "Admin only." };
+  if (!tripId) return { error: "Missing trip." };
+
+  await prisma.bed.createMany({
+    data: DEFAULT_HOUSE.map((b) => ({
+      tripId,
+      room: b.room,
+      label: b.label,
+      type: b.type,
+      womenOnly: false,
+    })),
+  });
+
+  revalidatePath("/admin/sleeping");
+  revalidatePath("/dashboard/sleeping");
+  return { success: true };
+}
+
 export async function addBed(formData: FormData) {
   if (!(await requireAdmin())) return { error: "Admin only." };
 
