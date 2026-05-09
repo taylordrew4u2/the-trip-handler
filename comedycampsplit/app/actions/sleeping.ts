@@ -365,9 +365,15 @@ export async function respondToBedmateRequest(requestId: string, accept: boolean
       where: { id: requestId },
       data: { status: "ACCEPTED", respondedAt: new Date() },
     }),
-    // Other pending requests for this bed are now stale — decline them.
+    // Other pending requests for this bed, or any other pending request
+    // the requester sent, are now stale — decline them so a different
+    // occupant can't unexpectedly move them again.
     prisma.bedmateRequest.updateMany({
-      where: { bedId: req.bedId, status: "PENDING", id: { not: requestId } },
+      where: {
+        status: "PENDING",
+        id: { not: requestId },
+        OR: [{ bedId: req.bedId }, { fromUserId: req.fromUserId }],
+      },
       data: { status: "DECLINED", respondedAt: new Date() },
     }),
   ]);

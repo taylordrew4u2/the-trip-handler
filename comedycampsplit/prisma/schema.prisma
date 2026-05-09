@@ -310,18 +310,25 @@ model BedAssignment {
   createdAt DateTime @default(now())
 }
 
+enum BedmateRequestStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
 model BedmateRequest {
-  id           String   @id @default(cuid())
+  id           String               @id @default(cuid())
   bedId        String
-  bed          Bed      @relation(fields: [bedId], references: [id], onDelete: Cascade)
+  bed          Bed                  @relation(fields: [bedId], references: [id], onDelete: Cascade)
   fromUserId   String
-  fromUser     User     @relation("BedmateRequester", fields: [fromUserId], references: [id], onDelete: Cascade)
+  fromUser     User                 @relation("BedmateRequester", fields: [fromUserId], references: [id], onDelete: Cascade)
   toUserId     String
-  toUser       User     @relation("BedmateRecipient", fields: [toUserId], references: [id], onDelete: Cascade)
-  status       String   @default("PENDING")
-  createdAt    DateTime @default(now())
+  toUser       User                 @relation("BedmateRecipient", fields: [toUserId], references: [id], onDelete: Cascade)
+  status       BedmateRequestStatus @default(PENDING)
+  createdAt    DateTime             @default(now())
   respondedAt  DateTime?
 
+  @@unique([bedId, fromUserId, toUserId, status])
   @@index([toUserId, status])
   @@index([fromUserId, status])
 }
