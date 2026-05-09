@@ -94,6 +94,35 @@ export async function deleteBed(bedId: string) {
   return { success: true };
 }
 
+export async function editBed(bedId: string, formData: FormData) {
+  if (!(await requireAdmin())) return { error: "Admin only." };
+  const label = ((formData.get("label") as string) ?? "").trim();
+  const room = ((formData.get("room") as string) ?? "").trim() || null;
+  const type = (formData.get("type") as string) === "SINGLE" ? "SINGLE" : "DOUBLE";
+  const womenOnly = Boolean(formData.get("womenOnly"));
+
+  if (!label) return { error: "Label can't be empty." };
+
+  const bed = await prisma.bed.findUnique({
+    where: { id: bedId },
+    include: { assignments: true },
+  });
+  if (!bed) return { error: "Bed not found." };
+
+  if (type === "SINGLE" && bed.type === "DOUBLE" && bed.assignments.length > 1) {
+    return { error: "Can't switch to single — two people are already in this bed. Unassign one first." };
+  }
+
+  await prisma.bed.update({
+    where: { id: bedId },
+    data: { label, room, type, womenOnly },
+  });
+
+  revalidatePath("/admin/sleeping");
+  revalidatePath("/dashboard/sleeping");
+  return { success: true };
+}
+
 export async function adminUnassignBed(userId: string) {
   if (!(await requireAdmin())) return { error: "Admin only." };
   await prisma.bedAssignment.deleteMany({ where: { userId } });
