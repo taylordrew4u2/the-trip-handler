@@ -21,6 +21,8 @@ export async function updateProfile(userId: string, data: {
   bio?: string;
   phone?: string;
   gender?: string;
+  sleepTags?: string[];
+  sleepNote?: string;
 }) {
   if (!userId || userId === "admin") {
     return { error: "You need to be signed in as a participant." };
@@ -35,5 +37,6 @@ export async function updateProfile(userId: string, data: {
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/roster");
   revalidatePath("/dashboard/profile");
+  revalidatePath("/dashboard/sleeping");
   return { success: true };
 }

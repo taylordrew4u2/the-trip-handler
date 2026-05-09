@@ -38,6 +38,8 @@ export default async function ProfilePage() {
               phone: user.phone ?? "",
               bio: user.bio ?? "",
               gender: user.gender ?? "",
+              sleepTags: user.sleepTags ?? [],
+              sleepNote: user.sleepNote ?? "",
             }}
           />
         </div>

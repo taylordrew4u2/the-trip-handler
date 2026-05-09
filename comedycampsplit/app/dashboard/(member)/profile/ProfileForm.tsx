@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { updateProfile } from "@/app/actions/profile";
+import { SLEEP_TAGS } from "@/lib/sleep";
 
 const inputCls =
   "w-full px-3 py-2.5 rounded-lg border border-stone-300 bg-white text-sm focus:outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900";
@@ -14,12 +15,27 @@ export function ProfileForm({
 }: {
   userId: string;
   email: string;
-  defaults: { name: string; username: string; phone: string; bio: string; gender: string };
+  defaults: {
+    name: string;
+    username: string;
+    phone: string;
+    bio: string;
+    gender: string;
+    sleepTags: string[];
+    sleepNote: string;
+  };
 }) {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [savedAt, setSavedAt] = useState<string | null>(null);
+  const [sleepTags, setSleepTags] = useState<string[]>(defaults.sleepTags);
+
+  function toggleTag(value: string) {
+    setSleepTags((prev) =>
+      prev.includes(value) ? prev.filter((t) => t !== value) : [...prev, value]
+    );
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -31,6 +47,7 @@ export function ProfileForm({
     const phone = ((fd.get("phone") as string) ?? "").trim();
     const bio = ((fd.get("bio") as string) ?? "").trim();
     const gender = ((fd.get("gender") as string) ?? "").trim();
+    const sleepNote = ((fd.get("sleepNote") as string) ?? "").trim();
 
     if (!name) {
       setError("Name is required.");
@@ -49,6 +66,8 @@ export function ProfileForm({
       phone: phone || undefined,
       bio: bio || undefined,
       gender: gender || undefined,
+      sleepTags,
+      sleepNote: sleepNote || undefined,
     });
     setSubmitting(false);
     if (result?.error) {
@@ -117,6 +136,44 @@ export function ProfileForm({
           defaultValue={defaults.bio}
           className={`${inputCls} resize-none`}
           placeholder="Style, one-liner, anything you want on the roster."
+        />
+      </div>
+
+      <div className="border-t border-stone-200 pt-5">
+        <p className="text-xs font-medium text-stone-700 mb-1.5 tracking-wide">SLEEP STYLE</p>
+        <p className="text-xs text-stone-500 mb-3">
+          Helps people pick a compatible bedmate. Shown next to your name on the sleeping page.
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {SLEEP_TAGS.map((t) => {
+            const on = sleepTags.includes(t.value);
+            return (
+              <button
+                key={t.value}
+                type="button"
+                onClick={() => toggleTag(t.value)}
+                className={`text-sm px-3 py-1.5 rounded-full border transition-colors ${
+                  on
+                    ? "border-stone-900 bg-stone-900 text-white"
+                    : "border-stone-300 bg-white text-stone-700 hover:bg-stone-50"
+                }`}
+              >
+                <span className="mr-1">{t.emoji}</span>
+                {t.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-xs font-medium text-stone-700 mb-1.5 tracking-wide">SLEEP NOTE</label>
+        <textarea
+          name="sleepNote"
+          rows={2}
+          defaultValue={defaults.sleepNote}
+          className={`${inputCls} resize-none`}
+          placeholder="Anything else helpful — wake-up time, meds, allergies to feathers, etc."
         />
       </div>
 
