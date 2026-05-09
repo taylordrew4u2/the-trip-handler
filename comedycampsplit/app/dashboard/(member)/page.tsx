@@ -122,7 +122,6 @@ export default async function DashboardPage() {
         {[
           { href: "/dashboard/roster", label: "Roster" },
           { href: "/dashboard/itinerary", label: "Itinerary" },
-          { href: "/dashboard/expenses", label: "Expenses" },
           { href: "/dashboard/contributions", label: "Contributions" },
         ].map((item) => (
           <a

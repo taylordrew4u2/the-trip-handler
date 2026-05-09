@@ -12,7 +12,6 @@ const navItems = [
   { href: "/admin/sleeping", label: "Sleeping" },
   { href: "/admin/meal-plan", label: "Meal plan" },
   { href: "/admin/meals", label: "Dietary" },
-  { href: "/admin/expenses", label: "Expenses" },
   { href: "/admin/contributions", label: "Contributions" },
   { href: "/admin/roster", label: "Roster" },
   { href: "/admin/intake", label: "Guest forms" },

@@ -10,7 +10,6 @@ export default async function AdminDashboardPage() {
     pendingUsers,
     approvedUsers,
     paidUsers,
-    expenses,
     pendingForms,
     editRequests,
   ] = await Promise.all([
@@ -19,7 +18,6 @@ export default async function AdminDashboardPage() {
     prisma.user.count({ where: { status: "PENDING" } }),
     prisma.user.count({ where: { status: { in: ["APPROVED", "PENDING_PAYMENT"] } } }),
     prisma.user.count({ where: { status: "CONFIRMED_PAID" } }),
-    prisma.expense.count(),
     prisma.user.count({
       where: { status: "PENDING", guestForm: { is: null } },
     }),
@@ -31,7 +29,6 @@ export default async function AdminDashboardPage() {
     { label: "Pending approval", value: pendingUsers, href: "/admin/users" },
     { label: "Approved", value: approvedUsers, href: "/admin/users" },
     { label: "Confirmed & paid", value: paidUsers, href: "/admin/users" },
-    { label: "Expenses", value: expenses, href: "/admin/expenses" },
   ];
 
   const queues: { label: string; count: number; href: string }[] = [];
@@ -97,7 +94,7 @@ export default async function AdminDashboardPage() {
 
       <section>
         <h2 className="text-xs uppercase tracking-[0.15em] text-stone-500 mb-3">At a glance</h2>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {stats.map((stat) => (
             <Link
               key={stat.label}
@@ -121,7 +118,6 @@ export default async function AdminDashboardPage() {
             { href: "/admin/sleeping", title: "Sleeping", desc: "Add beds and review who's in each." },
             { href: "/admin/meals", title: "Meals & dietary", desc: "Allergies and restrictions across the group." },
             { href: "/admin/trip", title: "Trip settings", desc: "Lock the trip, set price, edit lodging." },
-            { href: "/admin/expenses", title: "Expenses", desc: "Track shared spending." },
             { href: "/admin/contributions", title: "Contributions", desc: "Suggest items members can claim." },
             { href: "/admin/roster", title: "Full roster", desc: "Searchable table + CSV export." },
             { href: "/admin/diagnostics", title: "Diagnostics", desc: "Integration & env status." },
