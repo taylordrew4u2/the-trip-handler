@@ -13,14 +13,17 @@ export default async function SleepingPage() {
   if (!isApproved(sessionUser?.status)) return <ApprovalRequired what="Sleeping arrangements" />;
   const userId = sessionUser?.id ?? "";
 
-  const beds = await prisma.bed.findMany({
-    orderBy: [{ room: "asc" }, { createdAt: "asc" }],
-    include: {
-      assignments: {
-        include: { user: { select: { id: true, name: true, username: true } } },
+  const [beds, me] = await Promise.all([
+    prisma.bed.findMany({
+      orderBy: [{ room: "asc" }, { createdAt: "asc" }],
+      include: {
+        assignments: {
+          include: { user: { select: { id: true, name: true, username: true } } },
+        },
       },
-    },
-  });
+    }),
+    userId ? prisma.user.findUnique({ where: { id: userId }, select: { gender: true } }) : Promise.resolve(null),
+  ]);
 
   return (
     <div className="space-y-6 max-w-3xl">
@@ -28,10 +31,10 @@ export default async function SleepingPage() {
         <h1 className="font-serif text-3xl font-medium text-stone-900">Sleeping arrangements</h1>
         <p className="text-stone-500 text-sm mt-1 leading-relaxed">
           Pick a bed below — rooms and beds are chosen ahead of time, so claim early. Doubles fit
-          two; singles are reserved for women.
+          two; singles fit one. Female members can bump a current single occupant if needed.
         </p>
       </div>
-      <SleepingClient beds={beds} userId={userId} />
+      <SleepingClient beds={beds} userId={userId} myGender={me?.gender ?? null} />
     </div>
   );
 }
