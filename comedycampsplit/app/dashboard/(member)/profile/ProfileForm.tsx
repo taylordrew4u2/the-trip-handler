@@ -14,7 +14,7 @@ export function ProfileForm({
 }: {
   userId: string;
   email: string;
-  defaults: { name: string; username: string; phone: string; bio: string };
+  defaults: { name: string; username: string; phone: string; bio: string; gender: string };
 }) {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
@@ -30,6 +30,7 @@ export function ProfileForm({
     const username = ((fd.get("username") as string) ?? "").trim();
     const phone = ((fd.get("phone") as string) ?? "").trim();
     const bio = ((fd.get("bio") as string) ?? "").trim();
+    const gender = ((fd.get("gender") as string) ?? "").trim();
 
     if (!name) {
       setError("Name is required.");
@@ -47,6 +48,7 @@ export function ProfileForm({
       username: username || undefined,
       phone: phone || undefined,
       bio: bio || undefined,
+      gender: gender || undefined,
     });
     setSubmitting(false);
     if (result?.error) {
@@ -90,6 +92,21 @@ export function ProfileForm({
       <div>
         <label className="block text-xs font-medium text-stone-700 mb-1.5 tracking-wide">PHONE</label>
         <input name="phone" type="tel" defaultValue={defaults.phone} className={inputCls} placeholder="Optional" />
+      </div>
+
+      <div>
+        <label className="block text-xs font-medium text-stone-700 mb-1.5 tracking-wide">GENDER</label>
+        <select name="gender" defaultValue={defaults.gender} className={inputCls}>
+          <option value="">Prefer not to say</option>
+          <option value="female">Female</option>
+          <option value="male">Male</option>
+          <option value="non-binary">Non-binary</option>
+          <option value="other">Other</option>
+        </select>
+        <p className="text-xs text-stone-500 mt-1">
+          Female members can request a single bed even if it&apos;s already taken (current occupant
+          gets bumped and emailed). Used only for that.
+        </p>
       </div>
 
       <div>

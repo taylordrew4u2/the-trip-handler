@@ -18,6 +18,7 @@ model User {
   status        UserStatus    @default(PENDING)
   role          Role          @default(PARTICIPANT)
   phone         String?
+  gender        String?
   adminNotes    String?
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
