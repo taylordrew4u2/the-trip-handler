@@ -20,6 +20,7 @@ export async function updateProfile(userId: string, data: {
   username?: string;
   bio?: string;
   phone?: string;
+  gender?: string;
 }) {
   if (!userId || userId === "admin") {
     return { error: "You need to be signed in as a participant." };

@@ -36,6 +36,7 @@ export default async function ProfilePage() {
               username: user.username ?? "",
               phone: user.phone ?? "",
               bio: user.bio ?? "",
+              gender: user.gender ?? "",
             }}
           />
         </div>
