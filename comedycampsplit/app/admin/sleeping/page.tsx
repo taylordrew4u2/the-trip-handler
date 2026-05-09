@@ -1,9 +1,12 @@
 import { prisma } from "@/lib/db";
 import { AdminSleepingClient } from "./AdminSleepingClient";
+import { ensureSleepingSetup } from "@/app/actions/sleeping";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminSleepingPage() {
+  await ensureSleepingSetup();
+
   const [trip, beds] = await Promise.all([
     prisma.trip.findFirst(),
     prisma.bed.findMany({

@@ -27,24 +27,23 @@ async function requireApprovedUser(): Promise<{ id: string } | { error: string }
 }
 
 /**
- * Make sure all 9 meal slots and the phase row exist for the current trip.
- * Idempotent — safe to call on every page load.
+ * Seed the 9 default meal slots and phase row on first page load.
+ * Only seeds when the trip has zero slots — admin edits/deletes are preserved.
  */
 export async function ensureMealPlanSetup() {
   const tripId = await getCurrentTripId();
   if (!tripId) return;
 
-  for (const def of SLOT_DEFS) {
-    await prisma.mealSlot.upsert({
-      where: { tripId_dayName_mealType: { tripId, dayName: def.day, mealType: def.meal } },
-      create: {
+  const slotCount = await prisma.mealSlot.count({ where: { tripId } });
+  if (slotCount === 0) {
+    await prisma.mealSlot.createMany({
+      data: SLOT_DEFS.map((def) => ({
         tripId,
         dayName: def.day,
         mealType: def.meal,
         orderIndex: def.order,
         isOptional: def.optional,
-      },
-      update: { orderIndex: def.order, isOptional: def.optional },
+      })),
     });
   }
 
@@ -57,6 +56,74 @@ export async function ensureMealPlanSetup() {
     },
     update: {},
   });
+}
+
+// ---------- Slot management (admin only) ----------
+
+export async function addMealSlot(formData: FormData) {
+  if (!(await isAdmin())) return { error: "Admin only." };
+  const tripId = await getCurrentTripId();
+  if (!tripId) return { error: "No trip yet." };
+
+  const dayName = ((formData.get("dayName") as string) ?? "").trim();
+  const mealType = ((formData.get("mealType") as string) ?? "").trim();
+  const isOptional = Boolean(formData.get("isOptional"));
+  if (!dayName || !mealType) return { error: "Day and meal type are required." };
+
+  const existing = await prisma.mealSlot.findUnique({
+    where: { tripId_dayName_mealType: { tripId, dayName, mealType } },
+  });
+  if (existing) return { error: `${dayName} ${mealType} already exists.` };
+
+  const max = await prisma.mealSlot.aggregate({
+    where: { tripId },
+    _max: { orderIndex: true },
+  });
+  const orderIndex = (max._max.orderIndex ?? -1) + 1;
+
+  await prisma.mealSlot.create({
+    data: { tripId, dayName, mealType, orderIndex, isOptional },
+  });
+
+  revalidatePath("/dashboard/meals");
+  revalidatePath("/admin/meal-plan");
+  return { success: true };
+}
+
+export async function editMealSlot(slotId: string, formData: FormData) {
+  if (!(await isAdmin())) return { error: "Admin only." };
+  const tripId = await getCurrentTripId();
+  if (!tripId) return { error: "No trip yet." };
+
+  const dayName = ((formData.get("dayName") as string) ?? "").trim();
+  const mealType = ((formData.get("mealType") as string) ?? "").trim();
+  const isOptional = Boolean(formData.get("isOptional"));
+  if (!dayName || !mealType) return { error: "Day and meal type are required." };
+
+  const conflict = await prisma.mealSlot.findUnique({
+    where: { tripId_dayName_mealType: { tripId, dayName, mealType } },
+  });
+  if (conflict && conflict.id !== slotId) {
+    return { error: `${dayName} ${mealType} already exists.` };
+  }
+
+  await prisma.mealSlot.update({
+    where: { id: slotId },
+    data: { dayName, mealType, isOptional },
+  });
+
+  revalidatePath("/dashboard/meals");
+  revalidatePath("/admin/meal-plan");
+  return { success: true };
+}
+
+export async function deleteMealSlot(slotId: string) {
+  if (!(await isAdmin())) return { error: "Admin only." };
+  // Cascades: suggestions, votes, helpers, groceries are all onDelete: Cascade.
+  await prisma.mealSlot.delete({ where: { id: slotId } });
+  revalidatePath("/dashboard/meals");
+  revalidatePath("/admin/meal-plan");
+  return { success: true };
 }
 
 // ---------- Phase transitions (admin only) ----------

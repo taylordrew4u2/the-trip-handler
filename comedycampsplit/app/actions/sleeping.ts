@@ -49,6 +49,28 @@ export async function seedDefaultHouseLayout(tripId: string) {
   return { success: true };
 }
 
+/**
+ * Auto-seed the default 5-bedroom layout if the trip has no beds yet.
+ * Safe to call on every page load — only seeds when zero beds exist.
+ */
+export async function ensureSleepingSetup() {
+  const trip = await prisma.trip.findFirst({ select: { id: true } });
+  if (!trip) return;
+
+  const bedCount = await prisma.bed.count({ where: { tripId: trip.id } });
+  if (bedCount === 0) {
+    await prisma.bed.createMany({
+      data: DEFAULT_HOUSE.map((b) => ({
+        tripId: trip.id,
+        room: b.room,
+        label: b.label,
+        type: b.type,
+        womenOnly: false,
+      })),
+    });
+  }
+}
+
 export async function addBed(formData: FormData) {
   if (!(await requireAdmin())) return { error: "Admin only." };
 

@@ -5,6 +5,7 @@ import { ApprovalRequired } from "@/components/ApprovalRequired";
 import { isApproved } from "@/lib/approval";
 import { SleepingClient } from "./SleepingClient";
 import { SignOutButton } from "@/components/SignOutButton";
+import { ensureSleepingSetup } from "@/app/actions/sleeping";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +14,8 @@ export default async function SleepingPage() {
   const sessionUser = session?.user as { id?: string; status?: string } | undefined;
   if (!isApproved(sessionUser?.status)) return <ApprovalRequired what="Sleeping arrangements" />;
   const userId = sessionUser?.id ?? "";
+
+  await ensureSleepingSetup();
 
   const [beds, me] = await Promise.all([
     prisma.bed.findMany({
