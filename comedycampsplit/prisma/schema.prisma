@@ -19,6 +19,8 @@ model User {
   role          Role          @default(PARTICIPANT)
   phone         String?
   gender        String?
+  sleepTags     String[]      @default([])
+  sleepNote     String?
   adminNotes    String?
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
@@ -27,6 +29,8 @@ model User {
   expenses      Expense[]     @relation("ExpenseSubmitter")
   guestForm     GuestForm?
   bedAssignment BedAssignment?
+  bedmateRequestsSent     BedmateRequest[] @relation("BedmateRequester")
+  bedmateRequestsReceived BedmateRequest[] @relation("BedmateRecipient")
   comments      Comment[]
   reactions     Reaction[]
   mealSuggestions MealSuggestion[] @relation("MealSuggestionSubmitter")
@@ -264,6 +268,7 @@ model Bed {
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
   assignments BedAssignment[]
+  bedmateRequests BedmateRequest[]
 }
 
 enum BedType {
@@ -303,6 +308,22 @@ model BedAssignment {
   userId    String   @unique
   user      User     @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())
+}
+
+model BedmateRequest {
+  id           String   @id @default(cuid())
+  bedId        String
+  bed          Bed      @relation(fields: [bedId], references: [id], onDelete: Cascade)
+  fromUserId   String
+  fromUser     User     @relation("BedmateRequester", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUserId     String
+  toUser       User     @relation("BedmateRecipient", fields: [toUserId], references: [id], onDelete: Cascade)
+  status       String   @default("PENDING")
+  createdAt    DateTime @default(now())
+  respondedAt  DateTime?
+
+  @@index([toUserId, status])
+  @@index([fromUserId, status])
 }
 
 model GuestForm {

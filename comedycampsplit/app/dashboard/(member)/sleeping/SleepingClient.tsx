@@ -2,7 +2,23 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { claimBedSlot, leaveBedSlot, bumpFromSingle } from "@/app/actions/sleeping";
+import {
+  claimBedSlot,
+  leaveBedSlot,
+  bumpFromSingle,
+  requestBedmate,
+  respondToBedmateRequest,
+  cancelBedmateRequest,
+} from "@/app/actions/sleeping";
+import { SLEEP_TAG_BY_VALUE } from "@/lib/sleep";
+
+interface OccupantUser {
+  id: string;
+  name: string;
+  username: string | null;
+  sleepTags: string[];
+  sleepNote: string | null;
+}
 
 interface BedRow {
   id: string;
@@ -12,18 +28,34 @@ interface BedRow {
   womenOnly: boolean;
   assignments: {
     userId: string;
-    user: { id: string; name: string; username: string | null };
+    user: OccupantUser;
   }[];
+}
+
+interface IncomingReq {
+  id: string;
+  fromUser: OccupantUser;
+  bed: { id: string; label: string; room: string | null };
+}
+
+interface OutgoingReq {
+  id: string;
+  toUser: { id: string; name: string; username: string | null };
+  bed: { id: string; label: string; room: string | null };
 }
 
 export function SleepingClient({
   beds,
   userId,
   myGender,
+  incomingRequests,
+  outgoingRequests,
 }: {
   beds: BedRow[];
   userId: string;
   myGender: string | null;
+  incomingRequests: IncomingReq[];
+  outgoingRequests: OutgoingReq[];
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
@@ -32,45 +64,36 @@ export function SleepingClient({
   const isFemale = myGender === "female";
   const genderUnset = myGender === null;
 
-  async function handleClaim(bedId: string, womenOnly: boolean) {
+  async function run<T>(label: string, fn: () => Promise<T>) {
     setError("");
-    if (womenOnly) {
-      if (!confirm("This bed is women-only. Confirm you qualify?")) return;
+    setBusy(label);
+    try {
+      const r = (await fn()) as { error?: string } | undefined;
+      if (r && "error" in r && r.error) setError(r.error);
+      router.refresh();
+    } finally {
+      setBusy(null);
     }
-    setBusy(bedId);
-    const result = await claimBedSlot(bedId);
-    setBusy(null);
-    if (result?.error) {
-      setError(result.error);
-      return;
-    }
-    router.refresh();
+  }
+
+  async function handleClaim(bedId: string, womenOnly: boolean) {
+    if (womenOnly && !confirm("This bed is women-only. Confirm you qualify?")) return;
+    await run(bedId, () => claimBedSlot(bedId));
   }
 
   async function handleBump(bedId: string, occupantName: string) {
-    setError("");
     if (
       !confirm(
         `Take ${occupantName}'s single bed? They'll be moved out and emailed to pick another spot.`
       )
     )
       return;
-    setBusy(bedId + "bump");
-    const result = await bumpFromSingle(bedId);
-    setBusy(null);
-    if (result?.error) {
-      setError(result.error);
-      return;
-    }
-    router.refresh();
+    await run(bedId + "bump", () => bumpFromSingle(bedId));
   }
 
-  async function handleLeave() {
-    setError("");
-    setBusy("leave");
-    await leaveBedSlot();
-    setBusy(null);
-    router.refresh();
+  async function handleRequestShare(bedId: string, occupantName: string, toUserId: string) {
+    if (!confirm(`Ask ${occupantName} to share this bed? They'll see the request and accept or decline.`)) return;
+    await run(bedId + "req", () => requestBedmate(bedId, toUserId));
   }
 
   if (beds.length === 0) {
@@ -127,6 +150,64 @@ export function SleepingClient({
         </p>
       )}
 
+      {incomingRequests.length > 0 && (
+        <section className="bg-amber-50 border border-amber-300 rounded-xl p-4 space-y-3">
+          <p className="text-xs uppercase tracking-[0.15em] text-amber-900 font-medium">
+            Bedmate request{incomingRequests.length === 1 ? "" : "s"} for you
+          </p>
+          {incomingRequests.map((r) => (
+            <div key={r.id} className="bg-white border border-amber-200 rounded-lg p-3">
+              <p className="text-sm text-stone-900">
+                <strong>{r.fromUser.name}</strong>
+                {r.fromUser.username && <span className="text-stone-500"> · @{r.fromUser.username}</span>}{" "}
+                wants to share <strong>{r.bed.label}</strong>
+                {r.bed.room && <span className="text-stone-500"> in {r.bed.room}</span>}.
+              </p>
+              <SleepBadges tags={r.fromUser.sleepTags} note={r.fromUser.sleepNote} />
+              <div className="flex gap-2 mt-3">
+                <button
+                  onClick={() => run("acc-" + r.id, () => respondToBedmateRequest(r.id, true))}
+                  disabled={busy !== null}
+                  className="text-xs px-3 py-1.5 bg-stone-900 text-white rounded-md font-medium hover:bg-stone-800 disabled:opacity-50"
+                >
+                  Accept
+                </button>
+                <button
+                  onClick={() => run("dec-" + r.id, () => respondToBedmateRequest(r.id, false))}
+                  disabled={busy !== null}
+                  className="text-xs px-3 py-1.5 border border-stone-300 text-stone-700 rounded-md hover:bg-stone-100 disabled:opacity-50"
+                >
+                  Decline
+                </button>
+              </div>
+            </div>
+          ))}
+        </section>
+      )}
+
+      {outgoingRequests.length > 0 && (
+        <section className="bg-white border border-stone-200 rounded-xl p-4 space-y-2">
+          <p className="text-xs uppercase tracking-[0.15em] text-stone-500 font-medium">
+            Your pending request{outgoingRequests.length === 1 ? "" : "s"}
+          </p>
+          {outgoingRequests.map((r) => (
+            <div key={r.id} className="flex items-center justify-between gap-3 text-sm">
+              <p className="text-stone-700">
+                Asked <strong>{r.toUser.name}</strong> to share <strong>{r.bed.label}</strong>
+                {r.bed.room && <span className="text-stone-500"> ({r.bed.room})</span>}
+              </p>
+              <button
+                onClick={() => run("can-" + r.id, () => cancelBedmateRequest(r.id))}
+                disabled={busy !== null}
+                className="text-xs px-2.5 py-1 border border-stone-300 text-stone-700 rounded-md hover:bg-stone-100 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+            </div>
+          ))}
+        </section>
+      )}
+
       {myBed && (
         <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 flex items-center justify-between gap-3">
           <div>
@@ -141,7 +222,7 @@ export function SleepingClient({
             )}
           </div>
           <button
-            onClick={handleLeave}
+            onClick={() => run("leave", () => leaveBedSlot())}
             disabled={busy !== null}
             className="text-xs px-3 py-1.5 border border-emerald-700 text-emerald-900 rounded-md hover:bg-emerald-100 disabled:opacity-50 whitespace-nowrap"
           >
@@ -169,12 +250,19 @@ export function SleepingClient({
               const full = taken >= capacity;
               const mine = bed.assignments.some((a) => a.userId === userId);
               const isOccupiedSingle = bed.type === "SINGLE" && taken > 0 && !mine;
+              const isHalfFullDouble = bed.type === "DOUBLE" && taken === 1 && !mine;
               const occupant = bed.assignments[0];
               const canBump = isOccupiedSingle && isFemale;
+              const pendingReqToOccupant = isHalfFullDouble
+                ? outgoingRequests.find(
+                    (r) => r.bed.id === bed.id && r.toUser.id === occupant?.userId
+                  )
+                : null;
+
               return (
                 <div key={bed.id} className="px-5 py-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
+                  <div className="flex items-start justify-between gap-3 flex-wrap">
+                    <div className="min-w-0">
                       <p className="font-medium text-stone-900">{bed.label}</p>
                       <div className="flex flex-wrap items-center gap-2 mt-1">
                         <span className="text-xs px-2 py-0.5 rounded bg-stone-100 text-stone-700">
@@ -190,41 +278,69 @@ export function SleepingClient({
                         </span>
                       </div>
                     </div>
-                    {mine ? (
-                      <span className="text-xs px-2.5 py-1 bg-emerald-100 text-emerald-900 rounded-md font-medium">
-                        Yours
-                      </span>
-                    ) : canBump ? (
-                      <button
-                        onClick={() => handleBump(bed.id, occupant?.user.name ?? "the occupant")}
-                        disabled={busy !== null}
-                        className="text-xs px-3 py-1.5 border border-stone-700 text-stone-900 rounded-md font-medium hover:bg-stone-100 disabled:opacity-50"
-                        title="Female members can take a single from a current occupant"
-                      >
-                        {busy === bed.id + "bump" ? "Requesting…" : "Take this single"}
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => handleClaim(bed.id, bed.womenOnly)}
-                        disabled={full || busy !== null}
-                        className="text-xs px-3 py-1.5 bg-stone-900 text-white rounded-md font-medium hover:bg-stone-800 disabled:bg-stone-300 disabled:cursor-not-allowed"
-                      >
-                        {busy === bed.id ? "Claiming…" : full ? "Full" : myBedId ? "Move here" : "Claim"}
-                      </button>
-                    )}
+                    <div className="shrink-0">
+                      {mine ? (
+                        <span className="text-xs px-2.5 py-1 bg-emerald-100 text-emerald-900 rounded-md font-medium">
+                          Yours
+                        </span>
+                      ) : canBump ? (
+                        <button
+                          onClick={() => handleBump(bed.id, occupant?.user.name ?? "the occupant")}
+                          disabled={busy !== null}
+                          className="text-xs px-3 py-1.5 border border-stone-700 text-stone-900 rounded-md font-medium hover:bg-stone-100 disabled:opacity-50"
+                        >
+                          {busy === bed.id + "bump" ? "Requesting…" : "Take this single"}
+                        </button>
+                      ) : isHalfFullDouble ? (
+                        pendingReqToOccupant ? (
+                          <span className="text-xs px-2.5 py-1 bg-amber-100 text-amber-900 rounded-md font-medium">
+                            Request pending
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() =>
+                              handleRequestShare(bed.id, occupant.user.name, occupant.userId)
+                            }
+                            disabled={busy !== null}
+                            className="text-xs px-3 py-1.5 border border-stone-700 text-stone-900 rounded-md font-medium hover:bg-stone-100 disabled:opacity-50"
+                          >
+                            {busy === bed.id + "req" ? "Asking…" : "Ask to share"}
+                          </button>
+                        )
+                      ) : (
+                        <button
+                          onClick={() => handleClaim(bed.id, bed.womenOnly)}
+                          disabled={full || busy !== null}
+                          className="text-xs px-3 py-1.5 bg-stone-900 text-white rounded-md font-medium hover:bg-stone-800 disabled:bg-stone-300 disabled:cursor-not-allowed"
+                        >
+                          {busy === bed.id ? "Claiming…" : full ? "Full" : myBedId ? "Move here" : "Claim"}
+                        </button>
+                      )}
+                    </div>
                   </div>
                   {bed.assignments.length > 0 && (
-                    <ul className="mt-3 flex flex-wrap gap-1.5">
+                    <ul className="mt-3 space-y-2">
                       {bed.assignments.map((a) => (
                         <li
                           key={a.userId}
-                          className={`text-xs px-2 py-0.5 rounded ${
+                          className={`px-3 py-2 rounded-md ${
                             a.userId === userId
-                              ? "bg-emerald-100 text-emerald-900 font-medium"
-                              : "bg-stone-100 text-stone-700"
+                              ? "bg-emerald-50 border border-emerald-200"
+                              : "bg-stone-50 border border-stone-200"
                           }`}
                         >
-                          {a.user.username ? `@${a.user.username}` : a.user.name}
+                          <p className="text-sm font-medium text-stone-900">
+                            {a.user.name}
+                            {a.user.username && (
+                              <span className="text-stone-500 font-normal"> · @{a.user.username}</span>
+                            )}
+                            {a.userId === userId && (
+                              <span className="ml-2 text-xs px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-900">
+                                you
+                              </span>
+                            )}
+                          </p>
+                          <SleepBadges tags={a.user.sleepTags} note={a.user.sleepNote} />
                         </li>
                       ))}
                     </ul>
@@ -236,6 +352,27 @@ export function SleepingClient({
         </section>
         );
       })}
+    </div>
+  );
+}
+
+function SleepBadges({ tags, note }: { tags: string[]; note: string | null }) {
+  if ((!tags || tags.length === 0) && !note) return null;
+  return (
+    <div className="mt-1.5">
+      {tags && tags.length > 0 && (
+        <ul className="flex flex-wrap gap-1">
+          {tags.map((t) => {
+            const def = SLEEP_TAG_BY_VALUE.get(t);
+            return (
+              <li key={t} className="text-xs px-2 py-0.5 rounded-full bg-stone-100 text-stone-700">
+                {def ? `${def.emoji} ${def.label}` : t}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      {note && <p className="text-xs text-stone-600 mt-1 italic">&ldquo;{note}&rdquo;</p>}
     </div>
   );
 }

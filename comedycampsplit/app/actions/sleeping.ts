@@ -254,3 +254,119 @@ export async function bumpFromSingle(bedId: string) {
   revalidatePath("/dashboard/sleeping");
   return { success: true };
 }
+
+const APPROVED_STATUSES = ["APPROVED", "PENDING_PAYMENT", "CONFIRMED_PAID"];
+
+async function requireApprovedSelf() {
+  const session = await getServerSession(authOptions);
+  const u = session?.user as { id?: string; role?: string; status?: string } | undefined;
+  if (!u?.id || u.id === "admin" || u.role === "ADMIN") {
+    return { error: "Sign in as a participant first." } as const;
+  }
+  if (!APPROVED_STATUSES.includes(u.status ?? "")) {
+    return { error: "You need to be approved first." } as const;
+  }
+  return { id: u.id } as const;
+}
+
+/**
+ * Request to share a double bed that already has one occupant.
+ * The occupant must accept before the requester is added.
+ */
+export async function requestBedmate(bedId: string, toUserId: string) {
+  const auth = await requireApprovedSelf();
+  if ("error" in auth) return auth;
+  if (auth.id === toUserId) return { error: "You can't request yourself." };
+
+  const bed = await prisma.bed.findUnique({
+    where: { id: bedId },
+    include: { assignments: true },
+  });
+  if (!bed) return { error: "Bed not found." };
+  if (bed.type !== "DOUBLE") return { error: "Only double beds can be shared." };
+  if (bed.assignments.length === 0) {
+    return { error: "Bed is empty — just claim it normally." };
+  }
+  if (bed.assignments.length >= 2) return { error: "That bed is already full." };
+  if (bed.assignments.some((a) => a.userId === auth.id)) {
+    return { error: "You're already in this bed." };
+  }
+  if (!bed.assignments.some((a) => a.userId === toUserId)) {
+    return { error: "That person isn't in this bed anymore." };
+  }
+
+  const existing = await prisma.bedmateRequest.findFirst({
+    where: { bedId, fromUserId: auth.id, toUserId, status: "PENDING" },
+  });
+  if (existing) return { error: "You already have a pending request for this bed." };
+
+  await prisma.bedmateRequest.create({
+    data: { bedId, fromUserId: auth.id, toUserId, status: "PENDING" },
+  });
+
+  revalidatePath("/dashboard/sleeping");
+  revalidatePath("/admin/sleeping");
+  return { success: true };
+}
+
+export async function respondToBedmateRequest(requestId: string, accept: boolean) {
+  const auth = await requireApprovedSelf();
+  if ("error" in auth) return auth;
+
+  const req = await prisma.bedmateRequest.findUnique({
+    where: { id: requestId },
+    include: { bed: { include: { assignments: true } } },
+  });
+  if (!req) return { error: "Request not found." };
+  if (req.toUserId !== auth.id) return { error: "Not your request to respond to." };
+  if (req.status !== "PENDING") return { error: "Already handled." };
+
+  if (!accept) {
+    await prisma.bedmateRequest.update({
+      where: { id: requestId },
+      data: { status: "DECLINED", respondedAt: new Date() },
+    });
+    revalidatePath("/dashboard/sleeping");
+    return { success: true };
+  }
+
+  // Accept: requester gets moved into this bed.
+  if (req.bed.assignments.length >= 2) {
+    return { error: "Bed is now full — can't accept." };
+  }
+  if (!req.bed.assignments.some((a) => a.userId === auth.id)) {
+    return { error: "You're no longer in this bed — can't accept." };
+  }
+
+  await prisma.$transaction([
+    prisma.bedAssignment.deleteMany({ where: { userId: req.fromUserId } }),
+    prisma.bedAssignment.create({ data: { bedId: req.bedId, userId: req.fromUserId } }),
+    prisma.bedmateRequest.update({
+      where: { id: requestId },
+      data: { status: "ACCEPTED", respondedAt: new Date() },
+    }),
+    // Other pending requests for this bed are now stale — decline them.
+    prisma.bedmateRequest.updateMany({
+      where: { bedId: req.bedId, status: "PENDING", id: { not: requestId } },
+      data: { status: "DECLINED", respondedAt: new Date() },
+    }),
+  ]);
+
+  revalidatePath("/dashboard/sleeping");
+  revalidatePath("/admin/sleeping");
+  return { success: true };
+}
+
+export async function cancelBedmateRequest(requestId: string) {
+  const auth = await requireApprovedSelf();
+  if ("error" in auth) return auth;
+
+  const req = await prisma.bedmateRequest.findUnique({ where: { id: requestId } });
+  if (!req) return { error: "Request not found." };
+  if (req.fromUserId !== auth.id) return { error: "Not your request to cancel." };
+  if (req.status !== "PENDING") return { error: "Already handled." };
+
+  await prisma.bedmateRequest.delete({ where: { id: requestId } });
+  revalidatePath("/dashboard/sleeping");
+  return { success: true };
+}

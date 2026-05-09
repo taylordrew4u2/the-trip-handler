@@ -17,16 +17,50 @@ export default async function SleepingPage() {
 
   await ensureSleepingSetup();
 
-  const [beds, me] = await Promise.all([
+  const [beds, me, incomingRequests, outgoingRequests] = await Promise.all([
     prisma.bed.findMany({
       orderBy: [{ room: "asc" }, { createdAt: "asc" }],
       include: {
         assignments: {
-          include: { user: { select: { id: true, name: true, username: true } } },
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                username: true,
+                sleepTags: true,
+                sleepNote: true,
+              },
+            },
+          },
         },
       },
     }),
-    userId ? prisma.user.findUnique({ where: { id: userId }, select: { gender: true } }) : Promise.resolve(null),
+    userId
+      ? prisma.user.findUnique({ where: { id: userId }, select: { gender: true } })
+      : Promise.resolve(null),
+    userId
+      ? prisma.bedmateRequest.findMany({
+          where: { toUserId: userId, status: "PENDING" },
+          include: {
+            fromUser: {
+              select: { id: true, name: true, username: true, sleepTags: true, sleepNote: true },
+            },
+            bed: { select: { id: true, label: true, room: true } },
+          },
+          orderBy: { createdAt: "desc" },
+        })
+      : Promise.resolve([]),
+    userId
+      ? prisma.bedmateRequest.findMany({
+          where: { fromUserId: userId, status: "PENDING" },
+          include: {
+            toUser: { select: { id: true, name: true, username: true } },
+            bed: { select: { id: true, label: true, room: true } },
+          },
+          orderBy: { createdAt: "desc" },
+        })
+      : Promise.resolve([]),
   ]);
 
   return (
@@ -34,11 +68,17 @@ export default async function SleepingPage() {
       <div>
         <h1 className="font-serif text-3xl font-medium text-stone-900">Sleeping arrangements</h1>
         <p className="text-stone-500 text-sm mt-1 leading-relaxed">
-          Pick a bed below — rooms and beds are chosen ahead of time, so claim early. Doubles fit
-          two; singles fit one. Female members can bump a current single occupant if needed.
+          Claim a bed below. Doubles fit two — empty doubles can be claimed directly; if someone&apos;s
+          already there, send them a request to share. Female members can bump a single occupant.
         </p>
       </div>
-      <SleepingClient beds={beds} userId={userId} myGender={me?.gender ?? null} />
+      <SleepingClient
+        beds={beds}
+        userId={userId}
+        myGender={me?.gender ?? null}
+        incomingRequests={incomingRequests}
+        outgoingRequests={outgoingRequests}
+      />
 
       <div className="bg-white border border-stone-200 rounded-xl p-5 flex items-center justify-between">
         <p className="text-sm text-stone-600">Done picking? You can sign out.</p>
