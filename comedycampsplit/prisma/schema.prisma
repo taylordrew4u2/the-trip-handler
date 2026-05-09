@@ -56,6 +56,12 @@ model Trip {
   isLocked        Boolean     @default(false)
   lockedAt        DateTime?
   finalPrice      Float?
+  housingPrice    Float?
+  housingLocked   Boolean     @default(false)
+  transportPrice  Float?
+  transportLocked Boolean     @default(false)
+  mealsPrice      Float?
+  mealsLocked     Boolean     @default(false)
   totalExpenses   Float       @default(0)
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
