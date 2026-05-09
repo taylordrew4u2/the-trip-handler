@@ -6,20 +6,36 @@ This is the **Next.js app** for organizing the comedian summer camp trip (roster
 
 ---
 
+## ✅ Production status
+
+The site is live at <https://comedysummercamp.vercel.app> and the auth + database backbone is working. Verified end-to-end:
+
+- Public pages (`/`, `/login`, `/signup`) return **200**; unauthenticated `/dashboard` correctly redirects to `/login`
+- NextAuth endpoints respond (`NEXTAUTH_SECRET` and `NEXTAUTH_URL` are set correctly)
+- Postgres is connected and the schema has been pushed (build runs `prisma db push` on every deploy)
+- Admin login (`Taylor` / `weed69`) succeeds and **all six admin pages render 200**: dashboard, users, expenses, trip, contributions, roster
+- The Stripe webhook route loads without crashing
+
+**What still needs in-app verification** (can't be probed from outside): Vercel Blob uploads (avatars/receipts), Resend email delivery, and Stripe Checkout end-to-end. Walk through the **Step 12 smoke test** to confirm those.
+
+---
+
 ## ☑️ Progress checklist (tick as you go)
 
 Copy this into a notes app and tick each box yourself. **All boxes must be ticked before the site works.**
 
 - [x] **1.** GitHub repo exists and code is pushed ✅
-- [ ] **2.** Vercel project created, root directory set to `comedycampsplit`
-- [ ] **3.** Vercel Postgres database created and connected
-- [ ] **4.** Vercel Blob store created and connected
-- [ ] **5.** Stripe account created, API keys copied
-- [ ] **6.** Resend account created, sender domain verified, API key copied
-- [ ] **7.** All environment variables pasted into Vercel (see Step 6 table)
-- [ ] **8.** First deploy succeeded (build is green in Vercel)
+- [x] **2.** Vercel project created, root directory set to `comedycampsplit` ✅
+- [x] **3.** Vercel Postgres database created and connected ✅ (verified: credentials lookup queries the `User` table)
+- [ ] **4.** Vercel Blob store created and connected — verify by uploading an avatar in Step 12
+- [ ] **5.** Stripe account created, API keys copied — verify with a test purchase in Step 12
+- [ ] **6.** Resend account created, sender domain verified, API key copied — verify by triggering an email in Step 12
+- [x] **7.** Core environment variables present in Vercel ✅ (`NEXTAUTH_SECRET`, `NEXTAUTH_URL`, `DATABASE_URL` confirmed working). Still scan the Step 7 table for `STRIPE_*`, `RESEND_API_KEY`, `EMAIL_FROM`, `BLOB_READ_WRITE_TOKEN` if any feature below fails.
+- [x] **8a.** Build succeeds in Vercel ✅
+- [x] **8b.** Deployed site loads without 500s ✅ (returns 200 → `/login`, admin dashboard renders)
 - [ ] **9.** Stripe webhook created and `STRIPE_WEBHOOK_SECRET` added to Vercel
-- [ ] **10.** Database schema pushed (`npx prisma db push`) and seeded (`npm run db:seed`) from your laptop
+- [x] **10a.** Database schema pushed ✅ (the build now runs `prisma db push` automatically — see Step 10 below)
+- [ ] **10b.** Trip row seeded (`npm run db:seed`) — optional, the dashboard renders without it. Note: the admin user is hardcoded in `lib/auth.ts`, not seeded.
 - [ ] **11.** (Optional) Custom domain attached and `NEXTAUTH_URL` / `NEXT_PUBLIC_APP_URL` updated
 - [ ] **12.** Smoke test passed (full list at the bottom)
 
@@ -27,20 +43,17 @@ Copy this into a notes app and tick each box yourself. **All boxes must be ticke
 
 ## 🚧 What's left to finish (current status)
 
-Everything in the codebase is ready. **The remaining work is account/config setup in Vercel + Stripe + Resend — code changes are not needed.** In rough order:
+The hosting/auth/database layer is working in production. **What's left is exercising the third-party integrations end-to-end and verifying they're configured.** In priority order:
 
-1. **Point Vercel at `main`.** This repo's default deploy branch should be `main`. If your Vercel project was previously linked to a different branch (e.g. `claude/...` or `codex/...`), open Vercel → **Settings → Git → Production Branch** and set it to `main`. All future pushes to `main` will then auto-deploy.
-2. **Create the Vercel project** with Root Directory = `comedycampsplit` (Step 2).
-3. **Provision storage:** Postgres (Step 3) + Blob (Step 4). These auto-add `DATABASE_URL` and `BLOB_READ_WRITE_TOKEN`.
-4. **Get third-party keys:** Stripe test keys (Step 5) and Resend API key + verified sender domain (Step 6).
-5. **Paste env vars into Vercel** (Step 7) — the full list is in the table below. `EMAIL_FROM` is required (the app no longer hardcodes a sender).
-6. **First deploy** (Step 8), then **update `NEXTAUTH_URL` / `NEXT_PUBLIC_APP_URL`** to the real Vercel URL and redeploy.
-7. **Add the Stripe webhook** at `/api/webhooks/stripe`, paste the signing secret into `STRIPE_WEBHOOK_SECRET`, redeploy (Step 9).
-8. **Push the DB schema and seed** from your laptop — Vercel won't do this for you (Step 10).
-9. **Run the smoke test** (Step 12). When it passes end-to-end on test mode, swap to Stripe **live keys** and create a **live-mode webhook**.
-10. *(Optional)* Attach a **custom domain** and update both URL env vars + the Stripe webhook URL (Step 11).
+1. **Run the smoke test (Step 12)** against <https://comedysummercamp.vercel.app>. Each item that fails points at exactly which integration still needs work.
+2. **Vercel Blob (Step 4):** uploading an avatar in Step 12 will fail if `BLOB_READ_WRITE_TOKEN` is missing.
+3. **Resend (Step 6):** triggering an email (e.g. lock the trip in `/admin/trip`) will fail if `RESEND_API_KEY` or `EMAIL_FROM` is missing or the sender domain isn't verified.
+4. **Stripe Checkout (Step 5):** a test purchase will fail if `STRIPE_SECRET_KEY` / `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` are missing or use the wrong mode.
+5. **Stripe webhook (Step 9):** even after a successful checkout, the trip status only flips to *Confirmed & Paid* once the webhook is wired. Add the endpoint and paste `STRIPE_WEBHOOK_SECRET`, then redeploy.
+6. **Switch Stripe to live keys** once the test-mode smoke test passes end-to-end — and create a *new* webhook in live mode (Step 12).
+7. *(Optional)* Attach a **custom domain** and update both URL env vars + the Stripe webhook URL (Step 11).
 
-> If you want to know exactly which env var is still blank, open Vercel → **Settings → Environment Variables** and compare against the table in Step 7. Anything not listed there is still missing.
+> To audit env vars directly: Vercel → **Settings → Environment Variables**. Compare against the Step 7 table.
 
 ---
 
@@ -204,29 +217,22 @@ The app listens at `/api/webhooks/stripe`. Stripe needs to know to POST events t
 
 ---
 
-## Step 10 — Database schema + seed (do this from your laptop, ONCE)
+## Step 10 — Database schema + seed
 
-Vercel doesn't run `prisma db push` automatically. You have to.
+**Schema (automatic):** the Vercel build runs `prisma db push --skip-generate --accept-data-loss` on every deploy. Whenever `comedycampsplit/prisma/schema.prisma` changes, just commit and push — the next deploy syncs the production database. No laptop steps needed.
+
+**Seed (optional, manual):** the seed only inserts a default `Trip` row. The admin user is **not** seeded — it's hardcoded in `lib/auth.ts` (`Taylor` / `weed69`). The admin dashboard works without seeding (the trip name just falls back to "Comedy Summer Camp"). If you want a real Trip row in the DB:
 
 ```bash
 # On your laptop:
 cd comedycampsplit
 npm install
-
-# Link this folder to the Vercel project, then download production env vars
 npx vercel link
 npx vercel env pull .env
-
-# Create all the database tables
-npx prisma db push
-
-# Insert the trip row + admin user
 npm run db:seed
 ```
 
-**How to know it worked:** running `npx prisma studio` opens a browser showing tables (User, Trip, Expense, etc.) with at least the seeded admin user in `User`.
-
-> **You only re-run `npx prisma db push` if `comedycampsplit/prisma/schema.prisma` changes.** You don't re-seed unless you wipe the database.
+> **Heads up — `--accept-data-loss`:** this flag is on so deploys aren't blocked when a column is dropped. It does what it says: if you remove a field from `schema.prisma`, the column (and its data) goes away on the next deploy. If you ever need destructive-change protection, swap to `prisma migrate deploy` with a `prisma/migrations/` folder.
 
 ---
 

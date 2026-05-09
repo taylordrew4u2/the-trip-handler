@@ -12,19 +12,19 @@ export function SearchSort({ search, onSearchChange, sort, onSortChange }: Searc
     <div className="flex flex-col sm:flex-row gap-3">
       <input
         type="text"
-        placeholder="Search campers..."
+        placeholder="Search campers…"
         value={search}
         onChange={(e) => onSearchChange(e.target.value)}
-        className="flex-1 px-4 py-2 rounded-xl border border-purple-200 bg-white focus:outline-none focus:ring-2 focus:ring-purple-400 text-sm"
+        className="flex-1 px-3 py-2 rounded-lg border border-stone-300 bg-white focus:outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900 text-sm"
       />
       <select
         value={sort}
         onChange={(e) => onSortChange(e.target.value)}
-        className="px-4 py-2 rounded-xl border border-purple-200 bg-white focus:outline-none focus:ring-2 focus:ring-purple-400 text-sm"
+        className="px-3 py-2 rounded-lg border border-stone-300 bg-white focus:outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900 text-sm"
       >
         <option value="name">Sort A–Z</option>
-        <option value="newest">Newest First</option>
-        <option value="status">By Status</option>
+        <option value="newest">Newest first</option>
+        <option value="status">By status</option>
       </select>
     </div>
   );

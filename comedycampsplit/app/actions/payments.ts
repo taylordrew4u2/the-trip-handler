@@ -2,14 +2,17 @@
 
 import { getStripe } from "@/lib/stripe";
 import { prisma } from "@/lib/db";
+import { SECURITY_DEPOSIT_USD } from "@/lib/pricing";
 import { revalidatePath } from "next/cache";
 
-export async function createCheckoutSession(userId: string, amount: number) {
+export async function createCheckoutSession(userId: string, tripShare: number) {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL;
   if (!appUrl) return { error: "NEXT_PUBLIC_APP_URL is not configured" };
 
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) return { error: "User not found" };
+
+  const total = tripShare + SECURITY_DEPOSIT_USD;
 
   const stripe = getStripe();
   const session = await stripe.checkout.sessions.create({
@@ -18,8 +21,19 @@ export async function createCheckoutSession(userId: string, amount: number) {
       {
         price_data: {
           currency: "usd",
-          product_data: { name: "Comedy Summer Camp" },
-          unit_amount: Math.round(amount * 100),
+          product_data: { name: "Comedy Summer Camp — trip share" },
+          unit_amount: Math.round(tripShare * 100),
+        },
+        quantity: 1,
+      },
+      {
+        price_data: {
+          currency: "usd",
+          product_data: {
+            name: "Refundable security deposit",
+            description: "Returned after the trip if the rules are followed and there's no damage.",
+          },
+          unit_amount: Math.round(SECURITY_DEPOSIT_USD * 100),
         },
         quantity: 1,
       },
@@ -28,13 +42,13 @@ export async function createCheckoutSession(userId: string, amount: number) {
     success_url: `${appUrl}/dashboard/payment?success=true`,
     cancel_url: `${appUrl}/dashboard/payment?cancelled=true`,
     customer_email: user.email,
-    metadata: { userId },
+    metadata: { userId, tripShare: String(tripShare), securityDeposit: String(SECURITY_DEPOSIT_USD) },
   });
 
   await prisma.payment.create({
     data: {
       userId,
-      amount,
+      amount: total,
       stripeSessionId: session.id,
       status: "PENDING",
     },

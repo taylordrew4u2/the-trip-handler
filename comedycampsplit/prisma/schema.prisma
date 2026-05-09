@@ -18,12 +18,20 @@ model User {
   status        UserStatus    @default(PENDING)
   role          Role          @default(PARTICIPANT)
   phone         String?
+  gender        String?
   adminNotes    String?
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
   payments      Payment[]
   contributions UserContribution[]
   expenses      Expense[]     @relation("ExpenseSubmitter")
+  guestForm     GuestForm?
+  bedAssignment BedAssignment?
+  comments      Comment[]
+  reactions     Reaction[]
+  mealSuggestions MealSuggestion[] @relation("MealSuggestionSubmitter")
+  mealVotes       MealVote[]       @relation("MealVoter")
+  mealHelpers     MealHelper[]     @relation("MealHelperUser")
 }
 
 enum UserStatus {
@@ -52,19 +60,116 @@ model Trip {
   isLocked        Boolean     @default(false)
   lockedAt        DateTime?
   finalPrice      Float?
+  housingPrice    Float?
+  housingLocked   Boolean     @default(false)
+  transportPrice  Float?
+  transportLocked Boolean     @default(false)
+  mealsPrice      Float?
+  mealsLocked     Boolean     @default(false)
   totalExpenses   Float       @default(0)
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
   expenses        Expense[]
   contributions   Contribution[]
+  beds            Bed[]
+  days            Day[]
+  lodgingPhotos   LodgingPhoto[]
+  mealSlots       MealSlot[]
+  mealPlanPhase   MealPlanPhase?
+}
+
+model MealSlot {
+  id                    String   @id @default(cuid())
+  tripId                String
+  trip                  Trip     @relation(fields: [tripId], references: [id])
+  dayName               String
+  mealType              String
+  orderIndex            Int
+  isOptional            Boolean  @default(false)
+  status                String   @default("PENDING")
+  confirmedSuggestionId String?
+  adminOverrideNote     String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  suggestions MealSuggestion[]
+  votes       MealVote[]
+  helpers     MealHelper[]
+  groceries   GroceryItem[]
+
+  @@unique([tripId, dayName, mealType])
+}
+
+model MealSuggestion {
+  id                String   @id @default(cuid())
+  mealSlotId        String
+  mealSlot          MealSlot @relation(fields: [mealSlotId], references: [id], onDelete: Cascade)
+  mealName          String
+  submittedByUserId String
+  submittedBy       User     @relation("MealSuggestionSubmitter", fields: [submittedByUserId], references: [id], onDelete: Cascade)
+  note              String?
+  helpOffered       String[]
+  dietaryTags       String[]
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  votes             MealVote[]
+}
+
+model MealVote {
+  id           String          @id @default(cuid())
+  userId       String
+  user         User            @relation("MealVoter", fields: [userId], references: [id], onDelete: Cascade)
+  mealSlotId   String
+  mealSlot     MealSlot        @relation(fields: [mealSlotId], references: [id], onDelete: Cascade)
+  suggestionId String?
+  suggestion   MealSuggestion? @relation(fields: [suggestionId], references: [id], onDelete: SetNull)
+  isDontCare   Boolean         @default(false)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  @@unique([userId, mealSlotId])
+}
+
+model MealHelper {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation("MealHelperUser", fields: [userId], references: [id], onDelete: Cascade)
+  mealSlotId String
+  mealSlot   MealSlot @relation(fields: [mealSlotId], references: [id], onDelete: Cascade)
+  helpType   String
+  createdAt  DateTime @default(now())
+}
+
+model GroceryItem {
+  id         String   @id @default(cuid())
+  mealSlotId String
+  mealSlot   MealSlot @relation(fields: [mealSlotId], references: [id], onDelete: Cascade)
+  name       String
+  category   String
+  quantity   String?
+  bought     Boolean  @default(false)
+  notes      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model MealPlanPhase {
+  id                  String    @id @default(cuid())
+  tripId              String    @unique
+  trip                Trip      @relation(fields: [tripId], references: [id])
+  currentPhase        String    @default("suggestions_open")
+  suggestionsOpenedAt DateTime?
+  votingOpenedAt      DateTime?
+  votingClosedAt      DateTime?
+  finalizedAt         DateTime?
 }
 
 model Expense {
   id          String      @id @default(cuid())
   tripId      String
   trip        Trip        @relation(fields: [tripId], references: [id])
-  submittedBy String
-  submitter   User        @relation("ExpenseSubmitter", fields: [submittedBy], references: [id])
+  submittedBy String?
+  submitter   User?       @relation("ExpenseSubmitter", fields: [submittedBy], references: [id])
   title       String
   amount      Float
   category    String
@@ -116,4 +221,207 @@ enum PaymentStatus {
   COMPLETED
   REFUNDED
   FAILED
+}
+
+model Day {
+  id        String   @id @default(cuid())
+  tripId    String
+  trip      Trip     @relation(fields: [tripId], references: [id])
+  dayNumber Int
+  date      DateTime?
+  title     String?
+  schedule  String?
+  breakfast String?
+  lunch     String?
+  dinner    String?
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([tripId, dayNumber])
+}
+
+model LodgingPhoto {
+  id        String   @id @default(cuid())
+  tripId    String
+  trip      Trip     @relation(fields: [tripId], references: [id])
+  url       String
+  caption   String?
+  position  Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([tripId, position])
+}
+
+model Bed {
+  id          String          @id @default(cuid())
+  tripId      String
+  trip        Trip            @relation(fields: [tripId], references: [id])
+  label       String
+  room        String?
+  type        BedType         @default(DOUBLE)
+  womenOnly   Boolean         @default(false)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  assignments BedAssignment[]
+}
+
+enum BedType {
+  SINGLE
+  DOUBLE
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  body      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  reactions Reaction[]
+
+  @@index([createdAt])
+}
+
+model Reaction {
+  id        String   @id @default(cuid())
+  commentId String
+  comment   Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emoji     String
+  createdAt DateTime @default(now())
+
+  @@unique([commentId, userId, emoji])
+  @@index([commentId])
+}
+
+model BedAssignment {
+  id        String   @id @default(cuid())
+  bedId     String
+  bed       Bed      @relation(fields: [bedId], references: [id], onDelete: Cascade)
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model GuestForm {
+  id                       String   @id @default(cuid())
+  userId                   String   @unique
+  user                     User     @relation(fields: [userId], references: [id])
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+
+  // Form is locked after first submission — admin must grant edit access
+  // before the user can re-submit.
+  locked                   Boolean  @default(true)
+  editRequested            Boolean  @default(false)
+
+  // Preferences (van, food, comedy, emergency contact) are filled in
+  // post-approval and stay editable; this records when they were last saved.
+  preferencesSubmittedAt   DateTime?
+
+  // Basic Info
+  fullName                 String
+  stageName                String?
+  phoneNumber              String
+  pronouns                 String?
+  age21Confirmed           Boolean  @default(false)
+  emergencyName            String?
+  emergencyPhone           String?
+
+  // Substance-free policy (required acknowledgement)
+  substanceFreeAck         Boolean  @default(false)
+
+  // Van Transportation
+  comingFrom               String?
+  centralPickup            String?
+  preferredArea            String?
+  preferredAreaOther       String?
+  readyTimeDay1            String?
+  returnByDay3             String?
+  carsick                  String?
+  needsFrontSeat           String?
+  luggageSize              String?
+  bulkyItems               String?
+  willingToDrive           String?
+  vanAck                   Boolean  @default(false)
+
+  // Sleeping / House
+  shareRoom                String?
+  shareBed                 String?
+  needOwnBed               String?
+  bringingItems            String[]
+  sleepNotes               String?
+
+  // Food / Allergies
+  hasAllergies             String?
+  allergiesList            String?
+  allergySeverity          String?
+  dietaryRestrictions      String[]
+  dietaryOther             String?
+  willNotEat               String?
+  likedFoods               String?
+  snackRequests            String?
+  drinkPrefs               String[]
+  drinkOther               String?
+  communalMeals            String?
+  helpCookClean            String?
+
+  // Medical / Safety
+  medicalConditions        String?
+  refrigeratedMeds         String?
+  emergencyMedItem         String?
+  mobilityNeeds            String?
+  cannotDo                 String?
+  safetyNotes              String?
+
+  // Comedy / Workshop
+  workOnGoals              String[]
+  workOnOther              String?
+  materialAmount           String?
+  comfortPerforming        String?
+  comfortReceivingFb       String?
+  comfortGivingFb          String?
+  feedbackOptOut           String?
+  usefulFeedback           String?
+
+  // Content / Social Media
+  instagram                String?
+  tiktok                   String?
+  otherHandles             String?
+  comfortGroupPhotos       String?
+  comfortGroupVideos       String?
+  comfortTagged            String?
+  comfortPlannedContent    String?
+  contentComfort           String?
+  contentOptOut            String?
+  approveClipsBeforePost   String?
+  contentAcks              String[]
+
+  // Joke / Material Protection (required acknowledgements)
+  jokeProtectionAcks       String[]
+
+  // Group Activities
+  activitiesInterested     String[]
+  activitiesOtherText      String?
+  activitiesOptOut         String?
+  structurePref            String?
+
+  // Payment / Costs
+  maxBudget                String?
+  paymentMethod            String?
+  paymentMethodOther       String?
+  paymentUsername          String?
+  paymentAcks              String[]
+
+  // Security deposit (required acknowledgements)
+  securityDepositAcks      String[]
+
+  // House Rules (required acknowledgements)
+  houseRulesAcks           String[]
+
+  // Final Notes
+  finalNotes               String?
+  whatWouldMakeFun         String?
 }

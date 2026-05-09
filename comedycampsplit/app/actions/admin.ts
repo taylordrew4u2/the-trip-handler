@@ -1,7 +1,13 @@
 "use server";
 
 import { prisma } from "@/lib/db";
-import { sendApprovalEmail, sendTripLockedEmail } from "@/lib/resend";
+import {
+  sendApprovalEmail,
+  sendCancellationEmail,
+  sendRejectionEmail,
+  sendTripLockedEmail,
+} from "@/lib/resend";
+import { TRIP_CAPACITY } from "@/lib/pricing";
 import { revalidatePath } from "next/cache";
 
 export async function approveUser(userId: string) {
@@ -20,20 +26,27 @@ export async function approveUser(userId: string) {
 }
 
 export async function rejectUser(userId: string) {
-  await prisma.user.update({
+  const user = await prisma.user.update({
     where: { id: userId },
     data: { status: "CANCELLED" },
   });
+  await sendRejectionEmail(user.email, user.name);
   revalidatePath("/admin/users");
   return { success: true };
 }
 
 export async function cancelUser(userId: string) {
-  await prisma.user.update({
+  const user = await prisma.user.update({
     where: { id: userId },
     data: { status: "CANCELLED" },
   });
+  // Free their bed and contributions so the slots reopen.
+  await prisma.bedAssignment.deleteMany({ where: { userId } });
+  await prisma.userContribution.deleteMany({ where: { userId } });
+  await sendCancellationEmail(user.email, user.name);
   revalidatePath("/admin/users");
+  revalidatePath("/admin/sleeping");
+  revalidatePath("/dashboard/sleeping");
   return { success: true };
 }
 
@@ -55,7 +68,6 @@ export async function updateTrip(tripId: string, data: {
   itinerary?: string;
   lodging?: string;
   meals?: string;
-  finalPrice?: number;
 }) {
   await prisma.trip.update({
     where: { id: tripId },
@@ -67,6 +79,102 @@ export async function updateTrip(tripId: string, data: {
   });
   revalidatePath("/admin/trip");
   revalidatePath("/dashboard/itinerary");
+  return { success: true };
+}
+
+export type PriceKind = "housing" | "transport" | "meals";
+
+const PRICE_FIELDS: Record<PriceKind, { amount: "housingPrice" | "transportPrice" | "mealsPrice"; locked: "housingLocked" | "transportLocked" | "mealsLocked" }> = {
+  housing: { amount: "housingPrice", locked: "housingLocked" },
+  transport: { amount: "transportPrice", locked: "transportLocked" },
+  meals: { amount: "mealsPrice", locked: "mealsLocked" },
+};
+
+export async function updateTripPriceLine(tripId: string, kind: PriceKind, amount: number | null) {
+  const trip = await prisma.trip.findUnique({ where: { id: tripId } });
+  if (!trip) return { error: "Trip not found." };
+  if (trip.isLocked) return { error: "Unlock the trip before editing prices." };
+  const fields = PRICE_FIELDS[kind];
+  if (trip[fields.locked]) return { error: "Unlock this price first." };
+  if (amount !== null && (Number.isNaN(amount) || amount < 0)) return { error: "Amount must be a non-negative number." };
+
+  await prisma.trip.update({
+    where: { id: tripId },
+    data: { [fields.amount]: amount },
+  });
+  revalidatePath("/admin/trip");
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/payment");
+  return { success: true };
+}
+
+export async function lockTripPriceLine(tripId: string, kind: PriceKind) {
+  const trip = await prisma.trip.findUnique({ where: { id: tripId } });
+  if (!trip) return { error: "Trip not found." };
+  const fields = PRICE_FIELDS[kind];
+  if (trip[fields.amount] == null) return { error: "Set an amount before locking." };
+
+  await prisma.trip.update({
+    where: { id: tripId },
+    data: { [fields.locked]: true },
+  });
+
+  // If all three lines are now locked, auto-solidify the trip:
+  // - finalPrice is the per-person share (total ÷ TRIP_CAPACITY)
+  // - isLocked = true, APPROVED → PENDING_PAYMENT, emails sent to everyone
+  const updated = await prisma.trip.findUnique({ where: { id: tripId } });
+  if (
+    updated &&
+    updated.housingLocked &&
+    updated.transportLocked &&
+    updated.mealsLocked &&
+    !updated.isLocked
+  ) {
+    const total =
+      (updated.housingPrice ?? 0) +
+      (updated.transportPrice ?? 0) +
+      (updated.mealsPrice ?? 0);
+    const share = total / TRIP_CAPACITY;
+    await prisma.trip.update({
+      where: { id: tripId },
+      data: { finalPrice: share, isLocked: true, lockedAt: new Date() },
+    });
+    await prisma.user.updateMany({
+      where: { status: "APPROVED" },
+      data: { status: "PENDING_PAYMENT" },
+    });
+    const users = await prisma.user.findMany({
+      where: {
+        status: { in: ["PENDING_PAYMENT", "APPROVED"] },
+        role: "PARTICIPANT",
+      },
+    });
+    for (const u of users) {
+      try {
+        await sendTripLockedEmail(u.email, u.name, share);
+      } catch (e) {
+        console.error("Email failed:", e);
+      }
+    }
+  }
+
+  revalidatePath("/admin/trip");
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/payment");
+  return { success: true };
+}
+
+export async function unlockTripPriceLine(tripId: string, kind: PriceKind) {
+  const trip = await prisma.trip.findUnique({ where: { id: tripId } });
+  if (!trip) return { error: "Trip not found." };
+  if (trip.isLocked) return { error: "Unlock the whole trip first." };
+  const fields = PRICE_FIELDS[kind];
+  await prisma.trip.update({
+    where: { id: tripId },
+    data: { [fields.locked]: false },
+  });
+  revalidatePath("/admin/trip");
+  revalidatePath("/dashboard");
   return { success: true };
 }
 
@@ -102,10 +210,20 @@ export async function lockTrip(tripId: string) {
 }
 
 export async function unlockTrip(tripId: string) {
+  // Unlock the trip AND all three price lines so admin can edit again.
   await prisma.trip.update({
     where: { id: tripId },
-    data: { isLocked: false, lockedAt: null },
+    data: {
+      isLocked: false,
+      lockedAt: null,
+      finalPrice: null,
+      housingLocked: false,
+      transportLocked: false,
+      mealsLocked: false,
+    },
   });
   revalidatePath("/admin/trip");
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/payment");
   return { success: true };
 }

@@ -12,6 +12,9 @@ interface Contribution {
   users: { userId: string; user: { name: string; username: string | null }; notes: string | null }[];
 }
 
+const inputCls =
+  "w-full px-3 py-2 rounded-lg border border-stone-300 bg-white text-sm focus:outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900";
+
 export function AdminContributionsClient({ contributions, tripId }: {
   contributions: Contribution[];
   tripId: string;
@@ -41,56 +44,45 @@ export function AdminContributionsClient({ contributions, tripId }: {
 
   return (
     <div className="space-y-4">
-      <button
-        onClick={() => setShowForm(!showForm)}
-        className="px-4 py-2 bg-purple-600 text-white rounded-xl text-sm font-medium hover:bg-purple-700"
-      >
-        + Add Item
-      </button>
+      {!showForm && (
+        <button
+          onClick={() => setShowForm(true)}
+          className="px-4 py-2 bg-stone-900 text-white rounded-lg text-sm font-medium hover:bg-stone-800"
+        >
+          + Add suggestion
+        </button>
+      )}
 
       {showForm && (
-        <div className="bg-white rounded-2xl border border-purple-200 p-6">
+        <div className="bg-white rounded-xl border border-stone-200 p-6">
+          <h3 className="font-medium text-stone-900 mb-4">New contribution suggestion</h3>
           <form onSubmit={handleAdd} className="space-y-4">
-            <h3 className="font-semibold text-gray-900">New Contribution Item</h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
-                <input
-                  name="title"
-                  required
-                  className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
-                  placeholder="e.g. Bring snacks"
-                />
+                <label className="block text-xs font-medium text-stone-700 mb-1.5 tracking-wide">TITLE *</label>
+                <input name="title" required className={inputCls} placeholder="e.g. Bring snacks" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                <input
-                  name="category"
-                  className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
-                  placeholder="e.g. Food"
-                />
+                <label className="block text-xs font-medium text-stone-700 mb-1.5 tracking-wide">CATEGORY</label>
+                <input name="category" className={inputCls} placeholder="e.g. Food" />
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-              <input
-                name="description"
-                className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
-                placeholder="Optional details"
-              />
+              <label className="block text-xs font-medium text-stone-700 mb-1.5 tracking-wide">DESCRIPTION</label>
+              <input name="description" className={inputCls} placeholder="Optional details" />
             </div>
-            <div className="flex gap-3">
+            <div className="flex gap-2">
               <button
                 type="submit"
                 disabled={loading}
-                className="px-4 py-2 bg-purple-600 text-white rounded-xl text-sm font-medium hover:bg-purple-700 disabled:opacity-50"
+                className="px-4 py-2 bg-stone-900 text-white rounded-lg text-sm font-medium hover:bg-stone-800 disabled:opacity-50"
               >
-                {loading ? "Adding..." : "Add Item"}
+                {loading ? "Adding…" : "Add suggestion"}
               </button>
               <button
                 type="button"
                 onClick={() => setShowForm(false)}
-                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-sm font-medium"
+                className="px-4 py-2 border border-stone-300 text-stone-700 rounded-lg text-sm font-medium hover:bg-stone-100"
               >
                 Cancel
               </button>
@@ -100,34 +92,36 @@ export function AdminContributionsClient({ contributions, tripId }: {
       )}
 
       {items.length === 0 ? (
-        <p className="text-center text-gray-400 py-8">No contribution items yet.</p>
+        <p className="text-stone-500 text-sm">No contribution items yet.</p>
       ) : (
         <div className="space-y-3">
           {items.map((item) => (
-            <div key={item.id} className="bg-white rounded-xl border border-gray-200 p-4">
-              <div className="flex items-start justify-between">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-medium text-gray-900">{item.title}</h3>
+            <div key={item.id} className="bg-white rounded-xl border border-stone-200 p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="font-medium text-stone-900">{item.title}</h3>
                     {item.category && (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-pink-50 text-pink-700">{item.category}</span>
+                      <span className="text-xs px-2 py-0.5 rounded-md bg-stone-100 text-stone-700">{item.category}</span>
                     )}
+                    <span className="text-xs px-2 py-0.5 rounded-md bg-stone-100 text-stone-700 tabular-nums">
+                      {item.users.length} signed up
+                    </span>
                   </div>
-                  {item.description && <p className="text-sm text-gray-500">{item.description}</p>}
+                  {item.description && <p className="text-sm text-stone-600 mt-1">{item.description}</p>}
                   {item.users.length > 0 && (
-                    <div className="mt-2 flex flex-wrap gap-1">
+                    <div className="mt-2 flex flex-wrap gap-1.5">
                       {item.users.map((uc) => (
-                        <span key={uc.userId} className="text-xs px-2 py-0.5 rounded-full bg-purple-50 text-purple-700">
+                        <span key={uc.userId} className="text-xs px-2 py-0.5 rounded-md bg-stone-100 text-stone-700">
                           {uc.user.username ? `@${uc.user.username}` : uc.user.name}
                         </span>
                       ))}
                     </div>
                   )}
-                  <p className="text-xs text-gray-400 mt-1">{item.users.length} signed up</p>
                 </div>
                 <button
                   onClick={() => handleDelete(item.id)}
-                  className="px-3 py-1.5 bg-red-100 text-red-700 rounded-lg text-xs hover:bg-red-200"
+                  className="text-xs px-3 py-1 border border-red-300 text-red-700 rounded-md hover:bg-red-50"
                 >
                   Delete
                 </button>
