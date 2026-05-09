@@ -174,6 +174,16 @@ export async function claimBedSlot(bedId: string) {
     return { error: "That bed is already full." };
   }
 
+  if (bed.womenOnly) {
+    const me = await prisma.user.findUnique({
+      where: { id: sessionUser.id },
+      select: { gender: true },
+    });
+    if (me?.gender !== "female") {
+      return { error: "This bed is reserved for female members." };
+    }
+  }
+
   // Move user from any prior bed first.
   await prisma.bedAssignment.deleteMany({ where: { userId: sessionUser.id } });
 
@@ -293,6 +303,16 @@ export async function requestBedmate(bedId: string, toUserId: string) {
   }
   if (!bed.assignments.some((a) => a.userId === toUserId)) {
     return { error: "That person isn't in this bed anymore." };
+  }
+
+  if (bed.womenOnly) {
+    const me = await prisma.user.findUnique({
+      where: { id: auth.id },
+      select: { gender: true },
+    });
+    if (me?.gender !== "female") {
+      return { error: "This bed is reserved for female members." };
+    }
   }
 
   const existing = await prisma.bedmateRequest.findFirst({
