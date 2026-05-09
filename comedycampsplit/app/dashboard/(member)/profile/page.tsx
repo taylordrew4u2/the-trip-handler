@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { ProfileForm } from "./ProfileForm";
 import { AvatarUpload } from "@/components/AvatarUpload";
+import { SignOutButton } from "@/components/SignOutButton";
 
 export default async function ProfilePage() {
   const session = await getServerSession(authOptions);
@@ -39,6 +40,16 @@ export default async function ProfilePage() {
               gender: user.gender ?? "",
             }}
           />
+        </div>
+      </div>
+
+      <div className="mt-8 bg-white border border-stone-200 rounded-xl p-6 md:p-8">
+        <h2 className="font-serif text-lg font-medium text-stone-900">Sign out</h2>
+        <p className="text-stone-600 text-sm mt-1">
+          End your session on this device. You can sign back in anytime.
+        </p>
+        <div className="mt-4">
+          <SignOutButton />
         </div>
       </div>
     </div>
