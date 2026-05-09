@@ -213,7 +213,9 @@ export async function castVote(mealSlotId: string, suggestionId: string | null, 
   const tripId = await getCurrentTripId();
   if (!tripId) return { error: "No trip yet." };
   const phase = await prisma.mealPlanPhase.findUnique({ where: { tripId } });
-  if (phase?.currentPhase !== "voting_open") return { error: "Voting is closed." };
+  if (!["suggestions_open", "voting_open"].includes(phase?.currentPhase ?? "")) {
+    return { error: "Voting is closed." };
+  }
 
   if (isDontCare && suggestionId) return { error: "Pick one or the other." };
   if (!isDontCare && !suggestionId) return { error: "Pick a meal or 'I don't care'." };

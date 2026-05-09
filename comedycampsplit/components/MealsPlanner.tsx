@@ -108,9 +108,9 @@ const PHASE_LABEL: Record<Phase, string> = {
 
 const PHASE_COPY: Record<Phase, string> = {
   suggestions_open:
-    "Suggesting is optional. Add meal ideas if you have them. You'll still vote later.",
+    "Add meal ideas below — once a suggestion is in, you can vote on it right away. Pick one per slot, or choose 'I don't care.'",
   voting_open:
-    "Voting is required. Pick one option for each meal slot. You can vote for your own suggestion, someone else's, or choose 'I don't care.'",
+    "Voting is open. Pick one option for each meal slot, or choose 'I don't care.'",
   admin_finalizing:
     "Voting is closed. The admin is reviewing the top choices and finalizing the meal plan.",
   finalized:
@@ -469,15 +469,84 @@ function MealSlotCard({
 
       {phase === "suggestions_open" && (
         <div className="mt-3 space-y-2">
-          {slot.suggestions.map((s) => (
-            <SuggestionCard
-              key={s.id}
-              suggestion={s}
-              currentUserId={currentUserId}
-              isAdmin={isAdmin}
-              onDelete={() => run("del-" + s.id, () => deleteSuggestion(s.id))}
-            />
-          ))}
+          {slot.suggestions.length > 0 && (
+            <div className="space-y-1.5">
+              {slot.suggestions.map((s) => {
+                const isMine = myVote?.suggestionId === s.id;
+                const canDelete = s.submittedByUserId === currentUserId || isAdmin;
+                return (
+                  <label
+                    key={s.id}
+                    className={`flex items-start gap-2 px-3 py-2 rounded-md border cursor-pointer ${
+                      isMine ? "border-stone-900 bg-stone-50" : "border-stone-200 hover:bg-stone-50"
+                    }`}
+                  >
+                    {!isAdmin && (
+                      <input
+                        type="radio"
+                        name={`vote-${slot.id}`}
+                        checked={isMine}
+                        disabled={busy !== null}
+                        onChange={() => run("vote-" + slot.id, () => castVote(slot.id, s.id, false))}
+                        className="mt-1 accent-stone-900"
+                      />
+                    )}
+                    <span className="flex-1 text-sm">
+                      <span className="font-medium text-stone-900">{s.mealName}</span>
+                      <span className="text-stone-500"> · {s.submittedBy.name}</span>
+                      {s.note && <span className="block text-xs text-stone-600 mt-0.5">{s.note}</span>}
+                      <span className="flex flex-wrap gap-1 mt-1">
+                        {s.helpOffered.map((h) => (
+                          <span key={h} className="text-xs px-2 py-0.5 rounded bg-blue-50 text-blue-900">
+                            {h.replace("_", " ")}
+                          </span>
+                        ))}
+                        {s.dietaryTags.map((t) => (
+                          <span key={t} className="text-xs px-2 py-0.5 rounded bg-stone-100 text-stone-700">
+                            {t}
+                          </span>
+                        ))}
+                      </span>
+                    </span>
+                    {canDelete && (
+                      <button
+                        type="button"
+                        onClick={(e) => { e.preventDefault(); run("del-" + s.id, () => deleteSuggestion(s.id)); }}
+                        className="text-xs text-stone-400 hover:text-red-700 mt-0.5"
+                      >
+                        Delete
+                      </button>
+                    )}
+                  </label>
+                );
+              })}
+              {!isAdmin && (
+                <label
+                  className={`flex items-start gap-2 px-3 py-2 rounded-md border cursor-pointer ${
+                    myVote?.isDontCare ? "border-stone-900 bg-stone-50" : "border-stone-200 hover:bg-stone-50"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name={`vote-${slot.id}`}
+                    checked={!!myVote?.isDontCare}
+                    disabled={busy !== null}
+                    onChange={() => run("vote-" + slot.id, () => castVote(slot.id, null, true))}
+                    className="mt-1 accent-stone-900"
+                  />
+                  <span className="text-sm text-stone-700 italic">I don&apos;t care</span>
+                </label>
+              )}
+              {!isAdmin && myVote && (
+                <p className="text-xs text-stone-500">
+                  Your vote:{" "}
+                  {myVote.isDontCare
+                    ? "I don't care"
+                    : `"${slot.suggestions.find((s) => s.id === myVote.suggestionId)?.mealName ?? "?"}"`}
+                </p>
+              )}
+            </div>
+          )}
           {!isAdmin && (
             openSuggestForm === slot.id ? (
               <InlineSuggestForm
@@ -647,49 +716,6 @@ function MealSlotCard({
   );
 }
 
-function SuggestionCard({
-  suggestion,
-  currentUserId,
-  isAdmin,
-  onDelete,
-}: {
-  suggestion: Suggestion;
-  currentUserId: string;
-  isAdmin: boolean;
-  onDelete: () => void;
-}) {
-  const canDelete = suggestion.submittedByUserId === currentUserId || isAdmin;
-  return (
-    <div className="border border-stone-200 rounded-md px-3 py-2">
-      <div className="flex items-start justify-between gap-2">
-        <p className="font-medium text-stone-900 text-sm">{suggestion.mealName}</p>
-        {canDelete && (
-          <button
-            onClick={onDelete}
-            className="text-xs text-stone-400 hover:text-red-700"
-            title="Delete suggestion"
-          >
-            Delete
-          </button>
-        )}
-      </div>
-      <p className="text-xs text-stone-500">Suggested by {suggestion.submittedBy.name}</p>
-      {suggestion.note && <p className="text-sm text-stone-700 mt-1">{suggestion.note}</p>}
-      <div className="mt-1.5 flex flex-wrap gap-1">
-        {suggestion.helpOffered.map((h) => (
-          <span key={h} className="text-xs px-2 py-0.5 rounded bg-blue-50 text-blue-900">
-            {h.replace("_", " ")}
-          </span>
-        ))}
-        {suggestion.dietaryTags.map((t) => (
-          <span key={t} className="text-xs px-2 py-0.5 rounded bg-stone-100 text-stone-700">
-            {t}
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 function SuggestFormFields({
   slots,
