@@ -11,18 +11,19 @@ export function LodgingPhotosClient({ tripId, photos }: { tripId: string; photos
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [dragOver, setDragOver] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  async function handleFiles(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
+  async function uploadFiles(files: FileList | File[]) {
+    const list = Array.from(files);
+    if (list.length === 0) return;
     setError("");
     setUploading(true);
     try {
       let i = 0;
-      for (const file of Array.from(files)) {
+      for (const file of list) {
         i += 1;
-        setProgress(`Uploading ${i}/${files.length}: ${file.name}`);
+        setProgress(`Uploading ${i}/${list.length}: ${file.name}`);
         try {
           if (file.size > 10 * 1024 * 1024) {
             setError(`${file.name} is over 10MB. Skipping.`);
@@ -52,6 +53,35 @@ export function LodgingPhotosClient({ tripId, photos }: { tripId: string; photos
     }
   }
 
+  async function handleFiles(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = e.target.files;
+    if (files) await uploadFiles(files);
+  }
+
+  function handleDragOver(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!dragOver) setDragOver(true);
+  }
+
+  function handleDragLeave(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOver(false);
+  }
+
+  async function handleDrop(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOver(false);
+    const files = Array.from(e.dataTransfer.files).filter((f) => f.type.startsWith("image/"));
+    if (files.length === 0) {
+      setError("Only image files can be uploaded.");
+      return;
+    }
+    await uploadFiles(files);
+  }
+
   async function handleDelete(id: string) {
     if (!confirm("Delete this photo?")) return;
     await deleteLodgingPhoto(id);
@@ -74,23 +104,37 @@ export function LodgingPhotosClient({ tripId, photos }: { tripId: string; photos
             Show participants where they&apos;ll be staying. Up to 10MB per photo.
           </p>
         </div>
-        <div>
-          <input
-            ref={fileRef}
-            type="file"
-            accept="image/*"
-            multiple
-            onChange={handleFiles}
-            className="hidden"
-          />
-          <button
-            onClick={() => fileRef.current?.click()}
-            disabled={uploading}
-            className="px-4 py-2 bg-stone-900 text-white rounded-lg text-sm font-medium hover:bg-stone-800 disabled:opacity-50"
-          >
-            {uploading ? "Uploading…" : "+ Upload photos"}
-          </button>
-        </div>
+      </div>
+
+      <div
+        onDragOver={handleDragOver}
+        onDragEnter={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        onClick={() => fileRef.current?.click()}
+        className={`rounded-xl border-2 border-dashed px-4 py-8 text-center cursor-pointer transition-colors ${
+          dragOver
+            ? "border-stone-900 bg-stone-50"
+            : "border-stone-300 hover:border-stone-500 hover:bg-stone-50"
+        } ${uploading ? "pointer-events-none opacity-60" : ""}`}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") fileRef.current?.click();
+        }}
+      >
+        <p className="font-medium text-stone-900">
+          {uploading ? "Uploading…" : dragOver ? "Drop to upload" : "Drag photos here or click to choose"}
+        </p>
+        <p className="text-xs text-stone-500 mt-1">JPG / PNG / WebP / GIF · 10MB each · multiple at once</p>
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*"
+          multiple
+          onChange={handleFiles}
+          className="hidden"
+        />
       </div>
 
       {progress && (
@@ -105,7 +149,7 @@ export function LodgingPhotosClient({ tripId, photos }: { tripId: string; photos
       )}
 
       {photos.length === 0 ? (
-        <p className="text-stone-500 text-sm">No photos yet — upload one or more.</p>
+        <p className="text-stone-500 text-sm">No photos yet — drag some in above.</p>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           {photos.map((p) => (

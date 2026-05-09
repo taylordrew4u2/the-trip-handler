@@ -78,14 +78,14 @@ export function AdminSleepingClient({ tripId, beds }: { tripId: string; beds: Be
           <h3 className="font-medium text-stone-900 mb-4">New bed</h3>
           {error && <p className="text-red-600 text-sm mb-3">{error}</p>}
           <form onSubmit={handleAdd} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-xs font-medium text-stone-700 mb-1.5 tracking-wide">LABEL *</label>
                 <input
                   name="label"
                   required
                   className="w-full px-3 py-2 rounded-lg border border-stone-300 text-sm focus:outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900"
-                  placeholder="e.g. Bed 1"
+                  placeholder="e.g. Bed"
                 />
               </div>
               <div>
@@ -96,26 +96,40 @@ export function AdminSleepingClient({ tripId, beds }: { tripId: string; beds: Be
                   placeholder="e.g. Master bedroom"
                 />
               </div>
+              <div>
+                <label className="block text-xs font-medium text-stone-700 mb-1.5 tracking-wide">HOW MANY</label>
+                <input
+                  name="count"
+                  type="number"
+                  min="1"
+                  max="20"
+                  defaultValue="1"
+                  className="w-full px-3 py-2 rounded-lg border border-stone-300 text-sm focus:outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900"
+                />
+                <p className="text-xs text-stone-500 mt-1">If &gt;1, beds get suffixed “1, 2, 3…”.</p>
+              </div>
             </div>
             <div>
               <label className="block text-xs font-medium text-stone-700 mb-1.5 tracking-wide">TYPE</label>
-              <div className="flex gap-3 text-sm">
+              <div className="flex gap-4 text-sm">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input type="radio" name="type" value="DOUBLE" checked={type === "DOUBLE"} onChange={() => setType("DOUBLE")} />
                   Double (2 slots)
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input type="radio" name="type" value="SINGLE" checked={type === "SINGLE"} onChange={() => setType("SINGLE")} />
-                  Single (1 slot, women-only)
+                  Single (1 slot)
                 </label>
               </div>
+              <p className="text-xs text-stone-500 mt-1.5">
+                Singles aren&apos;t women-only by default — anyone can claim them. Female members can bump a current
+                single occupant from the dashboard if needed.
+              </p>
             </div>
-            {type === "DOUBLE" && (
-              <label className="flex items-center gap-2 text-sm text-stone-700 cursor-pointer">
-                <input type="checkbox" name="womenOnly" />
-                Mark this double as women-only
-              </label>
-            )}
+            <label className="flex items-center gap-2 text-sm text-stone-700 cursor-pointer">
+              <input type="checkbox" name="womenOnly" />
+              Mark these beds as women-only (rare — only if you want to reserve a specific bed)
+            </label>
             <button
               type="submit"
               disabled={submitting}
