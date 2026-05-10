@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { ProfileForm } from "./ProfileForm";
 import { AvatarUpload } from "@/components/AvatarUpload";
 import { SignOutButton } from "@/components/SignOutButton";
+import { PageNote } from "@/components/PageNote";
 
 export default async function ProfilePage() {
   const session = await getServerSession(authOptions);
@@ -16,6 +17,7 @@ export default async function ProfilePage() {
 
   return (
     <div className="max-w-2xl mx-auto">
+      <PageNote pageKey="profile" />
       <div className="mb-8">
         <p className="text-xs uppercase tracking-[0.2em] text-stone-500 mb-2">Profile</p>
         <h1 className="font-serif text-3xl font-medium text-stone-900">Your profile</h1>

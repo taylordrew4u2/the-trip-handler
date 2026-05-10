@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { ExpensesClient } from "./ExpensesClient";
+import { PageNote } from "@/components/PageNote";
 import { ApprovalRequired } from "@/components/ApprovalRequired";
 import { getUserStatus, isApproved } from "@/lib/approval";
 
@@ -13,6 +14,7 @@ export default async function ExpensesPage() {
 
   return (
     <div className="space-y-6">
+      <PageNote pageKey="expenses" />
       <div>
         <h1 className="font-serif text-3xl font-medium text-stone-900">Expenses</h1>
         <p className="text-stone-500 text-sm mt-1">Shared trip expenses tracked by the admin.</p>

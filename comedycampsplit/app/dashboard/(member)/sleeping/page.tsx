@@ -6,6 +6,7 @@ import { isApproved } from "@/lib/approval";
 import { SleepingClient } from "./SleepingClient";
 import { SignOutButton } from "@/components/SignOutButton";
 import { ensureSleepingSetup } from "@/app/actions/sleeping";
+import { PageNote } from "@/components/PageNote";
 
 export const dynamic = "force-dynamic";
 
@@ -65,6 +66,7 @@ export default async function SleepingPage() {
 
   return (
     <div className="space-y-6 max-w-3xl">
+      <PageNote pageKey="sleeping" />
       <div>
         <h1 className="font-serif text-3xl font-medium text-stone-900">Sleeping arrangements</h1>
         <p className="text-stone-500 text-sm mt-1 leading-relaxed">

@@ -5,6 +5,7 @@ import { ContributionItem } from "@/components/ContributionItem";
 import { AddContributionForm } from "@/components/AddContributionForm";
 import { ApprovalRequired } from "@/components/ApprovalRequired";
 import { isApproved } from "@/lib/approval";
+import { PageNote } from "@/components/PageNote";
 
 export default async function ContributionsPage() {
   const session = await getServerSession(authOptions);
@@ -27,6 +28,7 @@ export default async function ContributionsPage() {
 
   return (
     <div className="space-y-6">
+      <PageNote pageKey="contributions" />
       <div>
         <h1 className="font-serif text-3xl font-medium text-stone-900">Contributions</h1>
         <p className="text-stone-500 text-sm mt-1">

@@ -6,6 +6,7 @@ import { isApproved } from "@/lib/approval";
 import { ensureMealPlanSetup, votingCompletionSummary } from "@/app/actions/meals";
 import { MealsPlanner } from "@/components/MealsPlanner";
 import { SignOutButton } from "@/components/SignOutButton";
+import { PageNote } from "@/components/PageNote";
 
 export const dynamic = "force-dynamic";
 
@@ -39,6 +40,7 @@ export default async function MealsPage() {
 
   return (
     <div className="space-y-6">
+      <PageNote pageKey="meals" />
       <MealsPlanner
         currentUserId={userId}
         isAdmin={false}

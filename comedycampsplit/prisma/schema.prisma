@@ -333,6 +333,12 @@ model BedmateRequest {
   @@index([fromUserId, status])
 }
 
+model PageNote {
+  pageKey   String   @id
+  body      String
+  updatedAt DateTime @updatedAt
+}
+
 model GuestForm {
   id                       String   @id @default(cuid())
   userId                   String   @unique

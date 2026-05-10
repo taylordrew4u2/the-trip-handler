@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { ApprovalRequired } from "@/components/ApprovalRequired";
 import { isApproved } from "@/lib/approval";
 import { BoardClient } from "./BoardClient";
+import { PageNote } from "@/components/PageNote";
 
 export const dynamic = "force-dynamic";
 
@@ -23,6 +24,7 @@ export default async function BoardPage() {
 
   return (
     <div className="space-y-6 max-w-2xl">
+      <PageNote pageKey="board" />
       <div>
         <h1 className="font-serif text-3xl font-medium text-stone-900">The Board</h1>
         <p className="text-stone-500 text-sm mt-1">
