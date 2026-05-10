@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { createCheckoutSession } from "@/app/actions/payments";
 import { useSearchParams } from "next/navigation";
-import { SECURITY_DEPOSIT_USD, TRIP_CAPACITY } from "@/lib/pricing";
+import { SECURITY_DEPOSIT_USD, COST_SHARE_DIVISOR } from "@/lib/pricing";
 
 interface PaymentClientProps {
   trip: {
@@ -62,7 +62,7 @@ export function PaymentClient({ trip, user, payment, userId }: PaymentClientProp
     (trip.housingPrice ?? 0) +
     (trip.transportPrice ?? 0) +
     (trip.mealsPrice ?? 0);
-  const tripShare = grandTotal / TRIP_CAPACITY;
+  const tripShare = grandTotal / COST_SHARE_DIVISOR;
   const total = tripShare + SECURITY_DEPOSIT_USD;
   const allLocked = trip.housingLocked && trip.transportLocked && trip.mealsLocked;
   const anySet = trip.housingPrice != null || trip.transportPrice != null || trip.mealsPrice != null;
@@ -94,7 +94,7 @@ export function PaymentClient({ trip, user, payment, userId }: PaymentClientProp
             : "Trip cost not set yet"}
         </h2>
         <p className="text-xs text-stone-500 mt-1.5">
-          Costs are entered as totals for the trip and split {TRIP_CAPACITY} ways.
+          Costs are entered as totals for the trip and split {COST_SHARE_DIVISOR} ways.
         </p>
       </div>
 
@@ -134,7 +134,7 @@ export function PaymentClient({ trip, user, payment, userId }: PaymentClientProp
                 </p>
                 {row.total != null && (
                   <p className="text-xs text-stone-500 mt-0.5 tabular-nums">
-                    ÷ {TRIP_CAPACITY} = ${(row.total / TRIP_CAPACITY).toFixed(2)} each
+                    ÷ {COST_SHARE_DIVISOR} = ${(row.total / COST_SHARE_DIVISOR).toFixed(2)} each
                   </p>
                 )}
               </div>
@@ -147,9 +147,9 @@ export function PaymentClient({ trip, user, payment, userId }: PaymentClientProp
             <p className="text-sm font-medium text-stone-900">Your trip share</p>
             <p className="text-xs text-stone-500 mt-0.5">
               {allLocked
-                ? `Final · $${grandTotal.toFixed(2)} ÷ ${TRIP_CAPACITY}`
+                ? `Final · $${grandTotal.toFixed(2)} ÷ ${COST_SHARE_DIVISOR}`
                 : anySet
-                ? `Running estimate · $${grandTotal.toFixed(2)} ÷ ${TRIP_CAPACITY}`
+                ? `Running estimate · $${grandTotal.toFixed(2)} ÷ ${COST_SHARE_DIVISOR}`
                 : "Waiting on admin"}
             </p>
           </div>
@@ -190,7 +190,7 @@ export function PaymentClient({ trip, user, payment, userId }: PaymentClientProp
         <p className="text-xs text-stone-500 leading-relaxed">
           Numbers above are estimates while admin lines up housing, transport, and meals. Once each
           line is locked the total is final and you&apos;ll get an email asking you to pay (your
-          1/{TRIP_CAPACITY} share + the refundable ${SECURITY_DEPOSIT_USD} deposit).
+          1/{COST_SHARE_DIVISOR} share + the refundable ${SECURITY_DEPOSIT_USD} deposit).
         </p>
       )}
     </div>

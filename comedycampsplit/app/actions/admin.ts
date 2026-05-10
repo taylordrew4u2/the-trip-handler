@@ -7,7 +7,7 @@ import {
   sendRejectionEmail,
   sendTripLockedEmail,
 } from "@/lib/resend";
-import { TRIP_CAPACITY } from "@/lib/pricing";
+import { COST_SHARE_DIVISOR } from "@/lib/pricing";
 import { revalidatePath } from "next/cache";
 
 export async function approveUser(userId: string) {
@@ -120,7 +120,7 @@ export async function lockTripPriceLine(tripId: string, kind: PriceKind) {
   });
 
   // If all three lines are now locked, auto-solidify the trip:
-  // - finalPrice is the per-person share (total ÷ TRIP_CAPACITY)
+  // - finalPrice is the per-person share (total ÷ COST_SHARE_DIVISOR)
   // - isLocked = true, APPROVED → PENDING_PAYMENT, emails sent to everyone
   const updated = await prisma.trip.findUnique({ where: { id: tripId } });
   if (
@@ -134,7 +134,7 @@ export async function lockTripPriceLine(tripId: string, kind: PriceKind) {
       (updated.housingPrice ?? 0) +
       (updated.transportPrice ?? 0) +
       (updated.mealsPrice ?? 0);
-    const share = total / TRIP_CAPACITY;
+    const share = total / COST_SHARE_DIVISOR;
     await prisma.trip.update({
       where: { id: tripId },
       data: { finalPrice: share, isLocked: true, lockedAt: new Date() },

@@ -11,7 +11,7 @@ import {
   unlockTripPriceLine,
   type PriceKind,
 } from "@/app/actions/admin";
-import { SECURITY_DEPOSIT_USD, TRIP_CAPACITY } from "@/lib/pricing";
+import { SECURITY_DEPOSIT_USD, TRIP_CAPACITY, COST_SHARE_DIVISOR } from "@/lib/pricing";
 
 interface Trip {
   id: string;
@@ -115,10 +115,10 @@ export function TripClient({ trip }: { trip: Trip }) {
           (kind === "housing" ? parseFloat(priceDrafts.housing || "0") : trip.housingPrice ?? 0) +
           (kind === "transport" ? parseFloat(priceDrafts.transport || "0") : trip.transportPrice ?? 0) +
           (kind === "meals" ? parseFloat(priceDrafts.meals || "0") : trip.mealsPrice ?? 0);
-        const share = total / TRIP_CAPACITY;
+        const share = total / COST_SHARE_DIVISOR;
         if (
           !confirm(
-            `Locking ${PRICE_LABEL[kind]} will solidify the trip and email all approved users to pay $${share.toFixed(2)} each ($${total.toFixed(2)} ÷ ${TRIP_CAPACITY} + $${SECURITY_DEPOSIT_USD} deposit). Continue?`
+            `Locking ${PRICE_LABEL[kind]} will solidify the trip and email all approved users to pay $${share.toFixed(2)} each ($${total.toFixed(2)} ÷ ${COST_SHARE_DIVISOR} + $${SECURITY_DEPOSIT_USD} deposit). Continue?`
           )
         )
           return;
@@ -175,8 +175,10 @@ export function TripClient({ trip }: { trip: Trip }) {
           <h2 className="font-medium text-stone-900">Pricing breakdown</h2>
           <p className="text-stone-500 text-sm mt-0.5">
             Enter the <strong>total</strong> for each line (the whole trip). Each user pays their
-            share, divided by {TRIP_CAPACITY}. Lock a line when its number is final. When all three
-            are locked, the trip is solidified automatically and approved users get payment emails.
+            share, divided by {COST_SHARE_DIVISOR} (the roster opens up to {TRIP_CAPACITY} spots,
+            but the per-person share stays a {COST_SHARE_DIVISOR}-way split). Lock a line when its
+            number is final. When all three are locked, the trip is solidified automatically and
+            approved users get payment emails.
           </p>
         </div>
 
@@ -203,7 +205,7 @@ export function TripClient({ trip }: { trip: Trip }) {
                 </p>
                 {fields.amount != null && (
                   <p className="text-xs text-stone-700 mt-1 tabular-nums">
-                    ÷ {TRIP_CAPACITY} = ${(fields.amount / TRIP_CAPACITY).toFixed(2)} each
+                    ÷ {COST_SHARE_DIVISOR} = ${(fields.amount / COST_SHARE_DIVISOR).toFixed(2)} each
                   </p>
                 )}
               </div>
@@ -268,8 +270,8 @@ export function TripClient({ trip }: { trip: Trip }) {
             <div className="font-semibold text-stone-900 tabular-nums">${total.toFixed(2)}</div>
           </div>
           <div className="flex items-center justify-between text-stone-700">
-            <span>÷ {TRIP_CAPACITY} = each user pays</span>
-            <span className="font-semibold tabular-nums">${(total / TRIP_CAPACITY).toFixed(2)}</span>
+            <span>÷ {COST_SHARE_DIVISOR} = each user pays</span>
+            <span className="font-semibold tabular-nums">${(total / COST_SHARE_DIVISOR).toFixed(2)}</span>
           </div>
         </div>
         <p className="text-xs text-stone-500">
