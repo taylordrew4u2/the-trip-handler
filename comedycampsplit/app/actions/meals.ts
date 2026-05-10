@@ -170,7 +170,9 @@ export async function createSuggestion(formData: FormData) {
   const tripId = await getCurrentTripId();
   if (!tripId) return { error: "No trip yet." };
   const phase = await prisma.mealPlanPhase.findUnique({ where: { tripId } });
-  if (phase?.currentPhase !== "suggestions_open") return { error: "Suggestions are closed." };
+  if (!["suggestions_open", "voting_open"].includes(phase?.currentPhase ?? "")) {
+    return { error: "Suggestions are closed." };
+  }
 
   const mealSlotId = formData.get("mealSlotId") as string;
   const mealName = ((formData.get("mealName") as string) ?? "").trim();

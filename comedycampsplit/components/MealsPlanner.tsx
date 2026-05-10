@@ -108,9 +108,9 @@ const PHASE_LABEL: Record<Phase, string> = {
 
 const PHASE_COPY: Record<Phase, string> = {
   suggestions_open:
-    "Add meal ideas below — once a suggestion is in, you can vote on it right away. Pick one per slot, or choose 'I don't care.'",
+    "Each meal below is its own poll. Vote for an idea you like, choose \"I don't care,\" or write in your own idea — anytime.",
   voting_open:
-    "Voting is open. Pick one option for each meal slot, or choose 'I don't care.'",
+    "Each meal below is its own poll. Vote for an idea you like, choose \"I don't care,\" or write in your own idea — anytime.",
   admin_finalizing:
     "Voting is closed. The admin is reviewing the top choices and finalizing the meal plan.",
   finalized:
@@ -135,7 +135,6 @@ export function MealsPlanner({
   const router = useRouter();
   const [error, setError] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
-  const [openSuggestForm, setOpenSuggestForm] = useState<string | null>(null);
   const [showSuggestModal, setShowSuggestModal] = useState(false);
 
   const days = useMemo(() => {
@@ -245,8 +244,6 @@ export function MealsPlanner({
                   myVote={myVotes.get(slot.id)}
                   busy={busy}
                   run={run}
-                  openSuggestForm={openSuggestForm}
-                  setOpenSuggestForm={setOpenSuggestForm}
                 />
               ))}
             </div>
@@ -397,8 +394,6 @@ function MealSlotCard({
   myVote,
   busy,
   run,
-  openSuggestForm,
-  setOpenSuggestForm,
 }: {
   slot: SlotRow;
   phase: Phase;
@@ -407,8 +402,6 @@ function MealSlotCard({
   myVote: VoteRow | undefined;
   busy: string | null;
   run: <T>(label: string, fn: () => Promise<T>) => Promise<void>;
-  openSuggestForm: string | null;
-  setOpenSuggestForm: (id: string | null) => void;
 }) {
   const slotLabel = `${slot.dayName} ${slot.mealType}`;
   const suggCount = slot.suggestions.length;
@@ -436,13 +429,10 @@ function MealSlotCard({
               </span>
             )}
           </h3>
-          {phase === "suggestions_open" && (
+          {(phase === "suggestions_open" || phase === "voting_open") && (
             <p className="text-xs text-stone-500 mt-0.5">
-              {suggCount === 0 ? "Needs suggestions" : `${suggCount} suggestion${suggCount === 1 ? "" : "s"}`}
+              Poll · {suggCount === 0 ? "no ideas yet" : `${suggCount} idea${suggCount === 1 ? "" : "s"}`} · {slot.votes.length} {slot.votes.length === 1 ? "vote" : "votes"}
             </p>
-          )}
-          {phase === "voting_open" && (
-            <p className="text-xs text-stone-500 mt-0.5">Pick one for this meal.</p>
           )}
           {phase === "admin_finalizing" && (
             <p className="text-xs text-stone-500 mt-0.5">
@@ -467,178 +457,53 @@ function MealSlotCard({
         )}
       </header>
 
-      {phase === "suggestions_open" && (
-        <div className="mt-3 space-y-2">
-          {slot.suggestions.length > 0 && (
-            <div className="space-y-1.5">
-              {slot.suggestions.map((s) => {
-                const isMine = myVote?.suggestionId === s.id;
-                const canDelete = s.submittedByUserId === currentUserId || isAdmin;
-                return (
-                  <label
-                    key={s.id}
-                    className={`flex items-start gap-2 px-3 py-2 rounded-md border cursor-pointer ${
-                      isMine ? "border-stone-900 bg-stone-50" : "border-stone-200 hover:bg-stone-50"
-                    }`}
-                  >
-                    {!isAdmin && (
-                      <input
-                        type="radio"
-                        name={`vote-${slot.id}`}
-                        checked={isMine}
-                        disabled={busy !== null}
-                        onChange={() => run("vote-" + slot.id, () => castVote(slot.id, s.id, false))}
-                        className="mt-1 accent-stone-900"
-                      />
-                    )}
-                    <span className="flex-1 text-sm">
-                      <span className="font-medium text-stone-900">{s.mealName}</span>
-                      <span className="text-stone-500"> · {s.submittedBy.name}</span>
-                      {s.note && <span className="block text-xs text-stone-600 mt-0.5">{s.note}</span>}
-                      <span className="flex flex-wrap gap-1 mt-1">
-                        {s.helpOffered.map((h) => (
-                          <span key={h} className="text-xs px-2 py-0.5 rounded bg-blue-50 text-blue-900">
-                            {h.replace("_", " ")}
-                          </span>
-                        ))}
-                        {s.dietaryTags.map((t) => (
-                          <span key={t} className="text-xs px-2 py-0.5 rounded bg-stone-100 text-stone-700">
-                            {t}
-                          </span>
-                        ))}
-                      </span>
-                    </span>
-                    {canDelete && (
-                      <button
-                        type="button"
-                        onClick={(e) => { e.preventDefault(); run("del-" + s.id, () => deleteSuggestion(s.id)); }}
-                        className="text-xs text-stone-400 hover:text-red-700 mt-0.5"
-                      >
-                        Delete
-                      </button>
-                    )}
-                  </label>
-                );
-              })}
-              {!isAdmin && (
-                <label
-                  className={`flex items-start gap-2 px-3 py-2 rounded-md border cursor-pointer ${
-                    myVote?.isDontCare ? "border-stone-900 bg-stone-50" : "border-stone-200 hover:bg-stone-50"
-                  }`}
+      {(phase === "suggestions_open" || phase === "voting_open") && !isAdmin && (
+        <PollBody
+          slot={slot}
+          myVote={myVote}
+          tally={tally}
+          dontCareCount={dontCareCount}
+          currentUserId={currentUserId}
+          busy={busy}
+          run={run}
+        />
+      )}
+
+      {(phase === "suggestions_open" || phase === "voting_open") && isAdmin && (
+        <div className="mt-3 space-y-1.5">
+          {slot.suggestions.length === 0 ? (
+            <p className="text-xs text-stone-500 italic">No ideas yet.</p>
+          ) : (
+            slot.suggestions.map((s) => {
+              const count = tally.get(s.id) ?? 0;
+              return (
+                <div
+                  key={s.id}
+                  className="flex items-center justify-between gap-3 px-3 py-2 rounded-md border border-stone-200 text-sm"
                 >
-                  <input
-                    type="radio"
-                    name={`vote-${slot.id}`}
-                    checked={!!myVote?.isDontCare}
-                    disabled={busy !== null}
-                    onChange={() => run("vote-" + slot.id, () => castVote(slot.id, null, true))}
-                    className="mt-1 accent-stone-900"
-                  />
-                  <span className="text-sm text-stone-700 italic">I don&apos;t care</span>
-                </label>
-              )}
-              {!isAdmin && myVote && (
-                <p className="text-xs text-stone-500">
-                  Your vote:{" "}
-                  {myVote.isDontCare
-                    ? "I don't care"
-                    : `"${slot.suggestions.find((s) => s.id === myVote.suggestionId)?.mealName ?? "?"}"`}
-                </p>
-              )}
-            </div>
+                  <span>
+                    <span className="font-medium text-stone-900">{s.mealName}</span>
+                    <span className="text-stone-500"> · {s.submittedBy.name}</span>
+                  </span>
+                  <span className="flex items-center gap-2">
+                    <span className="text-xs px-2 py-0.5 rounded bg-stone-100 text-stone-700 tabular-nums">
+                      {count} {count === 1 ? "vote" : "votes"}
+                    </span>
+                    <button
+                      onClick={() => run("del-" + s.id, () => deleteSuggestion(s.id))}
+                      className="text-xs text-stone-400 hover:text-red-700"
+                    >
+                      Delete
+                    </button>
+                  </span>
+                </div>
+              );
+            })
           )}
-          {!isAdmin && (
-            openSuggestForm === slot.id ? (
-              <InlineSuggestForm
-                slot={slot}
-                onCancel={() => setOpenSuggestForm(null)}
-                onSubmit={async (fd) => {
-                  await run("inline-create", () => createSuggestion(fd));
-                  setOpenSuggestForm(null);
-                }}
-              />
-            ) : (
-              <button
-                onClick={() => setOpenSuggestForm(slot.id)}
-                className="text-xs px-3 py-1.5 border border-stone-300 text-stone-700 rounded-md hover:bg-stone-100"
-              >
-                + Suggest for {slotLabel}
-              </button>
-            )
-          )}
+          <p className="text-xs text-stone-500">
+            &ldquo;I don&apos;t care&rdquo; · <span className="tabular-nums">{dontCareCount}</span>
+          </p>
         </div>
-      )}
-
-      {phase === "voting_open" && !isAdmin && (
-        <div className="mt-3 space-y-2">
-          {slot.suggestions.length === 0 && !slot.isOptional && (
-            <p className="text-xs text-stone-500 italic">
-              No suggestions for this slot — vote &ldquo;I don&apos;t care&rdquo; to complete it.
-            </p>
-          )}
-          {slot.suggestions.map((s) => {
-            const isMine = myVote?.suggestionId === s.id;
-            return (
-              <label
-                key={s.id}
-                className={`flex items-start gap-2 px-3 py-2 rounded-md border cursor-pointer ${
-                  isMine ? "border-stone-900 bg-stone-50" : "border-stone-200 hover:bg-stone-50"
-                }`}
-              >
-                <input
-                  type="radio"
-                  name={`vote-${slot.id}`}
-                  checked={isMine}
-                  disabled={busy !== null}
-                  onChange={() => run("vote-" + slot.id, () => castVote(slot.id, s.id, false))}
-                  className="mt-1 accent-stone-900"
-                />
-                <span className="flex-1 text-sm">
-                  <span className="font-medium text-stone-900">{s.mealName}</span>
-                  <span className="text-stone-500"> · {s.submittedBy.name}</span>
-                  {s.note && <span className="block text-xs text-stone-600 mt-0.5">{s.note}</span>}
-                </span>
-              </label>
-            );
-          })}
-          <label
-            className={`flex items-start gap-2 px-3 py-2 rounded-md border cursor-pointer ${
-              myVote?.isDontCare ? "border-stone-900 bg-stone-50" : "border-stone-200 hover:bg-stone-50"
-            }`}
-          >
-            <input
-              type="radio"
-              name={`vote-${slot.id}`}
-              checked={!!myVote?.isDontCare}
-              disabled={busy !== null}
-              onChange={() => run("vote-" + slot.id, () => castVote(slot.id, null, true))}
-              className="mt-1 accent-stone-900"
-            />
-            <span className="text-sm text-stone-700 italic">I don&apos;t care</span>
-          </label>
-          {myVote && (
-            <p className="text-xs text-stone-500 mt-1">
-              You voted{" "}
-              {myVote.isDontCare
-                ? "I don't care"
-                : `for "${slot.suggestions.find((s) => s.id === myVote.suggestionId)?.mealName ?? "?"}"`}
-              .
-            </p>
-          )}
-        </div>
-      )}
-
-      {phase === "voting_open" && isAdmin && (
-        <ul className="mt-3 space-y-1 text-sm">
-          {slot.suggestions.map((s) => (
-            <li key={s.id} className="text-stone-700">
-              · {s.mealName} <span className="text-stone-400">({s.submittedBy.name})</span>
-            </li>
-          ))}
-          {slot.suggestions.length === 0 && (
-            <li className="text-xs text-stone-500 italic">No suggestions</li>
-          )}
-        </ul>
       )}
 
       {phase === "admin_finalizing" && isAdmin && (
@@ -779,36 +644,169 @@ function SuggestFormFields({
   );
 }
 
-function InlineSuggestForm({
+function PollBody({
   slot,
-  onSubmit,
-  onCancel,
+  myVote,
+  tally,
+  dontCareCount,
+  currentUserId,
+  busy,
+  run,
 }: {
   slot: SlotRow;
-  onSubmit: (fd: FormData) => Promise<void>;
-  onCancel: () => void;
+  myVote: VoteRow | undefined;
+  tally: Map<string, number>;
+  dontCareCount: number;
+  currentUserId: string;
+  busy: string | null;
+  run: <T>(label: string, fn: () => Promise<T>) => Promise<void>;
 }) {
+  const totalVotes = slot.votes.length;
+  return (
+    <div className="mt-3 space-y-2">
+      <div className="space-y-1.5" role="radiogroup" aria-label={`${slot.dayName} ${slot.mealType} poll`}>
+        {slot.suggestions.map((s) => {
+          const count = tally.get(s.id) ?? 0;
+          const isMine = myVote?.suggestionId === s.id;
+          const canDelete = s.submittedByUserId === currentUserId;
+          const pct = totalVotes > 0 ? Math.round((count / totalVotes) * 100) : 0;
+          return (
+            <label
+              key={s.id}
+              className={`relative flex items-start gap-2 px-3 py-2 rounded-md border cursor-pointer overflow-hidden ${
+                isMine ? "border-stone-900 bg-stone-50" : "border-stone-200 hover:bg-stone-50"
+              }`}
+            >
+              <span
+                aria-hidden
+                className="absolute inset-y-0 left-0 bg-stone-900/5"
+                style={{ width: `${pct}%` }}
+              />
+              <input
+                type="radio"
+                name={`vote-${slot.id}`}
+                checked={isMine}
+                disabled={busy !== null}
+                onChange={() => run("vote-" + slot.id, () => castVote(slot.id, s.id, false))}
+                className="mt-1 accent-stone-900 relative z-10"
+              />
+              <span className="flex-1 text-sm relative z-10">
+                <span className="font-medium text-stone-900">{s.mealName}</span>
+                <span className="text-stone-500"> · {s.submittedBy.name}</span>
+                {s.note && <span className="block text-xs text-stone-600 mt-0.5">{s.note}</span>}
+                <span className="flex flex-wrap gap-1 mt-1">
+                  {s.helpOffered.map((h) => (
+                    <span key={h} className="text-xs px-2 py-0.5 rounded bg-blue-50 text-blue-900">
+                      {h.replace("_", " ")}
+                    </span>
+                  ))}
+                  {s.dietaryTags.map((t) => (
+                    <span key={t} className="text-xs px-2 py-0.5 rounded bg-stone-100 text-stone-700">
+                      {t}
+                    </span>
+                  ))}
+                </span>
+              </span>
+              <span className="relative z-10 flex flex-col items-end gap-0.5">
+                <span className="text-xs px-2 py-0.5 rounded bg-stone-100 text-stone-700 tabular-nums">
+                  {count} {count === 1 ? "vote" : "votes"}
+                </span>
+                {canDelete && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      run("del-" + s.id, () => deleteSuggestion(s.id));
+                    }}
+                    className="text-[10px] text-stone-400 hover:text-red-700"
+                  >
+                    Remove
+                  </button>
+                )}
+              </span>
+            </label>
+          );
+        })}
+
+        <label
+          className={`relative flex items-start gap-2 px-3 py-2 rounded-md border cursor-pointer overflow-hidden ${
+            myVote?.isDontCare ? "border-stone-900 bg-stone-50" : "border-stone-200 hover:bg-stone-50"
+          }`}
+        >
+          <span
+            aria-hidden
+            className="absolute inset-y-0 left-0 bg-stone-900/5"
+            style={{
+              width: `${totalVotes > 0 ? Math.round((dontCareCount / totalVotes) * 100) : 0}%`,
+            }}
+          />
+          <input
+            type="radio"
+            name={`vote-${slot.id}`}
+            checked={!!myVote?.isDontCare}
+            disabled={busy !== null}
+            onChange={() => run("vote-" + slot.id, () => castVote(slot.id, null, true))}
+            className="mt-1 accent-stone-900 relative z-10"
+          />
+          <span className="flex-1 text-sm text-stone-700 italic relative z-10">I don&apos;t care</span>
+          <span className="relative z-10 text-xs px-2 py-0.5 rounded bg-stone-100 text-stone-700 tabular-nums">
+            {dontCareCount} {dontCareCount === 1 ? "vote" : "votes"}
+          </span>
+        </label>
+      </div>
+
+      <QuickSuggestForm slot={slot} busy={busy} run={run} />
+
+      {myVote && (
+        <p className="text-xs text-stone-500">
+          Your vote:{" "}
+          {myVote.isDontCare
+            ? "I don't care"
+            : `"${slot.suggestions.find((s) => s.id === myVote.suggestionId)?.mealName ?? "?"}"`}
+          . You can change it anytime.
+        </p>
+      )}
+    </div>
+  );
+}
+
+function QuickSuggestForm({
+  slot,
+  busy,
+  run,
+}: {
+  slot: SlotRow;
+  busy: string | null;
+  run: <T>(label: string, fn: () => Promise<T>) => Promise<void>;
+}) {
+  const [name, setName] = useState("");
   return (
     <form
-      className="border border-stone-300 rounded-lg p-3 space-y-3 bg-stone-50"
+      className="flex items-stretch gap-2 mt-1"
       onSubmit={async (e) => {
         e.preventDefault();
-        const fd = new FormData(e.currentTarget);
-        await onSubmit(fd);
+        const trimmed = name.trim();
+        if (!trimmed) return;
+        const fd = new FormData();
+        fd.set("mealSlotId", slot.id);
+        fd.set("mealName", trimmed);
+        await run("suggest-" + slot.id, () => createSuggestion(fd));
+        setName("");
       }}
     >
-      <p className="text-xs text-stone-500">
-        Suggesting for <strong>{slot.dayName} {slot.mealType}</strong>
-      </p>
-      <SuggestFormFields slots={[]} presetSlotId={slot.id} />
-      <div className="flex gap-2">
-        <button type="submit" className="text-xs px-3 py-1.5 bg-stone-900 text-white rounded-md font-medium hover:bg-stone-800">
-          Add suggestion
-        </button>
-        <button type="button" onClick={onCancel} className="text-xs px-3 py-1.5 border border-stone-300 text-stone-700 rounded-md hover:bg-stone-100">
-          Cancel
-        </button>
-      </div>
+      <input
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        placeholder="Suggest a new idea (e.g. BBQ)"
+        className="flex-1 px-3 py-2 rounded-md border border-stone-300 bg-white text-sm focus:outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900"
+      />
+      <button
+        type="submit"
+        disabled={busy !== null || !name.trim()}
+        className="px-3 py-2 bg-stone-900 text-white text-sm rounded-md font-medium hover:bg-stone-800 disabled:opacity-40"
+      >
+        Submit
+      </button>
     </form>
   );
 }
