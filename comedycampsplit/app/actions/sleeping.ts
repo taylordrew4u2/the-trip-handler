@@ -315,13 +315,17 @@ export async function requestBedmate(bedId: string, toUserId: string) {
     }
   }
 
-  const existing = await prisma.bedmateRequest.findFirst({
-    where: { bedId, fromUserId: auth.id, toUserId, status: "PENDING" },
+  const existing = await prisma.bedmateRequest.findUnique({
+    where: { bedId_fromUserId_toUserId: { bedId, fromUserId: auth.id, toUserId } },
   });
-  if (existing) return { error: "You already have a pending request for this bed." };
+  if (existing?.status === "PENDING") {
+    return { error: "You already have a pending request for this bed." };
+  }
 
-  await prisma.bedmateRequest.create({
-    data: { bedId, fromUserId: auth.id, toUserId, status: "PENDING" },
+  await prisma.bedmateRequest.upsert({
+    where: { bedId_fromUserId_toUserId: { bedId, fromUserId: auth.id, toUserId } },
+    create: { bedId, fromUserId: auth.id, toUserId, status: "PENDING" },
+    update: { status: "PENDING", respondedAt: null, createdAt: new Date() },
   });
 
   revalidatePath("/dashboard/sleeping");

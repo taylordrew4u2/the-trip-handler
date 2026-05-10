@@ -254,11 +254,11 @@ export function SleepingClient({
               const mine = bed.assignments.some((a) => a.userId === userId);
               const isOccupiedSingle = bed.type === "SINGLE" && taken > 0 && !mine;
               const isHalfFullDouble = bed.type === "DOUBLE" && taken === 1 && !mine;
-              const occupant = bed.assignments[0];
+              const occupant = taken > 0 ? bed.assignments[0] : null;
               const canBump = isOccupiedSingle && isFemale;
-              const pendingReqToOccupant = isHalfFullDouble
+              const pendingReqToOccupant = isHalfFullDouble && occupant
                 ? outgoingRequests.find(
-                    (r) => r.bed.id === bed.id && r.toUser.id === occupant?.userId
+                    (r) => r.bed.id === bed.id && r.toUser.id === occupant.userId
                   )
                 : null;
 
@@ -294,7 +294,7 @@ export function SleepingClient({
                         >
                           {busy === bed.id + "bump" ? "Requesting…" : "Take this single"}
                         </button>
-                      ) : isHalfFullDouble ? (
+                      ) : isHalfFullDouble && occupant ? (
                         pendingReqToOccupant ? (
                           <span className="text-xs px-2.5 py-1 bg-amber-100 text-amber-900 rounded-md font-medium">
                             Request pending
