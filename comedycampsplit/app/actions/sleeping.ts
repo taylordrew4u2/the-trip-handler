@@ -325,7 +325,7 @@ export async function requestBedmate(bedId: string, toUserId: string) {
   await prisma.bedmateRequest.upsert({
     where: { bedId_fromUserId_toUserId: { bedId, fromUserId: auth.id, toUserId } },
     create: { bedId, fromUserId: auth.id, toUserId, status: "PENDING" },
-    update: { status: "PENDING", respondedAt: null, createdAt: new Date() },
+    update: { status: "PENDING", respondedAt: null },
   });
 
   revalidatePath("/dashboard/sleeping");
