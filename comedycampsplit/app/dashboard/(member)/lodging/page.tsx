@@ -1,13 +1,9 @@
 import { prisma } from "@/lib/db";
-import { ApprovalRequired } from "@/components/ApprovalRequired";
-import { getUserStatus, isApproved } from "@/lib/approval";
 import { PageNote } from "@/components/PageNote";
 
 export const dynamic = "force-dynamic";
 
 export default async function LodgingPage() {
-  if (!isApproved(await getUserStatus())) return <ApprovalRequired what="Lodging" />;
-
   const trip = await prisma.trip.findFirst({ select: { id: true, lodging: true } });
   const photos = trip
     ? await prisma.lodgingPhoto.findMany({ where: { tripId: trip.id }, orderBy: { position: "asc" } })

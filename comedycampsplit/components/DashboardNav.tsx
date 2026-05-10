@@ -9,8 +9,8 @@ type NavItem = { href: string; label: string; exact?: boolean; gated?: boolean }
 const navItems: NavItem[] = [
   { href: "/dashboard", label: "Home", exact: true },
   { href: "/dashboard/roster", label: "Roster", gated: true },
-  { href: "/dashboard/itinerary", label: "Itinerary", gated: true },
-  { href: "/dashboard/lodging", label: "Lodging", gated: true },
+  { href: "/dashboard/itinerary", label: "Itinerary" },
+  { href: "/dashboard/lodging", label: "Lodging" },
   { href: "/dashboard/sleeping", label: "Sleeping", gated: true },
   { href: "/dashboard/meals", label: "Meals", gated: true },
   { href: "/dashboard/contributions", label: "Contributions", gated: true },
