@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { ApprovalRequired } from "@/components/ApprovalRequired";
 import { isApproved } from "@/lib/approval";
 import { PreferencesForm } from "./PreferencesForm";
+import { PageNote } from "@/components/PageNote";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +20,7 @@ export default async function PreferencesPage() {
 
   return (
     <div className="max-w-3xl mx-auto">
+      <PageNote pageKey="preferences" />
       <div className="mb-8">
         <p className="text-xs uppercase tracking-[0.2em] text-stone-500 mb-2">Trip preferences</p>
         <h1 className="font-serif text-3xl font-medium text-stone-900">Help plan the trip</h1>

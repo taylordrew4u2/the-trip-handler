@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { ApprovalRequired } from "@/components/ApprovalRequired";
 import { getUserStatus, isApproved } from "@/lib/approval";
+import { PageNote } from "@/components/PageNote";
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +26,7 @@ export default async function ItineraryPage() {
 
   return (
     <div className="space-y-8 max-w-3xl">
+      <PageNote pageKey="itinerary" />
       <header>
         <h1 className="font-serif text-3xl font-medium text-stone-900">{trip.name}</h1>
         <p className="text-stone-600 text-sm mt-1">
