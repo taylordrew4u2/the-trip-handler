@@ -328,7 +328,7 @@ model BedmateRequest {
   createdAt    DateTime             @default(now())
   respondedAt  DateTime?
 
-  @@unique([bedId, fromUserId, toUserId, status])
+  @@unique([bedId, fromUserId, toUserId])
   @@index([toUserId, status])
   @@index([fromUserId, status])
 }

@@ -151,6 +151,7 @@ export function ProfileForm({
               <button
                 key={t.value}
                 type="button"
+                aria-pressed={on}
                 onClick={() => toggleTag(t.value)}
                 className={`text-sm px-3 py-1.5 rounded-full border transition-colors ${
                   on
