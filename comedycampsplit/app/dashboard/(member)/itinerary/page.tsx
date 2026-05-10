@@ -1,7 +1,6 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { ApprovalRequired } from "@/components/ApprovalRequired";
 import { isApproved } from "@/lib/approval";
 import { PageNote } from "@/components/PageNote";
 import { ItineraryView } from "@/components/ItineraryView";
@@ -11,9 +10,9 @@ export const dynamic = "force-dynamic";
 export default async function ItineraryPage() {
   const session = await getServerSession(authOptions);
   const sessionUser = session?.user as { id?: string; status?: string; role?: string } | undefined;
-  if (!isApproved(sessionUser?.status)) return <ApprovalRequired what="The itinerary" />;
   const userId = sessionUser?.id ?? "";
   const isAdmin = sessionUser?.role === "ADMIN";
+  const canComment = isAdmin || isApproved(sessionUser?.status);
 
   const [trip, days] = await Promise.all([
     prisma.trip.findFirst(),
@@ -56,7 +55,18 @@ export default async function ItineraryPage() {
         </p>
       </header>
 
-      <ItineraryView days={days} currentUserId={userId} isAdmin={isAdmin} />
+      {!canComment && (
+        <p className="text-xs uppercase tracking-[0.15em] text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+          Read-only · comments unlock when you&apos;re approved
+        </p>
+      )}
+
+      <ItineraryView
+        days={days}
+        currentUserId={userId}
+        isAdmin={isAdmin}
+        canComment={canComment}
+      />
 
       {trip.description && (
         <section className="bg-white rounded-xl border border-stone-200 p-5">

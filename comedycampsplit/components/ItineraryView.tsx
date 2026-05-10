@@ -40,10 +40,12 @@ export function ItineraryView({
   days,
   currentUserId,
   isAdmin,
+  canComment,
 }: {
   days: DayRow[];
   currentUserId: string;
   isAdmin: boolean;
+  canComment: boolean;
 }) {
   if (days.length === 0) {
     return <p className="text-stone-500 text-sm">Itinerary details coming soon.</p>;
@@ -59,6 +61,7 @@ export function ItineraryView({
             day={day}
             currentUserId={currentUserId}
             isAdmin={isAdmin}
+            canComment={canComment}
           />
         ))}
       </div>
@@ -70,10 +73,12 @@ function DaySection({
   day,
   currentUserId,
   isAdmin,
+  canComment,
 }: {
   day: DayRow;
   currentUserId: string;
   isAdmin: boolean;
+  canComment: boolean;
 }) {
   const heading = day.title || `Day ${day.dayNumber}`;
   const dateStr = day.date
@@ -105,6 +110,7 @@ function DaySection({
               item={item}
               currentUserId={currentUserId}
               isAdmin={isAdmin}
+              canComment={canComment}
             />
           ))}
         </div>
@@ -117,10 +123,12 @@ function ItineraryItemCard({
   item,
   currentUserId,
   isAdmin,
+  canComment,
 }: {
   item: ItemRow;
   currentUserId: string;
   isAdmin: boolean;
+  canComment: boolean;
 }) {
   const [showComments, setShowComments] = useState(false);
   const commentCount = item.comments.length;
@@ -170,6 +178,7 @@ function ItineraryItemCard({
             comments={item.comments}
             currentUserId={currentUserId}
             isAdmin={isAdmin}
+            canComment={canComment}
           />
         )}
       </div>
@@ -182,11 +191,13 @@ function CommentsThread({
   comments,
   currentUserId,
   isAdmin,
+  canComment,
 }: {
   itemId: string;
   comments: CommentRow[];
   currentUserId: string;
   isAdmin: boolean;
+  canComment: boolean;
 }) {
   const router = useRouter();
   const [draft, setDraft] = useState("");
@@ -218,13 +229,18 @@ function CommentsThread({
             <CommentRow
               key={c.id}
               comment={c}
-              canEdit={c.user.id === currentUserId}
-              canDelete={c.user.id === currentUserId || isAdmin}
+              canEdit={canComment && c.user.id === currentUserId}
+              canDelete={canComment && (c.user.id === currentUserId || isAdmin)}
             />
           ))}
         </ul>
       )}
 
+      {!canComment ? (
+        <p className="text-xs text-stone-500 italic">
+          Get approved to post comments here.
+        </p>
+      ) : (
       <form onSubmit={handleSubmit} className="flex flex-col gap-2">
         <textarea
           value={draft}
@@ -245,6 +261,7 @@ function CommentsThread({
           </button>
         </div>
       </form>
+      )}
     </div>
   );
 }

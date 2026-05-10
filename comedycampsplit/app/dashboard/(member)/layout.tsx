@@ -40,9 +40,9 @@ export default async function MemberLayout({ children }: { children: React.React
       <main className="max-w-6xl mx-auto px-4 py-8">
         {isPending && (
           <div className="bg-amber-50 border border-amber-300 rounded-xl px-4 py-3 mb-6 text-sm text-amber-900">
-            <strong>You&apos;re pending admin approval.</strong> You can browse trip basics here, but
-            you won&apos;t see the roster or be able to sign up for contributions, submit anything, or
-            pay until you&apos;re approved.
+            <strong>You&apos;re pending admin approval.</strong> You can browse the itinerary and
+            lodging now, but the roster, contributions, payments, and other tools unlock once
+            you&apos;re approved.
           </div>
         )}
         {children}
