@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { ApprovalRequired } from "@/components/ApprovalRequired";
 import { getUserStatus, isApproved } from "@/lib/approval";
+import { PageNote } from "@/components/PageNote";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +15,7 @@ export default async function LodgingPage() {
 
   return (
     <div className="space-y-6 max-w-3xl">
+      <PageNote pageKey="lodging" />
       <header>
         <h1 className="font-serif text-3xl font-medium text-stone-900">Lodging</h1>
         <p className="text-stone-500 text-sm mt-1">Where we&apos;re staying.</p>

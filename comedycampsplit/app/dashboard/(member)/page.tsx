@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { WithdrawButton } from "@/components/WithdrawButton";
+import { PageNote } from "@/components/PageNote";
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
@@ -27,6 +28,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-8">
+      <PageNote pageKey="dashboard" />
       <header className="bg-stone-900 text-stone-100 rounded-2xl p-8 md:p-10">
         <p className="text-xs uppercase tracking-[0.2em] text-stone-400 mb-3">
           {trip?.isLocked ? "Locked · Payment due" : "The Roster"}

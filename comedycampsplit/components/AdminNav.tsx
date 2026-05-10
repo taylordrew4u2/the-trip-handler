@@ -16,6 +16,7 @@ const navItems = [
   { href: "/admin/roster", label: "Roster" },
   { href: "/admin/intake", label: "Guest forms" },
   { href: "/admin/board", label: "Board" },
+  { href: "/admin/page-notes", label: "Page notes" },
   { href: "/admin/diagnostics", label: "Diagnostics" },
 ];
 

@@ -5,6 +5,7 @@ import { PaymentClient } from "./PaymentClient";
 import { redirect } from "next/navigation";
 import { ApprovalRequired } from "@/components/ApprovalRequired";
 import { isApproved } from "@/lib/approval";
+import { PageNote } from "@/components/PageNote";
 
 export default async function PaymentPage() {
   const session = await getServerSession(authOptions);
@@ -24,6 +25,7 @@ export default async function PaymentPage() {
 
   return (
     <div className="space-y-6 max-w-2xl">
+      <PageNote pageKey="payment" />
       <h1 className="font-serif text-3xl font-medium text-stone-900">Payment</h1>
       <PaymentClient
         trip={trip}
