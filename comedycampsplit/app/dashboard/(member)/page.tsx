@@ -119,24 +119,25 @@ export default async function DashboardPage() {
         </div>
       )}
 
-      {user?.status !== "PENDING" && (
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { href: "/dashboard/roster", label: "Roster" },
-          { href: "/dashboard/itinerary", label: "Itinerary" },
-          { href: "/dashboard/contributions", label: "Contributions" },
-        ].map((item) => (
-          <a
-            key={item.href}
-            href={item.href}
-            className="group bg-white rounded-xl border border-stone-200 p-5 hover:border-stone-900 transition-colors"
-          >
-            <p className="font-medium text-stone-900 text-sm">{item.label}</p>
-            <p className="text-xs text-stone-500 mt-1 group-hover:text-stone-900">View →</p>
-          </a>
-        ))}
+          { href: "/dashboard/itinerary", label: "Itinerary", show: true },
+          { href: "/dashboard/lodging", label: "Lodging", show: true },
+          { href: "/dashboard/roster", label: "Roster", show: user?.status !== "PENDING" },
+          { href: "/dashboard/contributions", label: "Contributions", show: user?.status !== "PENDING" },
+        ]
+          .filter((item) => item.show)
+          .map((item) => (
+            <a
+              key={item.href}
+              href={item.href}
+              className="group bg-white rounded-xl border border-stone-200 p-5 hover:border-stone-900 transition-colors"
+            >
+              <p className="font-medium text-stone-900 text-sm">{item.label}</p>
+              <p className="text-xs text-stone-500 mt-1 group-hover:text-stone-900">View →</p>
+            </a>
+          ))}
       </div>
-      )}
 
       {user && user.status !== "CANCELLED" && (
         <div className="border-t border-stone-200 pt-6">
