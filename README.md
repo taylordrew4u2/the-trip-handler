@@ -1,5 +1,7 @@
 # The Trip Handler
 
+[![CI](https://github.com/taylordrew4u2/COMEDYSUMMERCAMP/actions/workflows/ci.yml/badge.svg)](https://github.com/taylordrew4u2/COMEDYSUMMERCAMP/actions/workflows/ci.yml)
+
 A full-stack Next.js application for organizing a private group trip — applications, approvals, lodging assignment, meal planning, itinerary, expense splitting, and Stripe-collected per-person payments — built as a single-tenant SaaS-style web app.
 
 ## Live Demo
@@ -284,10 +286,6 @@ A dedicated accessibility audit (screen reader testing, focus management on moda
 - No automated test suite.
 - Prisma migration history is not committed; the app uses `prisma db push --accept-data-loss` at build time. Not suitable for multi-tenant production.
 - Admin user is configured via code (`lib/auth.ts`) rather than the database.
-- No CI workflow is committed (`.github/workflows/` is empty).
-- No `LICENSE` file is present.
-- No `SECURITY.md` policy is present.
-- Documentation lives in two README files (`README.md` at the repo root is the project README; `comedycampsplit/README.md` is an older project summary kept for now).
 - Screenshots are not yet included.
 
 ## Roadmap
@@ -295,8 +293,6 @@ A dedicated accessibility audit (screen reader testing, focus management on moda
 - Add automated tests (Vitest or Playwright) starting with the auth + approval + payment flow.
 - Move admin user from code to database with hashed credentials and a password-reset path.
 - Replace `prisma db push --accept-data-loss` with a real migration history before any data the user can't afford to lose lands in production.
-- Add a GitHub Actions workflow for lint + type-check + build on pull requests.
-- Add a `LICENSE` file and a `SECURITY.md`.
 - Add screenshots of the main flows to this README.
 - Accessibility review.
 - Rate-limiting on auth and signup.
@@ -307,7 +303,7 @@ Active. The app is deployed at the URL above and used by one organizer for one t
 
 ## License
 
-No license has been added yet.
+MIT — see [`LICENSE`](./LICENSE).
 
 ---
 
