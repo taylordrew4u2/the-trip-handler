@@ -4,11 +4,15 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { DashboardNav } from "@/components/DashboardNav";
 import { SignOutLink } from "@/components/SignOutLink";
+import { getUserTripOrActive } from "@/lib/trip";
 
 export default async function MemberLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession(authOptions);
   const sessionUser = session?.user as { id?: string; status?: string } | undefined;
   if (!sessionUser?.id) redirect("/login");
+
+  // Make sure legacy users without a tripId get attached to the active trip.
+  await getUserTripOrActive(sessionUser.id);
 
   // PENDING users with no form must finish the intake first.
   if (sessionUser.status === "PENDING") {

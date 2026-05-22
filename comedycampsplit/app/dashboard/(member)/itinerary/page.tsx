@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { isApproved } from "@/lib/approval";
 import { PageNote } from "@/components/PageNote";
 import { ItineraryView } from "@/components/ItineraryView";
+import { getUserTripOrActive } from "@/lib/trip";
 
 export const dynamic = "force-dynamic";
 
@@ -14,10 +15,11 @@ export default async function ItineraryPage() {
   const isAdmin = sessionUser?.role === "ADMIN";
   const canComment = isAdmin || isApproved(sessionUser?.status);
 
-  const [trip, days] = await Promise.all([
-    prisma.trip.findFirst(),
-    prisma.day.findMany({
-      orderBy: { dayNumber: "asc" },
+  const trip = userId ? await getUserTripOrActive(userId) : null;
+  const days = trip
+    ? await prisma.day.findMany({
+        where: { tripId: trip.id },
+        orderBy: { dayNumber: "asc" },
       include: {
         itineraryItems: {
           orderBy: [{ pinned: "desc" }, { orderIndex: "asc" }],
@@ -29,8 +31,8 @@ export default async function ItineraryPage() {
           },
         },
       },
-    }),
-  ]);
+      })
+    : [];
 
   if (!trip) {
     return <p className="text-stone-500 text-sm">No trip found yet.</p>;

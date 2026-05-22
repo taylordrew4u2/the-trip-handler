@@ -1,11 +1,16 @@
 import { prisma } from "@/lib/db";
 import Link from "next/link";
+import { getActiveTrip } from "@/lib/trip";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminDashboardPage() {
+  const trip = await getActiveTrip();
+  const scope = trip
+    ? { tripId: trip.id, role: "PARTICIPANT" as const }
+    : { role: "PARTICIPANT" as const };
+
   const [
-    trip,
     totalUsers,
     pendingUsers,
     approvedUsers,
@@ -13,15 +18,14 @@ export default async function AdminDashboardPage() {
     pendingForms,
     editRequests,
   ] = await Promise.all([
-    prisma.trip.findFirst(),
-    prisma.user.count({ where: { role: "PARTICIPANT" } }),
-    prisma.user.count({ where: { status: "PENDING" } }),
-    prisma.user.count({ where: { status: { in: ["APPROVED", "PENDING_PAYMENT"] } } }),
-    prisma.user.count({ where: { status: "CONFIRMED_PAID" } }),
+    prisma.user.count({ where: scope }),
+    prisma.user.count({ where: { ...scope, status: "PENDING" } }),
+    prisma.user.count({ where: { ...scope, status: { in: ["APPROVED", "PENDING_PAYMENT"] } } }),
+    prisma.user.count({ where: { ...scope, status: "CONFIRMED_PAID" } }),
     prisma.user.count({
-      where: { status: "PENDING", guestForm: { is: null } },
+      where: { ...scope, status: "PENDING", guestForm: { is: null } },
     }),
-    prisma.guestForm.count({ where: { editRequested: true } }),
+    prisma.guestForm.count({ where: { editRequested: true, user: scope } }),
   ]);
 
   const stats = [

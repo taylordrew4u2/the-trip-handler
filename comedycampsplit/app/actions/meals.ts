@@ -9,7 +9,8 @@ import { SLOT_DEFS, type Phase } from "@/lib/meals";
 const APPROVED = new Set(["APPROVED", "PENDING_PAYMENT", "CONFIRMED_PAID"]);
 
 async function getCurrentTripId(): Promise<string | null> {
-  const trip = await prisma.trip.findFirst({ select: { id: true } });
+  const { getActiveTrip } = await import("@/lib/trip");
+  const trip = await getActiveTrip();
   return trip?.id ?? null;
 }
 

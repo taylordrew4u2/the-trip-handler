@@ -10,6 +10,7 @@ async function main() {
         name: "Untitled Trip",
         destination: "TBD",
         description: "Edit me from the admin Trip page.",
+        isActive: true,
       },
     });
     console.log("Seeded trip.");

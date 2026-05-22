@@ -1,10 +1,15 @@
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { PageNote } from "@/components/PageNote";
+import { getUserTripOrActive } from "@/lib/trip";
 
 export const dynamic = "force-dynamic";
 
 export default async function LodgingPage() {
-  const trip = await prisma.trip.findFirst({ select: { id: true, lodging: true } });
+  const session = await getServerSession(authOptions);
+  const userId = (session?.user as { id?: string } | undefined)?.id ?? "";
+  const trip = userId ? await getUserTripOrActive(userId) : null;
   const photos = trip
     ? await prisma.lodgingPhoto.findMany({ where: { tripId: trip.id }, orderBy: { position: "asc" } })
     : [];

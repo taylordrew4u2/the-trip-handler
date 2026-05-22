@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { prisma } from "@/lib/db";
+import { getActiveTrip } from "@/lib/trip";
 import { LoginForm } from "./LoginForm";
 
 export const dynamic = "force-dynamic";
@@ -20,10 +20,7 @@ function formatDateRange(start: Date | null, end: Date | null): string {
 }
 
 export default async function LoginPage() {
-  const trip = await prisma.trip.findFirst({
-    select: { name: true, destination: true, startDate: true, endDate: true, description: true },
-  });
-
+  const trip = await getActiveTrip();
   const dateRange = trip ? formatDateRange(trip.startDate, trip.endDate) : "";
 
   return (
@@ -61,7 +58,7 @@ export default async function LoginPage() {
           <p className="text-sm text-stone-600">
             New here?{" "}
             <Link href="/signup" className="text-stone-900 font-medium underline underline-offset-2 decoration-stone-300 hover:decoration-stone-900">
-              Apply for camp
+              Apply for a trip
             </Link>
           </p>
           <p className="text-xs text-stone-400">

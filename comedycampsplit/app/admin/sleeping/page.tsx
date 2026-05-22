@@ -1,23 +1,25 @@
 import { prisma } from "@/lib/db";
 import { AdminSleepingClient } from "./AdminSleepingClient";
 import { ensureSleepingSetup } from "@/app/actions/sleeping";
+import { getActiveTrip } from "@/lib/trip";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminSleepingPage() {
   await ensureSleepingSetup();
 
-  const [trip, beds] = await Promise.all([
-    prisma.trip.findFirst(),
-    prisma.bed.findMany({
-      orderBy: [{ room: "asc" }, { createdAt: "asc" }],
-      include: {
-        assignments: {
-          include: { user: { select: { id: true, name: true, username: true } } },
+  const trip = await getActiveTrip();
+  const beds = trip
+    ? await prisma.bed.findMany({
+        where: { tripId: trip.id },
+        orderBy: [{ room: "asc" }, { createdAt: "asc" }],
+        include: {
+          assignments: {
+            include: { user: { select: { id: true, name: true, username: true } } },
+          },
         },
-      },
-    }),
-  ]);
+      })
+    : [];
 
   return (
     <div className="space-y-6 max-w-4xl">

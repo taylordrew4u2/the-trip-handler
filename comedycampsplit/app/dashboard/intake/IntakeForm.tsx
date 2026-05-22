@@ -300,7 +300,7 @@ export function IntakeForm({ userId, defaultEmail, defaultName, defaultPhone, ex
         </Field>
       </Section>
 
-      <Section title="Group activities" intro="Comedy-related group activities, content creation, writing sessions, workshops, and regular summer camp-style activities.">
+      <Section title="Group activities" intro="Group activities, content creation, writing sessions, workshops, and other trip activities.">
         <Field label="Which activities are you interested in?">
           <CheckboxGroup name="activitiesInterested" defaultValue={e?.activitiesInterested} options={[
             { value: "Joke writing sessions", label: "Joke writing sessions" },

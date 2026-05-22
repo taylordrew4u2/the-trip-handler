@@ -7,7 +7,8 @@ import { signOut } from "next-auth/react";
 const navItems = [
   { href: "/admin/dashboard", label: "Dashboard" },
   { href: "/admin/users", label: "Users" },
-  { href: "/admin/trip", label: "Trip" },
+  { href: "/admin/trips", label: "Trips" },
+  { href: "/admin/trip", label: "Active trip" },
   { href: "/admin/itinerary", label: "Itinerary" },
   { href: "/admin/sleeping", label: "Sleeping" },
   { href: "/admin/meal-plan", label: "Meal plan" },
@@ -33,7 +34,7 @@ export function AdminNav() {
       </div>
       <nav className="flex-1 p-3 space-y-0.5">
         {navItems.map((item) => {
-          const active = pathname.startsWith(item.href);
+          const active = pathname === item.href || pathname.startsWith(item.href + "/");
           return (
             <Link
               key={item.href}

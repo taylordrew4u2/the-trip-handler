@@ -1,20 +1,22 @@
 import { prisma } from "@/lib/db";
 import { AdminItineraryClient } from "./AdminItineraryClient";
+import { getActiveTrip } from "@/lib/trip";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminItineraryPage() {
-  const [trip, days] = await Promise.all([
-    prisma.trip.findFirst(),
-    prisma.day.findMany({
-      orderBy: { dayNumber: "asc" },
-      include: {
-        itineraryItems: {
-          orderBy: [{ pinned: "desc" }, { orderIndex: "asc" }],
+  const trip = await getActiveTrip();
+  const days = trip
+    ? await prisma.day.findMany({
+        where: { tripId: trip.id },
+        orderBy: { dayNumber: "asc" },
+        include: {
+          itineraryItems: {
+            orderBy: [{ pinned: "desc" }, { orderIndex: "asc" }],
+          },
         },
-      },
-    }),
-  ]);
+      })
+    : [];
 
   return (
     <div className="space-y-6 max-w-4xl">
