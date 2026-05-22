@@ -294,6 +294,8 @@ export async function requestBedmate(bedId: string, toUserId: string) {
     include: { assignments: true },
   });
   if (!bed) return { error: "Bed not found." };
+  const me = await prisma.user.findUnique({ where: { id: auth.id }, select: { tripId: true } });
+  if (me?.tripId !== bed.tripId) return { error: "Wrong trip." };
   if (bed.type !== "DOUBLE") return { error: "Only double beds can be shared." };
   if (bed.assignments.length === 0) {
     return { error: "Bed is empty — just claim it normally." };
@@ -307,11 +309,11 @@ export async function requestBedmate(bedId: string, toUserId: string) {
   }
 
   if (bed.womenOnly) {
-    const me = await prisma.user.findUnique({
+    const gender = await prisma.user.findUnique({
       where: { id: auth.id },
       select: { gender: true },
     });
-    if (me?.gender !== "female") {
+    if (gender?.gender !== "female") {
       return { error: "This bed is reserved for female members." };
     }
   }

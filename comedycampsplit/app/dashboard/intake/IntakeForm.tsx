@@ -92,8 +92,8 @@ const YES_NO_ASK = [
   { value: "ask", label: "Ask me first" },
 ];
 
-export function IntakeForm({ userId, defaultEmail, defaultName, defaultPhone, existing, isPending = false }: {
-  userId: string; defaultEmail: string; defaultName: string; defaultPhone: string; existing: Existing; isPending?: boolean;
+export function IntakeForm({ defaultEmail, defaultName, defaultPhone, existing, isPending = false }: {
+  defaultEmail: string; defaultName: string; defaultPhone: string; existing: Existing; isPending?: boolean;
 }) {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
@@ -106,7 +106,7 @@ export function IntakeForm({ userId, defaultEmail, defaultName, defaultPhone, ex
 
   async function handleRequestEdit() {
     setRequesting(true);
-    const result = await requestFormEditAccess(userId);
+    const result = await requestFormEditAccess();
     setRequesting(false);
     if (result?.error) {
       setError(result.error);
@@ -122,7 +122,7 @@ export function IntakeForm({ userId, defaultEmail, defaultName, defaultPhone, ex
     setSubmitting(true);
     setError("");
     const fd = new FormData(ev.currentTarget);
-    const result = await submitGuestForm(userId, fd);
+    const result = await submitGuestForm(fd);
     setSubmitting(false);
     if (result?.error) {
       setError(result.error);

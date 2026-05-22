@@ -42,10 +42,6 @@ export async function upsertDay(formData: FormData) {
 
   const data = {
     title: ((formData.get("title") as string) ?? "").trim() || null,
-    schedule: ((formData.get("schedule") as string) ?? "").trim() || null,
-    breakfast: ((formData.get("breakfast") as string) ?? "").trim() || null,
-    lunch: ((formData.get("lunch") as string) ?? "").trim() || null,
-    dinner: ((formData.get("dinner") as string) ?? "").trim() || null,
     notes: ((formData.get("notes") as string) ?? "").trim() || null,
     date,
   };

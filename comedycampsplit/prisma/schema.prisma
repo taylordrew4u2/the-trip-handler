@@ -240,10 +240,6 @@ model Day {
   dayNumber Int
   date      DateTime?
   title     String?
-  schedule  String?
-  breakfast String?
-  lunch     String?
-  dinner    String?
   notes     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

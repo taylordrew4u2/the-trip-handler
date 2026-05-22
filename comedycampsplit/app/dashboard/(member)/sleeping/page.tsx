@@ -7,6 +7,7 @@ import { SleepingClient } from "./SleepingClient";
 import { SignOutButton } from "@/components/SignOutButton";
 import { ensureSleepingSetup } from "@/app/actions/sleeping";
 import { PageNote } from "@/components/PageNote";
+import { getUserTripOrActive } from "@/lib/trip";
 
 export const dynamic = "force-dynamic";
 
@@ -18,8 +19,11 @@ export default async function SleepingPage() {
 
   await ensureSleepingSetup();
 
+  const trip = await getUserTripOrActive(userId);
+
   const [beds, me, incomingRequests, outgoingRequests] = await Promise.all([
     prisma.bed.findMany({
+      where: trip ? { tripId: trip.id } : { tripId: "__none__" },
       orderBy: [{ room: "asc" }, { createdAt: "asc" }],
       include: {
         assignments: {

@@ -20,7 +20,6 @@ interface PaymentClientProps {
   } | null;
   user: { id: string; name: string; status: string } | null;
   payment: { status: string; amount: number; createdAt: Date } | null;
-  userId: string;
 }
 
 const LINES: { key: "housing" | "transport" | "meals"; label: string }[] = [
@@ -29,7 +28,7 @@ const LINES: { key: "housing" | "transport" | "meals"; label: string }[] = [
   { key: "meals", label: "Meals" },
 ];
 
-export function PaymentClient({ trip, user, payment, userId }: PaymentClientProps) {
+export function PaymentClient({ trip, user, payment }: PaymentClientProps) {
   const searchParams = useSearchParams();
   const success = searchParams.get("success");
   const cancelled = searchParams.get("cancelled");
@@ -71,7 +70,7 @@ export function PaymentClient({ trip, user, payment, userId }: PaymentClientProp
     if (!trip?.finalPrice) return;
     setLoading(true);
     setError("");
-    const result = await createCheckoutSession(userId, trip.finalPrice);
+    const result = await createCheckoutSession();
     if (result.url) {
       window.location.href = result.url;
     } else {
