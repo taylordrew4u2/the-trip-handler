@@ -65,7 +65,7 @@ export default async function AdminDashboardPage() {
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
           <h1 className="font-serif text-3xl font-medium text-stone-900">Admin dashboard</h1>
-          <p className="text-stone-500 text-sm mt-1">Managing {trip?.name ?? "Comedy Summer Camp"}.</p>
+          <p className="text-stone-500 text-sm mt-1">Managing {trip?.name ?? "your trip"}.</p>
         </div>
         <span
           className={`text-xs px-2.5 py-1 rounded-md font-medium ${

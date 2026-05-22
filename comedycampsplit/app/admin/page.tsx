@@ -37,7 +37,10 @@ export default function AdminLoginPage() {
       <div className="w-full max-w-sm">
         <div className="text-center mb-10">
           <p className="text-xs uppercase tracking-[0.2em] text-stone-500 mb-2">Admin</p>
-          <h1 className="font-serif text-3xl font-medium text-stone-100">Comedy Summer Camp</h1>
+          <h1 className="font-serif text-3xl font-medium text-stone-100">The Trip Handler</h1>
+          <p className="text-xs text-stone-500 italic mt-3 leading-snug">
+            For the friend who accidentally became the adult in charge of making the plan.
+          </p>
         </div>
 
         <div className="bg-stone-900 rounded-xl border border-stone-800 p-7">

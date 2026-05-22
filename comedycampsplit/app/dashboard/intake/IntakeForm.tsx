@@ -228,7 +228,7 @@ export function IntakeForm({ userId, defaultEmail, defaultName, defaultPhone, ex
               className="h-4 w-4 mt-0.5 accent-stone-900"
             />
             <span>
-              I understand and agree that Comedy Summer Camp is a <strong>drug- and alcohol-free</strong> trip.
+              I understand and agree that this is a <strong>drug- and alcohol-free</strong> trip.
               I will not bring, use, or share any alcohol or recreational drugs during the weekend.
             </span>
           </label>
@@ -280,7 +280,7 @@ export function IntakeForm({ userId, defaultEmail, defaultName, defaultPhone, ex
             { value: "filmed", label: "I am okay being filmed during group activities." },
             { value: "photographed", label: "I am okay being photographed during group activities." },
             { value: "recap", label: "I am okay appearing in recap videos from the weekend." },
-            { value: "promo", label: "I am okay appearing in promotional content for future Comedy Summer Camp weekends." },
+            { value: "promo", label: "I am okay appearing in promotional content for future trips." },
             { value: "tagged", label: "I am okay being tagged in posts." },
             { value: "approveClips", label: "I want to approve clips before they are posted." },
             { value: "doNotFilm", label: "I do not want to be filmed or photographed." },

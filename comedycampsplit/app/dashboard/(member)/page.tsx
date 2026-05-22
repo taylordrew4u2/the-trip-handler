@@ -34,7 +34,7 @@ export default async function DashboardPage() {
           {trip?.isLocked ? "Locked · Payment due" : "The Roster"}
         </p>
         <h1 className="font-serif text-4xl md:text-5xl font-medium leading-tight">
-          {trip?.name ?? "Comedy Summer Camp"}
+          {trip?.name ?? "Your trip"}
         </h1>
         {(trip?.destination || dateRange) && (
           <p className="text-stone-300 mt-3 text-base">

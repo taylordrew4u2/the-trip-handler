@@ -24,7 +24,7 @@ export default async function IntakePage() {
         <p className="text-xs uppercase tracking-[0.2em] text-stone-500 mb-2">
           {isPending ? "Required before approval" : "Guest form"}
         </p>
-        <h1 className="font-serif text-3xl font-medium text-stone-900">Comedy Summer Camp Guest Form</h1>
+        <h1 className="font-serif text-3xl font-medium text-stone-900">Guest Form</h1>
         <p className="text-stone-600 mt-3 text-sm leading-relaxed">
           {isPending ? (
             <>

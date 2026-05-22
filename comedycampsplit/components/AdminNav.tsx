@@ -28,7 +28,7 @@ export function AdminNav() {
       <div className="p-5 border-b border-stone-800">
         <p className="text-xs uppercase tracking-[0.2em] text-stone-500">Admin</p>
         <h1 className="font-serif text-lg font-medium text-stone-100 mt-1 leading-tight">
-          Comedy Summer Camp
+          The Trip Handler
         </h1>
       </div>
       <nav className="flex-1 p-3 space-y-0.5">

@@ -28,7 +28,7 @@ export default async function IntakeLayout({ children }: { children: React.React
       <header className="border-b border-stone-200 bg-white">
         <div className="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between">
           <Link href="/dashboard" className="font-serif text-lg font-medium text-stone-900">
-            Comedy Summer Camp
+            The Trip Handler
           </Link>
           {isApproved ? (
             <Link href="/dashboard" className="text-sm text-stone-600 hover:text-stone-900">

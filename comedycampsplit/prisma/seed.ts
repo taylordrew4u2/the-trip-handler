@@ -7,9 +7,9 @@ async function main() {
   if (!existingTrip) {
     await prisma.trip.create({
       data: {
-        name: "Comedy Summer Camp",
+        name: "Untitled Trip",
         destination: "TBD",
-        description: "The funniest trip of the year! Gather your comedy crew for a summer camp experience like no other.",
+        description: "Edit me from the admin Trip page.",
       },
     });
     console.log("Seeded trip.");

@@ -21,7 +21,7 @@ export async function createCheckoutSession(userId: string, tripShare: number) {
       {
         price_data: {
           currency: "usd",
-          product_data: { name: "Comedy Summer Camp — trip share" },
+          product_data: { name: "Trip share" },
           unit_amount: Math.round(tripShare * 100),
         },
         quantity: 1,

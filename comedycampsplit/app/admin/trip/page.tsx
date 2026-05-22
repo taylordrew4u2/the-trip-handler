@@ -5,7 +5,7 @@ import { LodgingPhotosClient } from "./LodgingPhotosClient";
 export default async function AdminTripPage() {
   const trip =
     (await prisma.trip.findFirst()) ??
-    (await prisma.trip.create({ data: { name: "Comedy Summer Camp" } }));
+    (await prisma.trip.create({ data: { name: "Untitled Trip" } }));
 
   const photos = await prisma.lodgingPhoto.findMany({
     where: { tripId: trip.id },
