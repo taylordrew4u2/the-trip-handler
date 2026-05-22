@@ -8,9 +8,17 @@ import {
   sendTripLockedEmail,
 } from "@/lib/resend";
 import { COST_SHARE_DIVISOR } from "@/lib/pricing";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 
+async function requireAdmin(): Promise<boolean> {
+  const session = await getServerSession(authOptions);
+  return (session?.user as { role?: string } | undefined)?.role === "ADMIN";
+}
+
 export async function approveUser(userId: string) {
+  if (!(await requireAdmin())) return { error: "Admin only." };
   const user = await prisma.user.update({
     where: { id: userId },
     data: { status: "APPROVED" },
@@ -26,6 +34,7 @@ export async function approveUser(userId: string) {
 }
 
 export async function rejectUser(userId: string) {
+  if (!(await requireAdmin())) return { error: "Admin only." };
   const user = await prisma.user.update({
     where: { id: userId },
     data: { status: "CANCELLED" },
@@ -36,6 +45,7 @@ export async function rejectUser(userId: string) {
 }
 
 export async function cancelUser(userId: string) {
+  if (!(await requireAdmin())) return { error: "Admin only." };
   const user = await prisma.user.update({
     where: { id: userId },
     data: { status: "CANCELLED" },
@@ -51,6 +61,7 @@ export async function cancelUser(userId: string) {
 }
 
 export async function addAdminNote(userId: string, note: string) {
+  if (!(await requireAdmin())) return { error: "Admin only." };
   await prisma.user.update({
     where: { id: userId },
     data: { adminNotes: note },
@@ -69,6 +80,7 @@ export async function updateTrip(tripId: string, data: {
   lodging?: string;
   meals?: string;
 }) {
+  if (!(await requireAdmin())) return { error: "Admin only." };
   await prisma.trip.update({
     where: { id: tripId },
     data: {
@@ -91,6 +103,7 @@ const PRICE_FIELDS: Record<PriceKind, { amount: "housingPrice" | "transportPrice
 };
 
 export async function updateTripPriceLine(tripId: string, kind: PriceKind, amount: number | null) {
+  if (!(await requireAdmin())) return { error: "Admin only." };
   const trip = await prisma.trip.findUnique({ where: { id: tripId } });
   if (!trip) return { error: "Trip not found." };
   if (trip.isLocked) return { error: "Unlock the trip before editing prices." };
@@ -109,6 +122,7 @@ export async function updateTripPriceLine(tripId: string, kind: PriceKind, amoun
 }
 
 export async function lockTripPriceLine(tripId: string, kind: PriceKind) {
+  if (!(await requireAdmin())) return { error: "Admin only." };
   const trip = await prisma.trip.findUnique({ where: { id: tripId } });
   if (!trip) return { error: "Trip not found." };
   const fields = PRICE_FIELDS[kind];
@@ -165,6 +179,7 @@ export async function lockTripPriceLine(tripId: string, kind: PriceKind) {
 }
 
 export async function unlockTripPriceLine(tripId: string, kind: PriceKind) {
+  if (!(await requireAdmin())) return { error: "Admin only." };
   const trip = await prisma.trip.findUnique({ where: { id: tripId } });
   if (!trip) return { error: "Trip not found." };
   if (trip.isLocked) return { error: "Unlock the whole trip first." };
@@ -179,6 +194,7 @@ export async function unlockTripPriceLine(tripId: string, kind: PriceKind) {
 }
 
 export async function lockTrip(tripId: string) {
+  if (!(await requireAdmin())) return { error: "Admin only." };
   const trip = await prisma.trip.update({
     where: { id: tripId },
     data: { isLocked: true, lockedAt: new Date() },
@@ -210,6 +226,7 @@ export async function lockTrip(tripId: string) {
 }
 
 export async function unlockTrip(tripId: string) {
+  if (!(await requireAdmin())) return { error: "Admin only." };
   // Unlock the trip AND all three price lines so admin can edit again.
   await prisma.trip.update({
     where: { id: tripId },
@@ -231,6 +248,7 @@ export async function unlockTrip(tripId: string) {
 // ---------- Multi-trip management ----------
 
 export async function createTrip(name: string) {
+  if (!(await requireAdmin())) return { error: "Admin only." };
   const trimmed = name.trim();
   if (!trimmed) return { error: "Name is required." };
 
@@ -250,6 +268,7 @@ export async function createTrip(name: string) {
 }
 
 export async function renameTrip(tripId: string, name: string) {
+  if (!(await requireAdmin())) return { error: "Admin only." };
   const trimmed = name.trim();
   if (!trimmed) return { error: "Name is required." };
   await prisma.trip.update({ where: { id: tripId }, data: { name: trimmed } });
@@ -259,6 +278,7 @@ export async function renameTrip(tripId: string, name: string) {
 }
 
 export async function setTripActive(tripId: string) {
+  if (!(await requireAdmin())) return { error: "Admin only." };
   await prisma.$transaction([
     prisma.trip.updateMany({ where: { isActive: true }, data: { isActive: false } }),
     prisma.trip.update({ where: { id: tripId }, data: { isActive: true } }),
@@ -269,6 +289,7 @@ export async function setTripActive(tripId: string) {
 }
 
 export async function setTripApplicationOpen(tripId: string, open: boolean) {
+  if (!(await requireAdmin())) return { error: "Admin only." };
   await prisma.trip.update({
     where: { id: tripId },
     data: { isApplicationOpen: open },
@@ -279,6 +300,7 @@ export async function setTripApplicationOpen(tripId: string, open: boolean) {
 }
 
 export async function deleteTrip(tripId: string) {
+  if (!(await requireAdmin())) return { error: "Admin only." };
   const userCount = await prisma.user.count({ where: { tripId } });
   if (userCount > 0) {
     return {

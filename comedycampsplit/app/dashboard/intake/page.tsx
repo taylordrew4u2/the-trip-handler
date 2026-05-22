@@ -41,7 +41,6 @@ export default async function IntakePage() {
         </p>
       </div>
       <IntakeForm
-        userId={userId}
         defaultEmail={user.email}
         defaultName={user.name}
         defaultPhone={user.phone ?? ""}

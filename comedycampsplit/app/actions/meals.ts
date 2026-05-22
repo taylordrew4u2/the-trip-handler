@@ -334,6 +334,7 @@ async function votingCompletionSummary() {
 
   const approvedUsers = await prisma.user.findMany({
     where: {
+      tripId,
       role: "PARTICIPANT",
       status: { in: ["APPROVED", "PENDING_PAYMENT", "CONFIRMED_PAID"] },
     },
