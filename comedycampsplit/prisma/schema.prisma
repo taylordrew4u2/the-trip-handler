@@ -37,6 +37,8 @@ model User {
   mealVotes       MealVote[]       @relation("MealVoter")
   mealHelpers     MealHelper[]     @relation("MealHelperUser")
   itineraryComments ItineraryComment[]
+  tripId        String?
+  trip          Trip?         @relation(fields: [tripId], references: [id])
 }
 
 enum UserStatus {
@@ -54,7 +56,9 @@ enum Role {
 
 model Trip {
   id              String      @id @default(cuid())
-  name            String      @default("Comedy Summer Camp")
+  name            String      @default("Untitled Trip")
+  isActive        Boolean     @default(false)
+  isApplicationOpen Boolean   @default(true)
   destination     String?
   startDate       DateTime?
   endDate         DateTime?
@@ -81,6 +85,7 @@ model Trip {
   lodgingPhotos   LodgingPhoto[]
   mealSlots       MealSlot[]
   mealPlanPhase   MealPlanPhase?
+  users           User[]
 }
 
 model MealSlot {

@@ -7,6 +7,7 @@ import { ensureMealPlanSetup, votingCompletionSummary } from "@/app/actions/meal
 import { MealsPlanner } from "@/components/MealsPlanner";
 import { SignOutButton } from "@/components/SignOutButton";
 import { PageNote } from "@/components/PageNote";
+import { getUserTripOrActive } from "@/lib/trip";
 
 export const dynamic = "force-dynamic";
 
@@ -17,10 +18,11 @@ export default async function MealsPage() {
   const userId = sessionUser?.id ?? "";
 
   await ensureMealPlanSetup();
+  const trip = await getUserTripOrActive(userId);
 
-  const [trip, slots, phase, completion] = await Promise.all([
-    prisma.trip.findFirst({ select: { id: true } }),
+  const [slots, phase, completion] = await Promise.all([
     prisma.mealSlot.findMany({
+      where: trip ? { tripId: trip.id } : { tripId: "__none__" },
       orderBy: { orderIndex: "asc" },
       include: {
         suggestions: {
@@ -34,7 +36,7 @@ export default async function MealsPage() {
         groceries: { orderBy: [{ category: "asc" }, { name: "asc" }] },
       },
     }),
-    prisma.mealPlanPhase.findFirst(),
+    trip ? prisma.mealPlanPhase.findUnique({ where: { tripId: trip.id } }) : null,
     votingCompletionSummary(),
   ]);
 

@@ -43,7 +43,7 @@ export function PaymentClient({ trip, user, payment, userId }: PaymentClientProp
       <div className="bg-white rounded-xl border border-emerald-300 p-8 text-center">
         <p className="text-xs uppercase tracking-[0.2em] text-emerald-700 mb-2">Confirmed</p>
         <h2 className="font-serif text-2xl font-medium text-stone-900 mb-2">You&apos;re in.</h2>
-        <p className="text-stone-600">Your payment was received. See you at camp.</p>
+        <p className="text-stone-600">Your payment was received. See you on the trip.</p>
       </div>
     );
   }

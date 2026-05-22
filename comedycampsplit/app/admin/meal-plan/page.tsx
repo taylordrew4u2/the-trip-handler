@@ -1,29 +1,33 @@
 import { prisma } from "@/lib/db";
 import { ensureMealPlanSetup, votingCompletionSummary } from "@/app/actions/meals";
 import { MealsPlanner } from "@/components/MealsPlanner";
+import { getActiveTrip } from "@/lib/trip";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminMealPlanPage() {
   await ensureMealPlanSetup();
+  const trip = await getActiveTrip();
 
-  const [trip, slots, phase, completion] = await Promise.all([
-    prisma.trip.findFirst({ select: { id: true } }),
-    prisma.mealSlot.findMany({
-      orderBy: { orderIndex: "asc" },
-      include: {
-        suggestions: {
-          orderBy: { createdAt: "asc" },
-          include: { submittedBy: { select: { id: true, name: true, username: true } } },
-        },
-        votes: { select: { id: true, userId: true, suggestionId: true, isDontCare: true } },
-        helpers: {
-          include: { user: { select: { id: true, name: true, username: true } } },
-        },
-        groceries: { orderBy: [{ category: "asc" }, { name: "asc" }] },
-      },
-    }),
-    prisma.mealPlanPhase.findFirst(),
+  const [slots, phase, completion] = await Promise.all([
+    trip
+      ? prisma.mealSlot.findMany({
+          where: { tripId: trip.id },
+          orderBy: { orderIndex: "asc" },
+          include: {
+            suggestions: {
+              orderBy: { createdAt: "asc" },
+              include: { submittedBy: { select: { id: true, name: true, username: true } } },
+            },
+            votes: { select: { id: true, userId: true, suggestionId: true, isDontCare: true } },
+            helpers: {
+              include: { user: { select: { id: true, name: true, username: true } } },
+            },
+            groceries: { orderBy: [{ category: "asc" }, { name: "asc" }] },
+          },
+        })
+      : [],
+    trip ? prisma.mealPlanPhase.findUnique({ where: { tripId: trip.id } }) : null,
     votingCompletionSummary(),
   ]);
 
