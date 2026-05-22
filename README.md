@@ -50,6 +50,7 @@ A group chat and a spreadsheet can do any one of those things, but no one item, 
 The Trip Handler centralizes the admin's workflow and the participant's view of the trip into one authenticated web app:
 
 - **Application + approval pipeline.** Anyone can sign up; admin reviews their guest form and approves them. Status drives what each user sees.
+- **Multiple trips.** Admin can run more than one trip in the same app — create new trips, mark which one is active, control which are open for applications. Members pick which trip to apply to at signup and only see data scoped to their own trip.
 - **Three-line cost model.** Admin enters housing, transport, and meals totals separately and locks each line as it becomes final. The per-person share is computed as total ÷ 10 even though the roster opens 13 spots, so the cost stays at a 10-person split while overage funds the host's effort.
 - **Roster slots.** The roster is rendered as 13 fixed slots, fills top-down with approved users, and shows "Open" for the rest.
 - **Bed claiming + bedmate requests.** Users claim beds. Single beds can be requested by female members and will reassign existing occupants (the bumped user gets an email and a link back to pick again).
@@ -63,6 +64,7 @@ The Trip Handler centralizes the admin's workflow and the participant's view of 
 ## Features
 
 - Email + password authentication with NextAuth (credentials provider) and separate admin sign-in.
+- Multi-trip support: admin can create, rename, switch the active trip, open/close applications per trip, and delete unused trips. Each member is bound to one trip and only sees its data.
 - Per-user status machine: `PENDING`, `APPROVED`, `PENDING_PAYMENT`, `CONFIRMED_PAID`, `CANCELLED`, with UI that gates pages and emails that fire on transitions.
 - Guest intake form (admin-reviewed, lockable, with an admin "unlock to edit" flow).
 - Trip pricing with three line items (housing/transport/meals), independent lock-in per line, auto-solidify when all three lock, and per-person share displayed in admin and member views.
@@ -105,7 +107,7 @@ comedycampsplit/
 │   ├── (root pages)         # /, /login, /signup, /admin sign-in
 │   ├── actions/             # Server actions: auth, admin, board, contributions,
 │   │                        # expenses, guestForm, itinerary, meals, pageNote,
-│   │                        # payments, profile, roster, sleeping, withdraw
+│   │                        # payments, profile, sleeping, withdraw
 │   ├── admin/               # Admin dashboard, users, trip pricing, expenses,
 │   │                        # contributions, roster, itinerary, meal-plan,
 │   │                        # meals, board, page-notes, sleeping, intake,
@@ -255,11 +257,15 @@ Manual testing should cover:
 What is implemented and visible in the codebase:
 
 - Secrets are not committed; `.env.example` documents required variable names only.
-- All Server Actions check the session via `getServerSession(authOptions)` before any database mutation.
-- Authorization is layered: page-level (server component returns gated content), action-level (`requireAdmin` / `requireApprovedUser`), and resource-level (e.g. a user can only edit their own comment).
+- All Server Actions check the session via `getServerSession(authOptions)` before any database mutation. User and trip IDs are read from the session, never trusted from client-supplied arguments.
+- Authorization is layered: page-level (server component returns gated content), action-level (`requireAdmin` / `requireApprovedUser` / `requireSelf`), and resource-level (e.g. a user can only edit their own comment).
+- Trip-scoped data (beds, expenses, meal slots, contributions, the roster) is filtered by the user's `tripId` on the server, so members in trip A can't read or write to data in trip B even by crafting a request directly.
+- Admin actions (approve user, lock trip, set prices, manage rosters, delete trips, etc.) all require the `ADMIN` role server-side.
+- Stripe Checkout sessions derive the `tripShare` server-side from the user's locked trip — the client cannot influence the amount charged.
 - Passwords are hashed with bcrypt (cost factor 10).
 - The Stripe webhook validates the signature before trusting the payload.
-- Uploads go through dedicated API routes that authenticate the session and forward to Vercel Blob, instead of exposing direct upload tokens to the client.
+- File uploads (avatar, lodging photo) authenticate the session and validate content type + size before forwarding to Vercel Blob.
+- Private vulnerability reports go to the email listed in [`SECURITY.md`](./SECURITY.md).
 
 What is **not** implemented and would be expected in a production-hardening pass:
 
@@ -268,7 +274,7 @@ What is **not** implemented and would be expected in a production-hardening pass
 - No automated audit logging.
 - Admin credentials default to a single hardcoded record in `lib/auth.ts`; suitable for single-tenant private use, not for multi-admin scenarios.
 
-Security hardening is a future improvement.
+Security hardening is ongoing — see `SECURITY.md` for reporting.
 
 ## Accessibility
 
@@ -299,30 +305,8 @@ A dedicated accessibility audit (screen reader testing, focus management on moda
 
 ## Status
 
-Active. The app is deployed at the URL above and used by one organizer for one trip. Active development is ongoing; recent commits cover a meal-poll redesign, an itinerary item + comments model, brand rename, and the 13-slot capacity / 10-way cost split.
+Active. The app is deployed at the URL above and used by one organizer. Active development is ongoing; recent commits cover multi-trip support, a meal-poll redesign, an itinerary item + comments model, brand rename, the 13-slot capacity / 10-way cost split, a security audit hardening every server action and API route, and a CI workflow that runs `tsc --noEmit` + `eslint` on every PR.
 
 ## License
 
 MIT — see [`LICENSE`](./LICENSE).
-
----
-
-## Repository presentation suggestions
-
-- **Suggested short repo description (for the GitHub sidebar):**
-  *Next.js + Prisma + Stripe app that runs a private group trip end-to-end: applications, approvals, lodging, meals, itinerary, expenses, and per-person payments.*
-
-- **Suggested topics:**
-  `nextjs`, `app-router`, `react`, `typescript`, `prisma`, `postgresql`, `nextauth`, `stripe`, `stripe-webhooks`, `tailwindcss`, `vercel`, `vercel-blob`, `resend`, `server-actions`, `group-travel`, `expense-splitting`
-
-- **Files worth cleaning up:**
-  - `comedycampsplit/README.md` — older project summary that overlaps this README; consider deleting or replacing with a one-line pointer to the root README.
-  - The previous root `README.md` was a deploy walkthrough; if you want to keep that content, move it to `docs/DEPLOYING.md` instead of mixing it with the project README.
-  - `comedycampsplit/public/` currently contains only Next.js default placeholder SVGs; either replace with project assets or remove.
-  - `comedycampsplit/tsconfig.tsbuildinfo` should be in `.gitignore` (build artifact).
-
-- **Worth adding:**
-  - `LICENSE` (MIT is the lowest-friction option for a portfolio repo).
-  - `SECURITY.md` describing how to report a vulnerability (even a one-liner pointing to an email).
-  - `.github/workflows/ci.yml` running `npm ci && npm run lint && npx tsc --noEmit` and producing a status badge for the top of this README.
-  - Screenshots in a `docs/screenshots/` directory and linked from the **Screenshots** section above.
