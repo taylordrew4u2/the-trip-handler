@@ -3,19 +3,33 @@
 import { getStripe } from "@/lib/stripe";
 import { prisma } from "@/lib/db";
 import { SECURITY_DEPOSIT_USD } from "@/lib/pricing";
-import { revalidatePath } from "next/cache";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
-export async function createCheckoutSession(userId: string, tripShare: number) {
+export async function createCheckoutSession() {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL;
   if (!appUrl) return { error: "NEXT_PUBLIC_APP_URL is not configured" };
 
-  const user = await prisma.user.findUnique({ where: { id: userId } });
-  if (!user) return { error: "User not found" };
+  const session = await getServerSession(authOptions);
+  const sessionUser = session?.user as { id?: string; role?: string } | undefined;
+  if (!sessionUser?.id || sessionUser.role === "ADMIN") {
+    return { error: "Sign in as a participant first." };
+  }
 
+  const user = await prisma.user.findUnique({
+    where: { id: sessionUser.id },
+    include: { trip: true },
+  });
+  if (!user) return { error: "User not found" };
+  if (!user.trip?.isLocked || !user.trip.finalPrice) {
+    return { error: "Trip isn't locked for payment yet." };
+  }
+
+  const tripShare = user.trip.finalPrice;
   const total = tripShare + SECURITY_DEPOSIT_USD;
 
   const stripe = getStripe();
-  const session = await stripe.checkout.sessions.create({
+  const checkout = await stripe.checkout.sessions.create({
     payment_method_types: ["card"],
     line_items: [
       {
@@ -42,35 +56,21 @@ export async function createCheckoutSession(userId: string, tripShare: number) {
     success_url: `${appUrl}/dashboard/payment?success=true`,
     cancel_url: `${appUrl}/dashboard/payment?cancelled=true`,
     customer_email: user.email,
-    metadata: { userId, tripShare: String(tripShare), securityDeposit: String(SECURITY_DEPOSIT_USD) },
+    metadata: {
+      userId: user.id,
+      tripShare: String(tripShare),
+      securityDeposit: String(SECURITY_DEPOSIT_USD),
+    },
   });
 
   await prisma.payment.create({
     data: {
-      userId,
+      userId: user.id,
       amount: total,
-      stripeSessionId: session.id,
+      stripeSessionId: checkout.id,
       status: "PENDING",
     },
   });
 
-  return { url: session.url };
-}
-
-export async function getPaymentStatus(userId: string) {
-  const payment = await prisma.payment.findFirst({
-    where: { userId },
-    orderBy: { createdAt: "desc" },
-  });
-  return payment;
-}
-
-export async function markUserPaid(userId: string) {
-  await prisma.user.update({
-    where: { id: userId },
-    data: { status: "CONFIRMED_PAID" },
-  });
-  revalidatePath("/admin/users");
-  revalidatePath("/dashboard/roster");
-  return { success: true };
+  return { url: checkout.url };
 }

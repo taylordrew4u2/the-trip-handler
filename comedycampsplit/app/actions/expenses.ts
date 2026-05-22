@@ -2,9 +2,18 @@
 
 import { prisma } from "@/lib/db";
 import { deleteBlob, uploadReceipt } from "@/lib/blob";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 
+async function isAdmin(): Promise<boolean> {
+  const session = await getServerSession(authOptions);
+  return (session?.user as { role?: string } | undefined)?.role === "ADMIN";
+}
+
 export async function addExpense(formData: FormData) {
+  if (!(await isAdmin())) return { error: "Admin only." };
+
   const tripId = formData.get("tripId") as string;
   const rawUserId = formData.get("userId") as string | null;
   const userId = rawUserId && rawUserId !== "admin" ? rawUserId : null;
@@ -80,6 +89,8 @@ export async function addExpense(formData: FormData) {
 }
 
 export async function approveExpense(expenseId: string) {
+  if (!(await isAdmin())) return { error: "Admin only." };
+
   const expense = await prisma.expense.update({
     where: { id: expenseId },
     data: { approved: true },
@@ -99,6 +110,8 @@ export async function approveExpense(expenseId: string) {
 }
 
 export async function deleteExpense(expenseId: string) {
+  if (!(await isAdmin())) return { error: "Admin only." };
+
   const expense = await prisma.expense.findUnique({ where: { id: expenseId } });
   if (!expense) return { success: true };
 

@@ -37,10 +37,13 @@ const REQUIRED_JOKE_PROTECTION = ["noPostMaterial", "workshopPrivate", "groupOk"
 
 const REQUIRED_SECURITY_DEPOSIT = ["payDeposit", "returned", "forfeitAndCharged", "hostNotLiable"];
 
-export async function submitGuestForm(userId: string, formData: FormData) {
-  if (!userId || userId === "admin") {
+export async function submitGuestForm(formData: FormData) {
+  const session = await getServerSession(authOptions);
+  const sessionUser = session?.user as { id?: string; role?: string } | undefined;
+  if (!sessionUser?.id || sessionUser.id === "admin" || sessionUser.role === "ADMIN") {
     return { error: "You need to be signed in as a participant." };
   }
+  const userId = sessionUser.id;
 
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) return { error: "User not found." };
@@ -131,8 +134,13 @@ export async function submitGuestForm(userId: string, formData: FormData) {
   return { success: true };
 }
 
-export async function requestFormEditAccess(userId: string) {
-  if (!userId || userId === "admin") return { error: "Sign in first." };
+export async function requestFormEditAccess() {
+  const session = await getServerSession(authOptions);
+  const sessionUser = session?.user as { id?: string; role?: string } | undefined;
+  if (!sessionUser?.id || sessionUser.id === "admin" || sessionUser.role === "ADMIN") {
+    return { error: "Sign in first." };
+  }
+  const userId = sessionUser.id;
   const form = await prisma.guestForm.findUnique({ where: { userId } });
   if (!form) return { error: "Submit your form first." };
   if (!form.locked) return { error: "Your form is already editable." };

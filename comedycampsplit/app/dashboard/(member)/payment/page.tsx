@@ -28,12 +28,7 @@ export default async function PaymentPage() {
     <div className="space-y-6 max-w-2xl">
       <PageNote pageKey="payment" />
       <h1 className="font-serif text-3xl font-medium text-stone-900">Payment</h1>
-      <PaymentClient
-        trip={trip}
-        user={user}
-        payment={payment}
-        userId={userId}
-      />
+      <PaymentClient trip={trip} user={user} payment={payment} />
     </div>
   );
 }
