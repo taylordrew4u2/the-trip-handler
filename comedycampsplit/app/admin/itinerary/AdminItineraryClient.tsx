@@ -33,9 +33,6 @@ interface DayWithItems {
   dayNumber: number;
   date: Date | string | null;
   title: string | null;
-  breakfast: string | null;
-  lunch: string | null;
-  dinner: string | null;
   notes: string | null;
   itineraryItems: ItemRow[];
 }
@@ -83,20 +80,6 @@ function DayForm({ day, nextDayNumber, submitting, error, onSubmit, onCancel }: 
             placeholder="e.g. Friday"
             className={inputCls}
           />
-        </div>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <div>
-          <label className="block text-xs font-medium text-stone-700 mb-1.5 tracking-wide">BREAKFAST</label>
-          <textarea name="breakfast" defaultValue={day?.breakfast ?? ""} rows={2} className={`${inputCls} resize-none`} />
-        </div>
-        <div>
-          <label className="block text-xs font-medium text-stone-700 mb-1.5 tracking-wide">LUNCH</label>
-          <textarea name="lunch" defaultValue={day?.lunch ?? ""} rows={2} className={`${inputCls} resize-none`} />
-        </div>
-        <div>
-          <label className="block text-xs font-medium text-stone-700 mb-1.5 tracking-wide">DINNER</label>
-          <textarea name="dinner" defaultValue={day?.dinner ?? ""} rows={2} className={`${inputCls} resize-none`} />
         </div>
       </div>
       <div>
