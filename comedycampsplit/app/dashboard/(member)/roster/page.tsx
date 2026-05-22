@@ -1,27 +1,37 @@
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { RosterClientView } from "./RosterClientView";
 import { ApprovalRequired } from "@/components/ApprovalRequired";
 import { getUserStatus, isApproved } from "@/lib/approval";
 import { PageNote } from "@/components/PageNote";
+import { getUserTripOrActive } from "@/lib/trip";
 
 export const dynamic = "force-dynamic";
 
 export default async function RosterPage() {
   if (!isApproved(await getUserStatus())) return <ApprovalRequired what="The roster" />;
 
+  const session = await getServerSession(authOptions);
+  const userId = (session?.user as { id?: string } | undefined)?.id ?? "";
+  const trip = userId ? await getUserTripOrActive(userId) : null;
+  const scope = trip
+    ? { tripId: trip.id, role: "PARTICIPANT" as const }
+    : { role: "PARTICIPANT" as const };
+
   const [users, totalApproved, totalPaid] = await Promise.all([
     prisma.user.findMany({
       where: {
+        ...scope,
         status: { in: ["APPROVED", "CONFIRMED_PAID", "PENDING_PAYMENT"] },
-        role: "PARTICIPANT",
       },
       orderBy: { name: "asc" },
       include: {
         contributions: { include: { contribution: true } },
       },
     }),
-    prisma.user.count({ where: { status: { in: ["APPROVED", "CONFIRMED_PAID", "PENDING_PAYMENT"] }, role: "PARTICIPANT" } }),
-    prisma.user.count({ where: { status: "CONFIRMED_PAID", role: "PARTICIPANT" } }),
+    prisma.user.count({ where: { ...scope, status: { in: ["APPROVED", "CONFIRMED_PAID", "PENDING_PAYMENT"] } } }),
+    prisma.user.count({ where: { ...scope, status: "CONFIRMED_PAID" } }),
   ]);
 
   return (
