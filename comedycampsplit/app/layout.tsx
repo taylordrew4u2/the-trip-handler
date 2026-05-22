@@ -16,8 +16,9 @@ const fraunces = Fraunces({
 });
 
 export const metadata: Metadata = {
-  title: "Comedy Summer Camp",
-  description: "Roster, expenses, and payments for the comedian summer camp trip.",
+  title: "The Trip Handler",
+  description:
+    "The Trip Handler — for the friend who accidentally became the adult in charge of making the plan.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

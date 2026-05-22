@@ -227,3 +227,80 @@ export async function unlockTrip(tripId: string) {
   revalidatePath("/dashboard/payment");
   return { success: true };
 }
+
+// ---------- Multi-trip management ----------
+
+export async function createTrip(name: string) {
+  const trimmed = name.trim();
+  if (!trimmed) return { error: "Name is required." };
+
+  const existingActive = await prisma.trip.findFirst({ where: { isActive: true } });
+
+  const trip = await prisma.trip.create({
+    data: {
+      name: trimmed,
+      isActive: !existingActive,
+      isApplicationOpen: true,
+    },
+  });
+
+  revalidatePath("/admin/trips");
+  revalidatePath("/signup");
+  return { success: true, tripId: trip.id };
+}
+
+export async function renameTrip(tripId: string, name: string) {
+  const trimmed = name.trim();
+  if (!trimmed) return { error: "Name is required." };
+  await prisma.trip.update({ where: { id: tripId }, data: { name: trimmed } });
+  revalidatePath("/admin/trips");
+  revalidatePath("/signup");
+  return { success: true };
+}
+
+export async function setTripActive(tripId: string) {
+  await prisma.$transaction([
+    prisma.trip.updateMany({ where: { isActive: true }, data: { isActive: false } }),
+    prisma.trip.update({ where: { id: tripId }, data: { isActive: true } }),
+  ]);
+  revalidatePath("/admin/trips");
+  revalidatePath("/admin");
+  return { success: true };
+}
+
+export async function setTripApplicationOpen(tripId: string, open: boolean) {
+  await prisma.trip.update({
+    where: { id: tripId },
+    data: { isApplicationOpen: open },
+  });
+  revalidatePath("/admin/trips");
+  revalidatePath("/signup");
+  return { success: true };
+}
+
+export async function deleteTrip(tripId: string) {
+  const userCount = await prisma.user.count({ where: { tripId } });
+  if (userCount > 0) {
+    return {
+      error: `Can't delete — ${userCount} member(s) are still attached to this trip. Reassign or remove them first.`,
+    };
+  }
+  const trip = await prisma.trip.findUnique({
+    where: { id: tripId },
+    select: { isActive: true },
+  });
+  if (!trip) return { error: "Trip not found." };
+
+  await prisma.trip.delete({ where: { id: tripId } });
+
+  if (trip.isActive) {
+    const fallback = await prisma.trip.findFirst({ orderBy: { createdAt: "desc" } });
+    if (fallback) {
+      await prisma.trip.update({ where: { id: fallback.id }, data: { isActive: true } });
+    }
+  }
+
+  revalidatePath("/admin/trips");
+  revalidatePath("/signup");
+  return { success: true };
+}

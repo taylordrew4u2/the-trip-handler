@@ -1,14 +1,16 @@
 import { prisma } from "@/lib/db";
 import { AdminExpensesClient } from "./AdminExpensesClient";
+import { getActiveTrip } from "@/lib/trip";
 
 export default async function AdminExpensesPage() {
-  const [trip, expenses] = await Promise.all([
-    prisma.trip.findFirst(),
-    prisma.expense.findMany({
-      orderBy: { createdAt: "desc" },
-      include: { submitter: { select: { name: true } } },
-    }),
-  ]);
+  const trip = await getActiveTrip();
+  const expenses = trip
+    ? await prisma.expense.findMany({
+        where: { tripId: trip.id },
+        orderBy: { createdAt: "desc" },
+        include: { submitter: { select: { name: true } } },
+      })
+    : [];
 
   return (
     <div className="space-y-6">

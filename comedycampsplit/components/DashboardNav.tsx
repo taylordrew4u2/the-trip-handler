@@ -31,7 +31,7 @@ export function DashboardNav({ status }: { status: string | null }) {
       <div className="max-w-6xl mx-auto px-4">
         <div className="flex items-center justify-between h-16 gap-4">
           <Link href="/dashboard" className="font-serif text-lg font-medium text-stone-900 whitespace-nowrap">
-            Comedy Summer Camp
+            The Trip Handler
           </Link>
           <div className="flex items-center gap-1 overflow-x-auto hide-scrollbar">
             {visible.map((item) => {

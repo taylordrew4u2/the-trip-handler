@@ -54,7 +54,8 @@ export async function seedDefaultHouseLayout(tripId: string) {
  * Safe to call on every page load — only seeds when zero beds exist.
  */
 export async function ensureSleepingSetup() {
-  const trip = await prisma.trip.findFirst({ select: { id: true } });
+  const { getActiveTrip } = await import("@/lib/trip");
+  const trip = await getActiveTrip();
   if (!trip) return;
 
   const bedCount = await prisma.bed.count({ where: { tripId: trip.id } });

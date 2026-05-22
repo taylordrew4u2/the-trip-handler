@@ -3,16 +3,22 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { WithdrawButton } from "@/components/WithdrawButton";
 import { PageNote } from "@/components/PageNote";
+import { getUserTripOrActive } from "@/lib/trip";
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as { id?: string })?.id;
+  const trip = userId && userId !== "admin" ? await getUserTripOrActive(userId) : null;
+  const rosterFilter = trip
+    ? { tripId: trip.id, role: "PARTICIPANT" as const }
+    : { role: "PARTICIPANT" as const };
 
-  const [user, trip, totalApproved, totalPaid, guestForm] = await Promise.all([
+  const [user, totalApproved, totalPaid, guestForm] = await Promise.all([
     userId && userId !== "admin" ? prisma.user.findUnique({ where: { id: userId } }) : null,
-    prisma.trip.findFirst(),
-    prisma.user.count({ where: { status: { in: ["APPROVED", "CONFIRMED_PAID", "PENDING_PAYMENT"] }, role: "PARTICIPANT" } }),
-    prisma.user.count({ where: { status: "CONFIRMED_PAID", role: "PARTICIPANT" } }),
+    prisma.user.count({
+      where: { ...rosterFilter, status: { in: ["APPROVED", "CONFIRMED_PAID", "PENDING_PAYMENT"] } },
+    }),
+    prisma.user.count({ where: { ...rosterFilter, status: "CONFIRMED_PAID" } }),
     userId && userId !== "admin" ? prisma.guestForm.findUnique({ where: { userId } }) : null,
   ]);
 
@@ -34,7 +40,7 @@ export default async function DashboardPage() {
           {trip?.isLocked ? "Locked · Payment due" : "The Roster"}
         </p>
         <h1 className="font-serif text-4xl md:text-5xl font-medium leading-tight">
-          {trip?.name ?? "Comedy Summer Camp"}
+          {trip?.name ?? "Your trip"}
         </h1>
         {(trip?.destination || dateRange) && (
           <p className="text-stone-300 mt-3 text-base">

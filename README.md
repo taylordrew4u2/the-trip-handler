@@ -1,322 +1,332 @@
-# COMEDYSUMMERCAMP — Setup Guide
+# The Trip Handler
 
-This is the **Next.js app** for organizing the comedian summer camp trip (roster, expenses, Stripe payments, emails). The app code lives in [`comedycampsplit/`](./comedycampsplit). This README is the **only thing you need to follow** to get the site live.
+A full-stack Next.js application for organizing a private group trip — applications, approvals, lodging assignment, meal planning, itinerary, expense splitting, and Stripe-collected per-person payments — built as a single-tenant SaaS-style web app.
 
-> **Read this top to bottom. Do the steps in order. Don't skip.** Each step has a "How to know it worked" check — don't move on until that check passes.
+## Live Demo
 
----
+<https://comedysummercamp.vercel.app>
 
-## ✅ Production status
+The deployed instance is configured for one specific trip. Admin features are hidden behind a separate sign-in page.
 
-The site is live at <https://comedysummercamp.vercel.app> and the auth + database backbone is working. Verified end-to-end:
+## Screenshots
 
-- Public pages (`/`, `/login`, `/signup`) return **200**; unauthenticated `/dashboard` correctly redirects to `/login`
-- NextAuth endpoints respond (`NEXTAUTH_SECRET` and `NEXTAUTH_URL` are set correctly)
-- Postgres is connected and the schema has been pushed (build runs `prisma db push` on every deploy)
-- Admin login (`Taylor` / `weed69`) succeeds and **all six admin pages render 200**: dashboard, users, expenses, trip, contributions, roster
-- The Stripe webhook route loads without crashing
+TODO: Add screenshots of the application/intake flow, member dashboard, admin trip/pricing screen, and itinerary view (mobile + desktop).
 
-**What still needs in-app verification** (can't be probed from outside): Vercel Blob uploads (avatars/receipts), Resend email delivery, and Stripe Checkout end-to-end. Walk through the **Step 12 smoke test** to confirm those.
+## Overview
 
----
+**The Trip Handler** is a private web app that one trip organizer ("admin") uses to run a group trip end to end, and that every invited person uses to apply, see what's happening, claim a bed, vote on meals, sign up for contributions, and pay their share.
 
-## ☑️ Progress checklist (tick as you go)
+It is built for the friend who accidentally became the adult in charge of making the plan. Instead of juggling group chats, spreadsheets, and Venmo requests, the admin gets one place that holds:
 
-Copy this into a notes app and tick each box yourself. **All boxes must be ticked before the site works.**
+- the application pipeline (apply → admin reviews → approve / reject)
+- the cost model (housing, transport, and meals as separate line items)
+- the room/bed layout and who is sleeping where
+- the itinerary with comments per item
+- the contribution board (who's bringing what)
+- the shared expense ledger
+- the meal poll and grocery plan
+- Stripe checkout for each person's share + refundable deposit
 
-- [x] **1.** GitHub repo exists and code is pushed ✅
-- [x] **2.** Vercel project created, root directory set to `comedycampsplit` ✅
-- [x] **3.** Vercel Postgres database created and connected ✅ (verified: credentials lookup queries the `User` table)
-- [ ] **4.** Vercel Blob store created and connected — verify by uploading an avatar in Step 12
-- [ ] **5.** Stripe account created, API keys copied — verify with a test purchase in Step 12
-- [ ] **6.** Resend account created, sender domain verified, API key copied — verify by triggering an email in Step 12
-- [x] **7.** Core environment variables present in Vercel ✅ (`NEXTAUTH_SECRET`, `NEXTAUTH_URL`, `DATABASE_URL` confirmed working). Still scan the Step 7 table for `STRIPE_*`, `RESEND_API_KEY`, `EMAIL_FROM`, `BLOB_READ_WRITE_TOKEN` if any feature below fails.
-- [x] **8a.** Build succeeds in Vercel ✅
-- [x] **8b.** Deployed site loads without 500s ✅ (returns 200 → `/login`, admin dashboard renders)
-- [ ] **9.** Stripe webhook created and `STRIPE_WEBHOOK_SECRET` added to Vercel
-- [x] **10a.** Database schema pushed ✅ (the build now runs `prisma db push` automatically — see Step 10 below)
-- [ ] **10b.** Trip row seeded (`npm run db:seed`) — optional, the dashboard renders without it. Note: the admin user is hardcoded in `lib/auth.ts`, not seeded.
-- [ ] **11.** (Optional) Custom domain attached and `NEXTAUTH_URL` / `NEXT_PUBLIC_APP_URL` updated
-- [ ] **12.** Smoke test passed (full list at the bottom)
+Each invited person has a single dashboard that unlocks more functionality as their status moves from `PENDING` → `APPROVED` → `PENDING_PAYMENT` → `CONFIRMED_PAID`.
 
----
+## Problem
 
-## 🚧 What's left to finish (current status)
+Organizing a multi-day group trip with 10+ people creates a lot of repetitive coordination work:
 
-The hosting/auth/database layer is working in production. **What's left is exercising the third-party integrations end-to-end and verifying they're configured.** In priority order:
+- Collecting applications and screening who's coming.
+- Splitting total costs (house rental, transit, meals) fairly when those numbers change while the trip is being planned.
+- Tracking who has paid, who is still on the hook, and what each person owes including a refundable deposit.
+- Assigning beds without conflicts and respecting per-bed gender rules (e.g. singles reserved for female members).
+- Collecting meal preferences and producing a grocery plan.
+- Keeping an itinerary that the whole group can read, comment on, and see updates to in real time.
+- Sending the right transactional emails ("you're approved", "trip is locked, time to pay", "your bed was reassigned") without missing anyone.
 
-1. **Run the smoke test (Step 12)** against <https://comedysummercamp.vercel.app>. Each item that fails points at exactly which integration still needs work.
-2. **Vercel Blob (Step 4):** uploading an avatar in Step 12 will fail if `BLOB_READ_WRITE_TOKEN` is missing.
-3. **Resend (Step 6):** triggering an email (e.g. lock the trip in `/admin/trip`) will fail if `RESEND_API_KEY` or `EMAIL_FROM` is missing or the sender domain isn't verified.
-4. **Stripe Checkout (Step 5):** a test purchase will fail if `STRIPE_SECRET_KEY` / `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` are missing or use the wrong mode.
-5. **Stripe webhook (Step 9):** even after a successful checkout, the trip status only flips to *Confirmed & Paid* once the webhook is wired. Add the endpoint and paste `STRIPE_WEBHOOK_SECRET`, then redeploy.
-6. **Switch Stripe to live keys** once the test-mode smoke test passes end-to-end — and create a *new* webhook in live mode (Step 12).
-7. *(Optional)* Attach a **custom domain** and update both URL env vars + the Stripe webhook URL (Step 11).
+A group chat and a spreadsheet can do any one of those things, but no one item, and they decay fast as the plan changes.
 
-> To audit env vars directly: Vercel → **Settings → Environment Variables**. Compare against the Step 7 table.
+## Solution
 
----
+The Trip Handler centralizes the admin's workflow and the participant's view of the trip into one authenticated web app:
 
-## What you'll need before starting
+- **Application + approval pipeline.** Anyone can sign up; admin reviews their guest form and approves them. Status drives what each user sees.
+- **Three-line cost model.** Admin enters housing, transport, and meals totals separately and locks each line as it becomes final. The per-person share is computed as total ÷ 10 even though the roster opens 13 spots, so the cost stays at a 10-person split while overage funds the host's effort.
+- **Roster slots.** The roster is rendered as 13 fixed slots, fills top-down with approved users, and shows "Open" for the rest.
+- **Bed claiming + bedmate requests.** Users claim beds. Single beds can be requested by female members and will reassign existing occupants (the bumped user gets an email and a link back to pick again).
+- **Meal planning by poll.** Admin posts meal slots; users suggest options and vote; the planner moves through phases (suggestions → voting → locked → grocery).
+- **Itinerary with per-item comments.** Days hold ordered itinerary items (time, title, location, description, notes, pin). Approved users can comment on each item; pending users can read but not write.
+- **Contribution board.** Admin posts items to bring; users sign up to claim them.
+- **Expense ledger.** Users submit shared expenses with optional receipt images; admin approves and the totals roll up.
+- **Stripe checkout.** When all three cost lines are locked, the trip auto-locks, approved users move to `PENDING_PAYMENT`, and they receive an email with a Stripe Checkout link for `share + $75 deposit`. A webhook flips them to `CONFIRMED_PAID`.
+- **Transactional emails.** Resend handles approval, rejection, cancellation, form-unlocked, bed-bump, trip-locked, and admin event notifications.
 
-- A laptop with a terminal (Mac Terminal, or Windows PowerShell)
-- A credit card (free tiers work, but Stripe and the optional domain may charge)
-- About **45 minutes** the first time
-- These browser tabs open: <https://vercel.com> · <https://stripe.com> · <https://resend.com> · <https://github.com>
+## Features
 
----
+- Email + password authentication with NextAuth (credentials provider) and separate admin sign-in.
+- Per-user status machine: `PENDING`, `APPROVED`, `PENDING_PAYMENT`, `CONFIRMED_PAID`, `CANCELLED`, with UI that gates pages and emails that fire on transitions.
+- Guest intake form (admin-reviewed, lockable, with an admin "unlock to edit" flow).
+- Trip pricing with three line items (housing/transport/meals), independent lock-in per line, auto-solidify when all three lock, and per-person share displayed in admin and member views.
+- Trip capacity of 13 roster slots with cost split as a 10-way divisor (configurable in `lib/pricing.ts`).
+- Live roster with search, sort, status badges, and an admin CSV export.
+- Lodging page with admin-managed description and photo gallery (Vercel Blob storage).
+- Beds + bed assignments + bedmate requests with female-priority rule on singles and reassignment emails.
+- Itinerary modeled as `Day → ItineraryItem` with reorder, pin, move-between-days, and an `ItineraryComment` thread per item.
+- Meal planning: meal slots, member-submitted suggestions, voting, helpers, grocery list, and phase transitions.
+- Contribution board for non-monetary trip contributions.
+- Expense submission with receipt uploads, admin approval, and totals.
+- Stripe Checkout integration plus a webhook (`/api/webhooks/stripe`) that records payments and updates user status.
+- Resend-backed transactional emails for every status transition, plus admin event notifications.
+- Page-level admin notes (`PageNote`) so the admin can post a sticky message at the top of any member page.
+- Withdraw flow for users who decide not to attend before paying.
+- Admin diagnostics page.
 
-## Step 1 — GitHub repo
+## Tech Stack
 
-✅ **Already done** — the repo is live at <https://github.com/taylordrew4u2/COMEDYSUMMERCAMP>. Skip to Step 2.
+- **Language:** TypeScript (strict).
+- **Framework:** Next.js 16 (App Router) with React 19, server components, and server actions.
+- **Styling:** Tailwind CSS v4 (via `@tailwindcss/postcss`) and a custom serif/sans system (Fraunces + Inter).
+- **Database:** PostgreSQL (Vercel Postgres in production).
+- **ORM:** Prisma v5 (`prisma generate` + `prisma db push` on every build; no migration history kept in repo).
+- **Authentication:** NextAuth.js v4, credentials provider, JWT sessions, bcrypt password hashing.
+- **Payments:** Stripe (Checkout sessions + signed webhook endpoint).
+- **File uploads:** Vercel Blob (avatars, lodging photos, expense receipts).
+- **Email:** Resend.
+- **Validation:** Zod.
+- **Hosting:** Vercel (project root is the `comedycampsplit/` subdirectory).
+- **Lint:** ESLint 9 with `eslint-config-next`.
 
-If you ever need to re-link a fresh local clone:
-```bash
-git remote add origin https://github.com/taylordrew4u2/COMEDYSUMMERCAMP.git
-git push -u origin main
+## Architecture
+
+The repository is a single Next.js application living under `comedycampsplit/`. The root of the repo holds repo-level docs; the app itself is in the subdirectory because Vercel is configured with `Root Directory = comedycampsplit`.
+
+```
+comedycampsplit/
+├── app/
+│   ├── (root pages)         # /, /login, /signup, /admin sign-in
+│   ├── actions/             # Server actions: auth, admin, board, contributions,
+│   │                        # expenses, guestForm, itinerary, meals, pageNote,
+│   │                        # payments, profile, roster, sleeping, withdraw
+│   ├── admin/               # Admin dashboard, users, trip pricing, expenses,
+│   │                        # contributions, roster, itinerary, meal-plan,
+│   │                        # meals, board, page-notes, sleeping, intake,
+│   │                        # diagnostics
+│   ├── api/
+│   │   ├── auth/            # NextAuth route handler
+│   │   ├── upload-avatar/   # Vercel Blob upload endpoint
+│   │   ├── upload-lodging-photo/
+│   │   └── webhooks/stripe/ # Stripe webhook receiver
+│   └── dashboard/
+│       ├── (member)/        # Per-feature member pages: roster, itinerary,
+│       │                    # lodging, sleeping, meals, board, contributions,
+│       │                    # expenses, payment, preferences, profile
+│       └── intake/          # Guest-form flow (separate layout)
+├── components/              # Reusable UI: nav bars, cards, forms,
+│                            # ItineraryView, MealsPlanner, etc.
+├── lib/                     # Cross-cutting modules:
+│                            #   auth, db (Prisma client), stripe, blob,
+│                            #   resend, approval, meals, pageNotes,
+│                            #   pricing, sleep
+├── prisma/
+│   ├── schema.prisma        # 23 models incl. User, Trip, Day, ItineraryItem,
+│   │                        # ItineraryComment, MealSlot, Bed, etc.
+│   └── seed.ts              # Optional seed for the Trip row
+├── public/                  # Static assets (default Next.js placeholders)
+└── types/                   # NextAuth + shared TypeScript declarations
 ```
 
-**How to know it worked:** visiting <https://github.com/taylordrew4u2/COMEDYSUMMERCAMP> shows the code.
+### App flow in plain English
 
----
+1. A visitor lands on `/login` and sees the trip's name, destination, and dates pulled from the database. New visitors click through to `/signup`, fill in name + email + password, and are created with status `PENDING`.
+2. They are redirected to `/dashboard/intake` to fill in the guest form. Until they submit it, the rest of the dashboard is blocked.
+3. The admin signs in at `/admin` (separate UI), reviews the guest form, and approves, rejects, or cancels the applicant. Resend sends the matching email.
+4. Once approved, the user can browse the itinerary, lodging, roster, meals page, contributions board, sleeping plan, and expenses. They can claim beds, vote on meals, leave comments on itinerary items, sign up for contributions, and submit expenses.
+5. The admin enters housing, transport, and meals totals on `/admin/trip` and locks each line as it firms up. When all three are locked, the trip auto-locks: every approved user becomes `PENDING_PAYMENT` and gets an email with a Stripe Checkout link.
+6. The user pays through Stripe. A webhook at `/api/webhooks/stripe` records the payment and flips them to `CONFIRMED_PAID`.
 
-## Step 2 — Create the Vercel project
+Everything that changes data goes through a typed server action in `app/actions/`. The Prisma client is instantiated once in `lib/db.ts`. Approval gating uses `lib/approval.ts` and a `requireApprovedUser()` pattern inside server actions.
 
-1. Go to <https://vercel.com/signup> and sign in with GitHub if you haven't.
-2. Click **Add New… → Project**.
-3. Find `COMEDYSUMMERCAMP` in the list. Click **Import**.
-4. **CRITICAL — Set the Root Directory.**
-   - Click **Edit** next to "Root Directory".
-   - Click **Continue** to browse the repo.
-   - Click `comedycampsplit` to select it.
-   - Click **Continue**.
-5. Vercel should now say **Framework Preset: Next.js**. If it says "Other", you picked the wrong root — go back and fix it.
-6. **DO NOT click Deploy yet.** Leave this tab open. Continue to Step 3.
-
-**How to know it worked:** the project page in Vercel shows "Framework: Next.js" and the project name `comedycampsplit`.
-
----
-
-## Step 3 — Vercel Postgres database
-
-Still in your Vercel project (don't deploy yet):
-
-1. Click the **Storage** tab.
-2. Click **Create Database** → choose **Postgres**.
-3. Name it `comedysummercamp-db` (any name works).
-4. Pick a region close to you (e.g. `iad1` for US East).
-5. Click **Create**.
-6. After it provisions, click **Connect Project** and pick your project. Confirm.
-
-**How to know it worked:** go to **Settings → Environment Variables**. You should see `DATABASE_URL`, `POSTGRES_URL`, and a few related vars auto-added. **You did not type these — Vercel did.**
-
----
-
-## Step 4 — Vercel Blob store
-
-Same Storage tab:
-
-1. Click **Create** → choose **Blob**.
-2. Name it `comedysummercamp-blob`.
-3. Click **Create**, then **Connect Project**.
-
-**How to know it worked:** in **Settings → Environment Variables** you now also see `BLOB_READ_WRITE_TOKEN`.
-
----
-
-## Step 5 — Stripe account + keys
-
-1. Sign up at <https://stripe.com>.
-2. **Stay in test mode** (toggle in top right says "Test mode"). Use test mode until everything works.
-3. Go to <https://dashboard.stripe.com/test/apikeys>.
-4. Copy the **Publishable key** (starts with `pk_test_…`) — paste into a notes app.
-5. Click **Reveal test key** next to Secret key. Copy it (starts with `sk_test_…`) — paste into notes.
-
-> **You'll switch to live keys (`pk_live_…` / `sk_live_…`) only after a successful test purchase.** Don't skip this — it lets you test with the fake card `4242 4242 4242 4242`.
-
-**How to know it worked:** you have two strings copied that start with `pk_test_` and `sk_test_`.
-
----
-
-## Step 6 — Resend account + sender domain
-
-1. Sign up at <https://resend.com>.
-2. **API Keys → Create API Key.** Name it `comedysummercamp`. Copy the key (starts with `re_…`) — paste into notes.
-3. **Domains → Add Domain.** Enter the domain you want emails to come from (e.g. `comedysummercamp.com`). If you don't have one, see "No domain yet?" below.
-4. Resend shows you DNS records (TXT, MX, CNAME). Open your DNS provider in a new tab.
-5. Add **every record exactly as shown**. For most providers, the "Name" / "Host" field is the part *before* your domain (Resend will say "for `mail.comedysummercamp.com`" — you enter `mail` only).
-6. Wait 5–30 minutes. Click **Verify** in Resend until it goes green.
-
-**No domain yet?** You can ship with Resend's default sender `onboarding@resend.dev` and emails will work for testing — but real users will see them go to spam. Verify a domain before launch.
-
-**How to know it worked:** the domain in Resend shows a green "Verified" badge.
-
----
-
-## Step 7 — Paste environment variables into Vercel
-
-Vercel project → **Settings → Environment Variables**. Add each row below for **all three environments** (Production, Preview, Development) unless noted.
-
-| Variable | Value (where to get it) |
-|---|---|
-| `DATABASE_URL` | ✅ Already added by Step 3 — leave it alone |
-| `BLOB_READ_WRITE_TOKEN` | ✅ Already added by Step 4 — leave it alone |
-| `NEXTAUTH_SECRET` | Open a terminal on your laptop, run `openssl rand -base64 32`, paste the output |
-| `NEXTAUTH_URL` | After first deploy this is your Vercel URL like `https://comedysummercamp.vercel.app`. **Set it to `https://placeholder.vercel.app` for now — you'll fix it after Step 8.** |
-| `NEXT_PUBLIC_APP_URL` | Same value as `NEXTAUTH_URL` |
-| `STRIPE_SECRET_KEY` | Your `sk_test_…` from Step 5 |
-| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Your `pk_test_…` from Step 5 |
-| `STRIPE_WEBHOOK_SECRET` | **Leave blank for now.** You'll get this in Step 9. The build won't crash — Stripe is lazily initialized. |
-| `RESEND_API_KEY` | Your `re_…` from Step 6 |
-| `EMAIL_FROM` | The verified sender address, e.g. `Comedy Camp <noreply@comedysummercamp.com>` (or `onboarding@resend.dev` if no domain) |
-
-**How to know it worked:** the env vars list shows all 10 entries (`STRIPE_WEBHOOK_SECRET` may be blank — that's fine for now).
-
----
-
-## Step 8 — First deploy
-
-1. In Vercel, click **Deployments → Redeploy** (or push a new commit if it hasn't deployed yet).
-2. Watch the build logs.
-3. Wait for **Ready** status with a green checkmark.
-
-**Now copy your real Vercel URL** (e.g. `https://comedysummercamp-abc123.vercel.app`) and:
-- Go back to **Settings → Environment Variables**
-- Update `NEXTAUTH_URL` to that exact URL (no trailing slash)
-- Update `NEXT_PUBLIC_APP_URL` to the same URL
-- Click **Deployments → Redeploy** so the new values take effect
-
-**How to know it worked:** visiting the URL redirects you to `/login`.
-
-**If the build failed:**
-| Error message | Fix |
-|---|---|
-| `prisma: command not found` | Root Directory is wrong → re-do Step 2 |
-| `STRIPE_SECRET_KEY` missing | You skipped that env var in Step 7 |
-| `Invalid prisma schema` | Schema in `comedycampsplit/prisma/schema.prisma` got corrupted; restore from git |
-| `Module not found` | Click Redeploy and uncheck "Use existing build cache" |
-
----
-
-## Step 9 — Stripe webhook
-
-The app listens at `/api/webhooks/stripe`. Stripe needs to know to POST events there.
-
-1. <https://dashboard.stripe.com/test/webhooks> → **Add endpoint**.
-2. **Endpoint URL:** `https://<your-vercel-url>/api/webhooks/stripe` (use the URL from Step 8).
-3. **Events to send** — click **Select events**, then check exactly these:
-   - `checkout.session.completed`
-   - `payment_intent.succeeded`
-   - `payment_intent.payment_failed`
-4. Click **Add endpoint**.
-5. On the new endpoint's page, click **Reveal** next to "Signing secret". Copy it (starts with `whsec_…`).
-6. Vercel → **Settings → Environment Variables** → edit `STRIPE_WEBHOOK_SECRET` → paste the value → save.
-7. **Deployments → Redeploy.**
-
-**How to know it worked:** in Stripe, send a test event (button on the endpoint page) → it shows **HTTP 200** in the webhook attempts table.
-
----
-
-## Step 10 — Database schema + seed
-
-**Schema (automatic):** the Vercel build runs `prisma db push --skip-generate --accept-data-loss` on every deploy. Whenever `comedycampsplit/prisma/schema.prisma` changes, just commit and push — the next deploy syncs the production database. No laptop steps needed.
-
-**Seed (optional, manual):** the seed only inserts a default `Trip` row. The admin user is **not** seeded — it's hardcoded in `lib/auth.ts` (`Taylor` / `weed69`). The admin dashboard works without seeding (the trip name just falls back to "Comedy Summer Camp"). If you want a real Trip row in the DB:
+## How to Run Locally
 
 ```bash
-# On your laptop:
-cd comedycampsplit
+git clone https://github.com/taylordrew4u2/COMEDYSUMMERCAMP.git
+cd COMEDYSUMMERCAMP/comedycampsplit
 npm install
-npx vercel link
-npx vercel env pull .env
-npm run db:seed
+cp .env.example .env.local   # fill in values, see below
+npm run dev
 ```
 
-> **Heads up — `--accept-data-loss`:** this flag is on so deploys aren't blocked when a column is dropped. It does what it says: if you remove a field from `schema.prisma`, the column (and its data) goes away on the next deploy. If you ever need destructive-change protection, swap to `prisma migrate deploy` with a `prisma/migrations/` folder.
+The dev server runs at `http://localhost:3000`.
 
----
+### Build, lint, database scripts
 
-## Step 11 — (Optional) Custom domain
-
-Skip this if you're fine with the `*.vercel.app` URL.
-
-1. Vercel project → **Settings → Domains** → **Add**.
-2. Type your domain. Vercel shows DNS records (A or CNAME).
-3. At your DNS provider, add the records exactly as shown.
-4. Wait for verification (a few minutes to a few hours).
-5. Once Vercel marks the domain ✅, **update both `NEXTAUTH_URL` and `NEXT_PUBLIC_APP_URL`** to the new domain. Redeploy.
-6. **Update the Stripe webhook URL** (Step 9) to the new domain. Otherwise webhooks break.
-
-**How to know it worked:** visiting your custom domain loads the app.
-
----
-
-## Step 12 — Smoke test
-
-Tick each item. If any fails, go to Troubleshooting.
-
-- [ ] Visit your URL → redirects to `/login`
-- [ ] Sign up a test participant → see "pending approval" state
-- [ ] Log in to `/admin` (default Taylor / `weed69`) → approve the test user
-- [ ] As the test user, see the dashboard, roster, itinerary
-- [ ] Upload an avatar → confirm it appears (verifies Vercel Blob)
-- [ ] Submit an expense with a receipt photo → upload works
-- [ ] Lock the trip from `/admin/trip` → confirmation email arrives
-- [ ] Pay via Stripe Checkout (test card `4242 4242 4242 4242`, any future date, any CVC) → status flips to **Confirmed & Paid**
-- [ ] Stripe Dashboard → Webhooks → endpoint shows **succeeded** events (not 4xx/5xx)
-
-**Once all of those pass**, switch from Stripe test keys to live keys:
-1. Stripe → toggle off "Test mode".
-2. Get your `pk_live_…` and `sk_live_…`.
-3. Replace `STRIPE_SECRET_KEY` and `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` in Vercel env vars.
-4. Create a **new** webhook endpoint in live mode (Step 9 again, but on the live mode dashboard). Get a new `whsec_…` and update `STRIPE_WEBHOOK_SECRET`.
-5. Redeploy.
-
----
-
-## Troubleshooting
-
-| Symptom | Cause / Fix |
-|---|---|
-| Build fails with `prisma: command not found` | Root Directory in Vercel isn't `comedycampsplit` — Step 2 |
-| Build fails about Stripe at build time | Should not happen — Stripe is lazily initialized. Make sure you didn't import `stripe` at module top in new code |
-| Login loop / `NEXTAUTH_URL mismatch` | `NEXTAUTH_URL` doesn't match the URL you're visiting. Set it to the *exact* deployed URL (no trailing slash, https not http) and redeploy |
-| Emails not arriving | Resend domain not verified, or `EMAIL_FROM` doesn't match the verified domain. Check Resend → Logs |
-| Avatar/receipt upload fails | `BLOB_READ_WRITE_TOKEN` missing. Storage tab → reconnect Blob → Redeploy |
-| Stripe webhook returns 400 | `STRIPE_WEBHOOK_SECRET` is wrong or you forgot to redeploy after setting it |
-| Stripe webhook returns 500 | Check Vercel function logs: Vercel project → **Logs** → filter `/api/webhooks/stripe` |
-| `prisma db push` errors | `npx vercel env pull .env` again to refresh `DATABASE_URL` |
-| Database is empty after seed | You ran `db:seed` against your laptop's local DB, not Vercel's. Make sure `.env` came from `vercel env pull` |
-
----
-
-## Local development
-
-See [`comedycampsplit/README.md`](./comedycampsplit/README.md) for running locally with `npm run dev`.
-
----
-
-## Repo layout
-
-```
-COMEDYSUMMERCAMP/
-├── comedycampsplit/        ← the Next.js app (deployed root)
-│   ├── app/                  Next.js App Router routes
-│   ├── components/
-│   ├── lib/                  Stripe, Resend, Prisma, NextAuth helpers
-│   ├── prisma/               schema.prisma + seed
-│   ├── vercel.json           Vercel build config
-│   └── README.md             app-level docs
-└── README.md               ← you are here
+```bash
+npm run build      # prisma generate && prisma db push && next build
+npm run lint       # ESLint
+npm run db:push    # Apply schema to the database
+npm run db:seed    # Insert a placeholder Trip row
+npm run db:studio  # Open Prisma Studio
 ```
 
+### Environment Variables
+
+The app uses environment variables. Variable names only:
+
+```bash
+DATABASE_URL=
+NEXTAUTH_SECRET=
+NEXTAUTH_URL=
+STRIPE_SECRET_KEY=
+STRIPE_PUBLISHABLE_KEY=
+STRIPE_WEBHOOK_SECRET=
+RESEND_API_KEY=
+BLOB_READ_WRITE_TOKEN=
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
+NEXT_PUBLIC_APP_URL=
+```
+
+`.env.example` at `comedycampsplit/.env.example` is the source of truth for which variables are required.
+
+## Usage
+
+After running the app locally and seeding the database:
+
+1. Visit `/signup` and create a participant account.
+2. Fill out the guest form at `/dashboard/intake`.
+3. In a second browser session, sign in at `/admin` (admin credentials are defined in `lib/auth.ts` and intended to be customized) and approve the user from `/admin/users`.
+4. As the approved user, browse the dashboard, claim a bed, vote on meals, sign up for contributions, and comment on the itinerary.
+5. As admin, enter and lock the three cost lines on `/admin/trip` to auto-lock the trip.
+6. As the user, complete a Stripe Checkout payment from `/dashboard/payment`. The webhook should mark you `CONFIRMED_PAID`.
+
+## What I Built
+
+- Designed and implemented the entire data model (~23 Prisma models) including the user status machine, three-line cost model, itinerary items + comments, bed assignments with bedmate-request rules, meal poll phases, and the contribution and expense ledgers.
+- Built every page in the App Router, mixing React 19 server components with targeted client components only where interactivity is required.
+- Implemented every mutation as a typed Next.js server action with explicit auth/role/status checks, instead of REST endpoints, to keep the trust boundary inside one file per feature.
+- Implemented the approval-gated UI affordances (read-only mode for `PENDING` users on the itinerary and lodging pages; full read/write for approved users) without weakening the server-side authorization.
+- Built the admin pricing flow with per-line lock toggles and the auto-solidify side effect (status transition + transactional emails).
+- Integrated Stripe Checkout end-to-end: server action to create the session, a signed webhook to record the payment, and a status update that gates the rest of the app.
+- Integrated Vercel Blob for avatar, lodging photo, and receipt uploads.
+- Integrated Resend for seven distinct transactional emails and admin event notifications.
+- Implemented the itinerary admin tooling — create, edit, reorder up/down, pin, move-to-day, and per-item comment threads.
+- Implemented the meals planner UI (`components/MealsPlanner.tsx`) with phase-aware suggestions, voting, helpers, and grocery list.
+- Branding pass to "The Trip Handler" across the dashboard nav, admin nav, login/signup/admin headers, page metadata, Stripe product label, and all outgoing emails.
+
+## Technical Decisions
+
+- **Next.js App Router + server actions.** Picked over a separate Express/REST backend because every mutation has session context and Postgres access, so co-locating the auth check, validation, and DB write in one server action removes an entire layer of API surface area. Easier to audit ("does every server action call `requireApprovedUser`?") than scanning a sprawling API route tree.
+- **Prisma + `prisma db push`, no migration history.** The app is single-tenant and the schema is owned by one developer, so structured migrations would cost more than they protect. Vercel runs `prisma db push --accept-data-loss` on each build; this is documented as intentional and is appropriate for the trade-off here, but is called out under "Known Limitations" because it is not suitable for multi-tenant production.
+- **`TRIP_CAPACITY` (13) decoupled from `COST_SHARE_DIVISOR` (10).** The trip's economics were designed around a 10-way split. Rather than re-baseline every cost UI, the constants were separated: the roster renders 13 slots, but every share calculation reads `COST_SHARE_DIVISOR`. This keeps the per-person price stable as the head count grows.
+- **Status machine over feature flags.** Access control is keyed off a single enum (`PENDING`/`APPROVED`/`PENDING_PAYMENT`/`CONFIRMED_PAID`/`CANCELLED`) rather than scattered boolean flags. `lib/approval.ts` centralizes the "is this user approved for X" predicate; every page and server action that gates on approval calls the same helper.
+- **Server-side authorization first, UI affordances second.** Read-only mode on the itinerary for pending users hides the comment composer in the client, but the underlying `createItineraryComment` server action also rejects the call from any unapproved user. The UI change is a hint, not the security boundary.
+- **Resend used in a best-effort wrapper.** `notifyAdmin` swallows Resend failures so a third-party hiccup never fails the user-visible mutation. User-facing emails are intentionally allowed to throw so the operator notices a misconfigured sender domain.
+
+## Challenges Solved
+
+**Open extra spots without changing the per-person price.**
+*Challenge:* The trip was originally costed for 10 people, but the host wanted to invite 13. Re-pricing the trip on the fly would have created drift between the admin's mental model and the UI in multiple places (admin pricing screen, member payment screen, lock-trip email).
+*Solution:* Introduced `COST_SHARE_DIVISOR = 10` alongside `TRIP_CAPACITY = 13` and refactored every share computation (admin price page, auto-lock side effect, member payment breakdown, lock-trip email math) to use the divisor. The roster page kept using `TRIP_CAPACITY` for slot count.
+*Why it matters:* The decision is now a single edit in `lib/pricing.ts`. The split between capacity and cost is explicit instead of implicit in scattered constants.
+
+**Pending users that can browse but not edit.**
+*Challenge:* Originally, unapproved users were redirected away from the itinerary and lodging pages by an `ApprovalRequired` gate. The desired behavior was: anyone signed in can see those pages, but cannot write.
+*Solution:* Removed the approval gate at the page level for those two routes, threaded a `canComment` boolean through `ItineraryView` to suppress the comment composer and per-comment edit/delete affordances for pending users, and confirmed the underlying server actions (`createItineraryComment`, `updateItineraryComment`, `deleteItineraryComment`) still reject unapproved users via `requireApprovedUser`.
+*Why it matters:* Lets the admin onboard people who are "still being decided on" so they can see what they'd be signing up for, without leaking write access.
+
+**Single beds reserved for female members, with automatic reassignment.**
+*Challenge:* The lodging has a few single beds that should be claimable by female members even if a male member already claimed one. Doing this manually creates an awkward, error-prone conversation.
+*Solution:* When a female member claims a single bed that's already occupied, the system reassigns it, sends the displaced user a "your bed was reassigned, here's a link to pick again" email through Resend, and updates the bed assignment atomically.
+*Why it matters:* The rule is enforced in code, communicated in writing, and recoverable in one click — the host doesn't have to broker it.
+
+## Testing
+
+Automated tests are not currently implemented.
+
+Manual testing should cover:
+
+- The end-to-end flow: signup → intake → admin approval → bed claim → meal vote → admin locks pricing → Stripe checkout → status flips to `CONFIRMED_PAID`.
+- Approval-gated pages: a `PENDING` user can read the itinerary and lodging but not comment; an `APPROVED` user can comment, edit, and delete their own comments; admin can delete any comment.
+- Form validation on signup, intake, expenses, and bed claims.
+- Error states on Stripe failures and Resend failures (the user-visible action should still succeed when admin notification email fails, per design).
+- Mobile/responsive layout for the member dashboard, especially the itinerary, meals planner, and payment screens.
+- Data persistence and revalidation: editing an itinerary item should be visible to other users on next navigation or refresh.
+
+## Security
+
+What is implemented and visible in the codebase:
+
+- Secrets are not committed; `.env.example` documents required variable names only.
+- All Server Actions check the session via `getServerSession(authOptions)` before any database mutation.
+- Authorization is layered: page-level (server component returns gated content), action-level (`requireAdmin` / `requireApprovedUser`), and resource-level (e.g. a user can only edit their own comment).
+- Passwords are hashed with bcrypt (cost factor 10).
+- The Stripe webhook validates the signature before trusting the payload.
+- Uploads go through dedicated API routes that authenticate the session and forward to Vercel Blob, instead of exposing direct upload tokens to the client.
+
+What is **not** implemented and would be expected in a production-hardening pass:
+
+- No rate limiting on the auth endpoints or on the signup form.
+- No CSRF protection beyond what NextAuth/server actions provide by default.
+- No automated audit logging.
+- Admin credentials default to a single hardcoded record in `lib/auth.ts`; suitable for single-tenant private use, not for multi-admin scenarios.
+
+Security hardening is a future improvement.
+
+## Accessibility
+
+What is true in the codebase:
+
+- Semantic HTML for headings, forms, lists, and navigation.
+- Form inputs are labeled.
+- Color choices use the Tailwind `stone` palette and `amber`/`emerald` accents at contrast levels intended for readable text.
+- Layouts are responsive (mobile breakpoints throughout).
+
+A dedicated accessibility audit (screen reader testing, focus management on modals, keyboard traversal of the meals planner, contrast verification) has not been performed. Accessibility review is a future improvement.
+
+## Known Limitations
+
+- No automated test suite.
+- Prisma migration history is not committed; the app uses `prisma db push --accept-data-loss` at build time. Not suitable for multi-tenant production.
+- Admin user is configured via code (`lib/auth.ts`) rather than the database.
+- No CI workflow is committed (`.github/workflows/` is empty).
+- No `LICENSE` file is present.
+- No `SECURITY.md` policy is present.
+- Documentation lives in two README files (`README.md` at the repo root is the project README; `comedycampsplit/README.md` is an older project summary kept for now).
+- Screenshots are not yet included.
+
+## Roadmap
+
+- Add automated tests (Vitest or Playwright) starting with the auth + approval + payment flow.
+- Move admin user from code to database with hashed credentials and a password-reset path.
+- Replace `prisma db push --accept-data-loss` with a real migration history before any data the user can't afford to lose lands in production.
+- Add a GitHub Actions workflow for lint + type-check + build on pull requests.
+- Add a `LICENSE` file and a `SECURITY.md`.
+- Add screenshots of the main flows to this README.
+- Accessibility review.
+- Rate-limiting on auth and signup.
+
+## Status
+
+Active. The app is deployed at the URL above and used by one organizer for one trip. Active development is ongoing; recent commits cover a meal-poll redesign, an itinerary item + comments model, brand rename, and the 13-slot capacity / 10-way cost split.
+
+## License
+
+No license has been added yet.
+
 ---
 
-## Need help?
+## Repository presentation suggestions
 
-If a step fails and the Troubleshooting table doesn't cover it:
-1. Screenshot the error
-2. Note which step number you're on
-3. Copy the last 30 lines of the Vercel build log (or browser console, whichever is failing)
+- **Suggested short repo description (for the GitHub sidebar):**
+  *Next.js + Prisma + Stripe app that runs a private group trip end-to-end: applications, approvals, lodging, meals, itinerary, expenses, and per-person payments.*
 
-That's enough info to debug almost anything.
+- **Suggested topics:**
+  `nextjs`, `app-router`, `react`, `typescript`, `prisma`, `postgresql`, `nextauth`, `stripe`, `stripe-webhooks`, `tailwindcss`, `vercel`, `vercel-blob`, `resend`, `server-actions`, `group-travel`, `expense-splitting`
+
+- **Files worth cleaning up:**
+  - `comedycampsplit/README.md` — older project summary that overlaps this README; consider deleting or replacing with a one-line pointer to the root README.
+  - The previous root `README.md` was a deploy walkthrough; if you want to keep that content, move it to `docs/DEPLOYING.md` instead of mixing it with the project README.
+  - `comedycampsplit/public/` currently contains only Next.js default placeholder SVGs; either replace with project assets or remove.
+  - `comedycampsplit/tsconfig.tsbuildinfo` should be in `.gitignore` (build artifact).
+
+- **Worth adding:**
+  - `LICENSE` (MIT is the lowest-friction option for a portfolio repo).
+  - `SECURITY.md` describing how to report a vulnerability (even a one-liner pointing to an email).
+  - `.github/workflows/ci.yml` running `npm ci && npm run lint && npx tsc --noEmit` and producing a status badge for the top of this README.
+  - Screenshots in a `docs/screenshots/` directory and linked from the **Screenshots** section above.

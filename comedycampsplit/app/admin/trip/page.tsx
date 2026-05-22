@@ -1,11 +1,12 @@
 import { prisma } from "@/lib/db";
 import { TripClient } from "./TripClient";
 import { LodgingPhotosClient } from "./LodgingPhotosClient";
+import { getActiveTrip } from "@/lib/trip";
 
 export default async function AdminTripPage() {
   const trip =
-    (await prisma.trip.findFirst()) ??
-    (await prisma.trip.create({ data: { name: "Comedy Summer Camp" } }));
+    (await getActiveTrip()) ??
+    (await prisma.trip.create({ data: { name: "Untitled Trip", isActive: true } }));
 
   const photos = await prisma.lodgingPhoto.findMany({
     where: { tripId: trip.id },
