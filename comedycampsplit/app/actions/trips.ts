@@ -43,6 +43,46 @@ export async function createMyTrip(name: string) {
   return { success: true, tripId: trip.id };
 }
 
+/** Edit the descriptive fields of a trip you own. */
+export async function updateMyTrip(
+  tripId: string,
+  data: {
+    name?: string;
+    destination?: string;
+    startDate?: string;
+    endDate?: string;
+    description?: string;
+    itinerary?: string;
+    lodging?: string;
+    meals?: string;
+  },
+) {
+  const userId = await currentUserId();
+  if (!userId) return { error: "Sign in first." };
+  if (!(await ownedTrip(tripId, userId))) return { error: "Not your trip." };
+
+  const name = data.name?.trim();
+  if (name !== undefined && !name) return { error: "Trip name can't be empty." };
+
+  await prisma.trip.update({
+    where: { id: tripId },
+    data: {
+      name: name || undefined,
+      destination: data.destination?.trim() || null,
+      startDate: data.startDate ? new Date(data.startDate) : null,
+      endDate: data.endDate ? new Date(data.endDate) : null,
+      description: data.description?.trim() || null,
+      itinerary: data.itinerary?.trim() || null,
+      lodging: data.lodging?.trim() || null,
+      meals: data.meals?.trim() || null,
+    },
+  });
+
+  revalidatePath("/dashboard/my-trips");
+  revalidatePath(`/dashboard/my-trips/${tripId}`);
+  return { success: true };
+}
+
 export async function setMyTripApplicationOpen(tripId: string, open: boolean) {
   const userId = await currentUserId();
   if (!userId) return { error: "Sign in first." };
