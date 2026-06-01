@@ -20,7 +20,6 @@ export function LoginForm() {
       redirect: false,
       identifier,
       password,
-      isAdmin: "false",
     });
 
     setLoading(false);

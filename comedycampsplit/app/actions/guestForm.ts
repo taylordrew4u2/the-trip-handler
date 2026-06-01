@@ -127,7 +127,7 @@ export async function submitGuestForm(formData: FormData) {
         "Substance-free ack": data.substanceFreeAck ? "Agreed" : "NOT AGREED",
       },
       actionLabel: "Review application",
-      actionUrl: `${baseUrl}/admin/intake/${userId}`,
+      actionUrl: `${baseUrl}/dashboard/my-trips`,
     });
   }
 
@@ -158,10 +158,10 @@ export async function requestFormEditAccess() {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
     await notifyAdmin({
       subject: `${u.name} requested edit access to their guest form`,
-      intro: `They want to make changes to a previously submitted form. Unlock it from the admin page if that's fine.`,
+      intro: `They want to make changes to a previously submitted form. Unlock it from your trip's applicant list if that's fine.`,
       details: { Name: u.name, Email: u.email },
       actionLabel: "Open & unlock",
-      actionUrl: `${baseUrl}/admin/intake/${userId}`,
+      actionUrl: `${baseUrl}/dashboard/my-trips`,
     });
   }
   return { success: true };
