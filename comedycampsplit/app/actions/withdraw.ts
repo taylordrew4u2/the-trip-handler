@@ -39,8 +39,8 @@ export async function withdrawSelf() {
     subject: `${current.name} pulled out of the trip`,
     intro: `They withdrew before paying. Their bed and contributions have been released so someone else can take the spot.`,
     details: { Name: current.name, Email: current.email, "Previous status": current.status },
-    actionLabel: "View users",
-    actionUrl: `${baseUrl}/admin/users`,
+    actionLabel: "View applicants",
+    actionUrl: `${baseUrl}/dashboard/my-trips`,
   });
 
   return { success: true };

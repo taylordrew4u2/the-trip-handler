@@ -10,58 +10,19 @@ export const authOptions: NextAuthOptions = {
       credentials: {
         identifier: { label: "Email or Username", type: "text" },
         password: { label: "Password", type: "password" },
-        isAdmin: { label: "Admin", type: "text" },
       },
       async authorize(credentials) {
         if (!credentials?.identifier || !credentials?.password) return null;
 
-        // Admin login. Two ways to authenticate:
-        //  1. The bootstrap super-admin defined in the environment. Its
-        //     ADMIN_PASSWORD_HASH is a bcrypt hash, compared the same way as
-        //     participant passwords below.
-        //  2. Any database user who has been granted the ADMIN role (via the
-        //     self-signup + approval flow), signing in with email or username.
-        if (credentials.isAdmin === "true") {
-          const adminUsername = process.env.ADMIN_USERNAME;
-          const adminPasswordHash = process.env.ADMIN_PASSWORD_HASH;
-          if (
-            adminUsername &&
-            adminPasswordHash &&
-            credentials.identifier === adminUsername &&
-            (await bcrypt.compare(credentials.password, adminPasswordHash))
-          ) {
-            return {
-              id: "admin",
-              email: process.env.ADMIN_EMAIL ?? "admin@thetriphandler.app",
-              name: adminUsername,
-              role: "ADMIN",
-            };
-          }
-
-          const dbAdmin = await prisma.user.findFirst({
-            where: {
-              role: "ADMIN",
-              OR: [
-                { email: credentials.identifier },
-                { username: credentials.identifier },
-              ],
-            },
-          });
-          if (dbAdmin && (await bcrypt.compare(credentials.password, dbAdmin.password))) {
-            return {
-              id: dbAdmin.id,
-              email: dbAdmin.email,
-              name: dbAdmin.name,
-              role: "ADMIN",
-              status: dbAdmin.status as string,
-            };
-          }
-          return null;
-        }
-
-        // Participant login by email
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.identifier },
+        // Sign in by email or username. Everyone is a regular member; trips
+        // are managed by whoever creates them.
+        const user = await prisma.user.findFirst({
+          where: {
+            OR: [
+              { email: credentials.identifier },
+              { username: credentials.identifier },
+            ],
+          },
         });
         if (!user) return null;
 

@@ -6,9 +6,8 @@ import { SignOutLink } from "@/components/SignOutLink";
 
 export default async function MyTripsLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession(authOptions);
-  const user = session?.user as { id?: string; role?: string } | undefined;
+  const user = session?.user as { id?: string } | undefined;
   if (!user?.id) redirect("/login");
-  if (user.role === "ADMIN") redirect("/admin/dashboard");
 
   return (
     <div className="min-h-screen bg-stone-50">
