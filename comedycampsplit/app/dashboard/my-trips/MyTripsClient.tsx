@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useTransition } from "react";
 import {
   approveTripApplicant,
@@ -126,6 +127,10 @@ export function MyTripsClient({ trips }: { trips: TripData[] }) {
                   <h2 className="font-serif text-xl font-medium text-stone-900">{trip.name}</h2>
                   <p className="text-xs text-stone-500 mt-0.5">
                     {trip.applicants.length} applicant{trip.applicants.length === 1 ? "" : "s"}
+                    {" · "}
+                    <Link href={`/dashboard/my-trips/${trip.id}`} className="text-stone-700 underline underline-offset-2 hover:text-stone-900">
+                      Edit details
+                    </Link>
                   </p>
                 </div>
                 <label className="flex items-center gap-2 text-xs text-stone-600 whitespace-nowrap">
