@@ -10,10 +10,6 @@ A full-stack Next.js application for organizing a private group trip — applica
 
 The deployed instance is configured for one specific trip. Admin features are hidden behind a separate sign-in page.
 
-## Screenshots
-
-TODO: Add screenshots of the application/intake flow, member dashboard, admin trip/pricing screen, and itinerary view (mobile + desktop).
-
 ## Overview
 
 **The Trip Handler** is a private web app that one trip organizer ("admin") uses to run a group trip end to end, and that every invited person uses to apply, see what's happening, claim a bed, vote on meals, sign up for contributions, and pay their share.
@@ -132,7 +128,6 @@ comedycampsplit/
 │   ├── schema.prisma        # 23 models incl. User, Trip, Day, ItineraryItem,
 │   │                        # ItineraryComment, MealSlot, Bed, etc.
 │   └── seed.ts              # Optional seed for the Trip row
-├── public/                  # Static assets (default Next.js placeholders)
 └── types/                   # NextAuth + shared TypeScript declarations
 ```
 
