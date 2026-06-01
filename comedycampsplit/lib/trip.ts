@@ -45,13 +45,8 @@ export async function getUserTripOrActive(userId: string): Promise<Trip | null> 
   return active;
 }
 
-/**
- * Trips that are accepting new applications. Used by the signup page so
- * applicants can pick which trip they want to join.
- */
-export async function getOpenTrips(): Promise<Trip[]> {
-  return prisma.trip.findMany({
-    where: { isApplicationOpen: true },
-    orderBy: [{ isActive: "desc" }, { createdAt: "desc" }],
-  });
+/** Look up a trip by its shareable invite token. */
+export async function getTripByInviteToken(token: string): Promise<Trip | null> {
+  if (!token) return null;
+  return prisma.trip.findUnique({ where: { inviteToken: token } });
 }
