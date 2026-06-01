@@ -3,7 +3,7 @@ import { Resend } from "resend";
 export const resend = new Resend(process.env.RESEND_API_KEY ?? "RESEND_KEY_MISSING");
 
 const FROM_ADDRESS = process.env.EMAIL_FROM ?? "onboarding@resend.dev";
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "taylordrew4u@gmail.com";
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 
 type AdminEvent = {
   subject: string;
@@ -14,10 +14,12 @@ type AdminEvent = {
 };
 
 /**
- * Send an admin notification. Best-effort — never throws (we don't want a
- * Resend hiccup to fail the underlying user action).
+ * Send an admin notification to ADMIN_EMAIL. No-ops when ADMIN_EMAIL is
+ * unset, and best-effort otherwise — never throws (we don't want a Resend
+ * hiccup to fail the underlying user action).
  */
 export async function notifyAdmin(event: AdminEvent): Promise<void> {
+  if (!ADMIN_EMAIL) return;
   try {
     const detailRows = Object.entries(event.details ?? {})
       .filter(([, v]) => v !== null && v !== undefined && v !== "")
@@ -35,7 +37,7 @@ export async function notifyAdmin(event: AdminEvent): Promise<void> {
     await resend.emails.send({
       from: FROM_ADDRESS,
       to: ADMIN_EMAIL,
-      subject: `[CSC admin] ${event.subject}`,
+      subject: `[Trip Handler admin] ${event.subject}`,
       html: `
         <div style="font-family: ui-sans-serif, system-ui, sans-serif; max-width: 560px; margin: 0 auto; color: #1c1917;">
           <p style="font-size: 12px; text-transform: uppercase; letter-spacing: 2px; color: #888; margin: 0 0 8px;">The Trip Handler · admin</p>
@@ -58,15 +60,6 @@ function escapeHtml(s: string): string {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
-}
-
-export async function sendHelloWorldEmail(to: string = "taylordrew4u@gmail.com") {
-  await resend.emails.send({
-    from: FROM_ADDRESS,
-    to,
-    subject: "Hello World",
-    html: "<p>Congrats on sending your <strong>first email</strong>!</p>",
-  });
 }
 
 export async function sendApprovalEmail(email: string, name: string) {
