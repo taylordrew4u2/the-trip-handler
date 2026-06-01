@@ -83,8 +83,10 @@ export default function AdminLoginPage() {
           </form>
         </div>
 
-        <p className="mt-6 text-center text-xs text-stone-500">
+        <p className="mt-6 text-center text-xs text-stone-500 space-x-3">
           <a href="/login" className="hover:text-stone-300">← Member login</a>
+          <span className="text-stone-700">·</span>
+          <a href="/admin/request" className="hover:text-stone-300">Request admin access</a>
         </p>
       </div>
     </div>
