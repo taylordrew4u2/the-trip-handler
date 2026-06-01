@@ -17,6 +17,7 @@ model User {
   avatarUrl     String?
   status        UserStatus    @default(PENDING)
   role          Role          @default(PARTICIPANT)
+  adminRequest  AdminRequestStatus @default(NONE)
   phone         String?
   gender        String?
   sleepTags     String[]      @default([])
@@ -52,6 +53,12 @@ enum UserStatus {
 enum Role {
   ADMIN
   PARTICIPANT
+}
+enum AdminRequestStatus {
+  NONE
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 model Trip {

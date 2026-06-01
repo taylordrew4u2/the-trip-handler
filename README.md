@@ -205,6 +205,7 @@ After running the app locally and seeding the database:
 - Implemented every mutation as a typed Next.js server action with explicit auth/role/status checks, instead of REST endpoints, to keep the trust boundary inside one file per feature.
 - Implemented the approval-gated UI affordances (read-only mode for `PENDING` users on the itinerary and lodging pages; full read/write for approved users) without weakening the server-side authorization.
 - Built the admin pricing flow with per-line lock toggles and the auto-solidify side effect (status transition + transactional emails).
+- Built a self-service admin-access system: a bootstrap super-admin defined in the environment, plus a request-and-approve flow (`/admin/request` → `/admin/admins`) that lets existing admins grant or revoke the `ADMIN` role so the app can have multiple admins.
 - Integrated Stripe Checkout end-to-end: server action to create the session, a signed webhook to record the payment, and a status update that gates the rest of the app.
 - Integrated Vercel Blob for avatar, lodging photo, and receipt uploads.
 - Integrated Resend for seven distinct transactional emails and admin event notifications.

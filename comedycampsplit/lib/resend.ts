@@ -62,6 +62,26 @@ function escapeHtml(s: string): string {
     .replace(/'/g, "&#39;");
 }
 
+export async function sendAdminAccessGrantedEmail(email: string, name: string) {
+  try {
+    await resend.emails.send({
+      from: FROM_ADDRESS,
+      to: email,
+      subject: "You now have admin access",
+      html: `
+        <div style="font-family: ui-sans-serif, system-ui, sans-serif; max-width: 560px; margin: 0 auto; color: #1c1917;">
+          <p style="font-size: 12px; text-transform: uppercase; letter-spacing: 2px; color: #888; margin: 0 0 8px;">The Trip Handler · admin</p>
+          <h1 style="font-size: 22px; margin: 0 0 12px;">Hey ${name} — you're an admin now.</h1>
+          <p style="font-size: 14px; line-height: 1.5; color: #444;">Your request for admin access was approved. Sign in on the admin page with the same email and password you signed up with.</p>
+          <a href="${process.env.NEXT_PUBLIC_APP_URL}/admin" style="background:#1c1917;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;display:inline-block;margin-top:16px;font-size:14px;">Open the admin sign-in</a>
+        </div>
+      `,
+    });
+  } catch (err) {
+    console.error("sendAdminAccessGrantedEmail failed:", err);
+  }
+}
+
 export async function sendApprovalEmail(email: string, name: string) {
   await resend.emails.send({
     from: FROM_ADDRESS,
