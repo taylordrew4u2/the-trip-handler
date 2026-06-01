@@ -172,6 +172,9 @@ The app uses environment variables. Variable names only:
 DATABASE_URL=
 NEXTAUTH_SECRET=
 NEXTAUTH_URL=
+ADMIN_USERNAME=
+ADMIN_PASSWORD_HASH=     # bcrypt hash, see .env.example for the one-liner
+ADMIN_EMAIL=
 STRIPE_SECRET_KEY=
 STRIPE_PUBLISHABLE_KEY=
 STRIPE_WEBHOOK_SECRET=
@@ -189,7 +192,7 @@ After running the app locally and seeding the database:
 
 1. Visit `/signup` and create a participant account.
 2. Fill out the guest form at `/dashboard/intake`.
-3. In a second browser session, sign in at `/admin` (admin credentials are defined in `lib/auth.ts` and intended to be customized) and approve the user from `/admin/users`.
+3. In a second browser session, sign in at `/admin` (admin credentials come from the `ADMIN_USERNAME` / `ADMIN_PASSWORD_HASH` environment variables) and approve the user from `/admin/users`.
 4. As the approved user, browse the dashboard, claim a bed, vote on meals, sign up for contributions, and comment on the itinerary.
 5. As admin, enter and lock the three cost lines on `/admin/trip` to auto-lock the trip.
 6. As the user, complete a Stripe Checkout payment from `/dashboard/payment`. The webhook should mark you `CONFIRMED_PAID`.
