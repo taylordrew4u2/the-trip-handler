@@ -15,16 +15,24 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         if (!credentials?.identifier || !credentials?.password) return null;
 
-        // Admin login
+        // Admin login — credentials come from the environment, never hardcoded.
+        // ADMIN_PASSWORD_HASH is a bcrypt hash, compared the same way as
+        // participant passwords below.
         if (credentials.isAdmin === "true") {
-          if (
-            credentials.identifier === "Taylor" &&
-            credentials.password === "weed69"
-          ) {
+          const adminUsername = process.env.ADMIN_USERNAME;
+          const adminPasswordHash = process.env.ADMIN_PASSWORD_HASH;
+          if (!adminUsername || !adminPasswordHash) return null;
+
+          const usernameMatches = credentials.identifier === adminUsername;
+          const passwordMatches = await bcrypt.compare(
+            credentials.password,
+            adminPasswordHash,
+          );
+          if (usernameMatches && passwordMatches) {
             return {
               id: "admin",
-              email: "admin@comedycampsplit.com",
-              name: "Taylor",
+              email: process.env.ADMIN_EMAIL ?? "admin@thetriphandler.app",
+              name: adminUsername,
               role: "ADMIN",
             };
           }
