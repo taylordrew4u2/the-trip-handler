@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
@@ -20,6 +21,19 @@ export default async function IntakePage() {
 
   return (
     <div>
+      {!user.tripId && (
+        <div className="mb-6 rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm flex items-center justify-between gap-3">
+          <span className="text-stone-600">
+            Just here to organize a trip of your own?
+          </span>
+          <Link
+            href="/dashboard/my-trips"
+            className="font-medium text-stone-900 underline underline-offset-2 whitespace-nowrap"
+          >
+            Host your own trip →
+          </Link>
+        </div>
+      )}
       <div className="mb-8">
         <p className="text-xs uppercase tracking-[0.2em] text-stone-500 mb-2">
           {isPending ? "Required before approval" : "Guest form"}

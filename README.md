@@ -206,6 +206,7 @@ After running the app locally and seeding the database:
 - Implemented the approval-gated UI affordances (read-only mode for `PENDING` users on the itinerary and lodging pages; full read/write for approved users) without weakening the server-side authorization.
 - Built the admin pricing flow with per-line lock toggles and the auto-solidify side effect (status transition + transactional emails).
 - Built a self-service admin-access system: a bootstrap super-admin defined in the environment, plus a request-and-approve flow (`/admin/request` → `/admin/admins`) that lets existing admins grant or revoke the `ADMIN` role so the app can have multiple admins.
+- Built multi-tenant, invite-only trips: any signed-in member can create a trip (becoming its owner), gets a private invite link (`/join/[token]`), and reviews/approves the people who apply through it from `/dashboard/my-trips` — all scoped so an owner only ever sees and manages their own trips.
 - Integrated Stripe Checkout end-to-end: server action to create the session, a signed webhook to record the payment, and a status update that gates the rest of the app.
 - Integrated Vercel Blob for avatar, lodging photo, and receipt uploads.
 - Integrated Resend for seven distinct transactional emails and admin event notifications.
