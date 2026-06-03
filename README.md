@@ -185,9 +185,9 @@ After running the app locally and seeding the database:
 
 ## Testing
 
-Automated tests are not currently implemented.
+Unit tests run with **Vitest** (`npm test`) and execute in CI on every PR. They cover the pure pricing/approval/meal-slot logic and the authorization guards on the owner trip actions (ownership checks, and that applying to a trip never silently moves a member off another trip) using mocked Prisma and session boundaries.
 
-Manual testing should cover:
+Manual testing should additionally cover:
 
 - The end-to-end flow: signup → create trip → share invite → apply → owner approves → bed claim → meal vote → Stripe checkout → status flips to `CONFIRMED_PAID`.
 - Ownership isolation: an owner only sees/manages their own trips and applicants; acting on another owner's trip is rejected server-side.
