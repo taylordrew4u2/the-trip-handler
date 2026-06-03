@@ -394,3 +394,77 @@ export async function deleteTripExpense(expenseId: string) {
   revalidatePath("/dashboard/expenses");
   return { success: true };
 }
+
+// ---------- beds / sleeping layout (owner-scoped) ----------
+
+const DEFAULT_HOUSE: { room: string; label: string; type: "SINGLE" | "DOUBLE" }[] = [
+  { room: "Bedroom 1", label: "Queen Bed", type: "DOUBLE" },
+  { room: "Bedroom 2", label: "Queen Bed", type: "DOUBLE" },
+  { room: "Bedroom 3", label: "King Bed", type: "DOUBLE" },
+  { room: "Bedroom 3", label: "Twin Bed", type: "SINGLE" },
+  { room: "Bedroom 4", label: "Twin Bed 1", type: "SINGLE" },
+  { room: "Bedroom 4", label: "Twin Bed 2", type: "SINGLE" },
+  { room: "Bedroom 5", label: "Queen Bed", type: "DOUBLE" },
+];
+
+/** Seed a starter bedroom layout on a trip you own (only if it has no beds). */
+export async function seedDefaultTripBeds(tripId: string) {
+  const userId = await currentUserId();
+  if (!userId) return { error: "Sign in first." };
+  if (!(await ownedTrip(tripId, userId))) return { error: "Not your trip." };
+
+  const existing = await prisma.bed.count({ where: { tripId } });
+  if (existing > 0) return { error: "This trip already has beds." };
+
+  await prisma.bed.createMany({
+    data: DEFAULT_HOUSE.map((b) => ({ tripId, room: b.room, label: b.label, type: b.type })),
+  });
+  revalidatePath(`/dashboard/my-trips/${tripId}`);
+  revalidatePath("/dashboard/sleeping");
+  return { success: true };
+}
+
+/** Add one or more beds to a trip you own. */
+export async function addTripBed(
+  tripId: string,
+  data: { label: string; room?: string; type: "SINGLE" | "DOUBLE"; womenOnly: boolean; count: number },
+) {
+  const userId = await currentUserId();
+  if (!userId) return { error: "Sign in first." };
+  if (!(await ownedTrip(tripId, userId))) return { error: "Not your trip." };
+
+  const label = data.label.trim();
+  if (!label) return { error: "Give the bed a label." };
+  const room = data.room?.trim() || null;
+  const count = Math.min(20, Math.max(1, Math.floor(data.count) || 1));
+
+  if (count === 1) {
+    await prisma.bed.create({ data: { tripId, label, room, type: data.type, womenOnly: data.womenOnly } });
+  } else {
+    await prisma.bed.createMany({
+      data: Array.from({ length: count }, (_, i) => ({
+        tripId,
+        label: `${label} ${i + 1}`,
+        room,
+        type: data.type,
+        womenOnly: data.womenOnly,
+      })),
+    });
+  }
+  revalidatePath(`/dashboard/my-trips/${tripId}`);
+  revalidatePath("/dashboard/sleeping");
+  return { success: true };
+}
+
+export async function deleteTripBed(bedId: string) {
+  const userId = await currentUserId();
+  if (!userId) return { error: "Sign in first." };
+  const bed = await prisma.bed.findUnique({ where: { id: bedId }, select: { tripId: true } });
+  if (!bed || !(await ownedTrip(bed.tripId, userId))) return { error: "Not your trip." };
+
+  await prisma.bedAssignment.deleteMany({ where: { bedId } });
+  await prisma.bed.delete({ where: { id: bedId } });
+  revalidatePath(`/dashboard/my-trips/${bed.tripId}`);
+  revalidatePath("/dashboard/sleeping");
+  return { success: true };
+}
