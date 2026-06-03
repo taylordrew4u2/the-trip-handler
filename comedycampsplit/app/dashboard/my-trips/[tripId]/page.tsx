@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { TripEditForm } from "./TripEditForm";
+import { PricingPanel } from "./PricingPanel";
 
 export const dynamic = "force-dynamic";
 
@@ -46,6 +47,19 @@ export default async function ManageTripPage({
           itinerary: trip.itinerary ?? "",
           lodging: trip.lodging ?? "",
           meals: trip.meals ?? "",
+        }}
+      />
+      <PricingPanel
+        tripId={trip.id}
+        pricing={{
+          housingPrice: trip.housingPrice,
+          housingLocked: trip.housingLocked,
+          transportPrice: trip.transportPrice,
+          transportLocked: trip.transportLocked,
+          mealsPrice: trip.mealsPrice,
+          mealsLocked: trip.mealsLocked,
+          isLocked: trip.isLocked,
+          finalPrice: trip.finalPrice,
         }}
       />
     </div>
