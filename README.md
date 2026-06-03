@@ -59,15 +59,15 @@ The Trip Handler centralizes a trip owner's workflow and each participant's view
 - **File uploads:** Vercel Blob (avatars, lodging photos, expense receipts).
 - **Email:** Resend.
 - **Validation:** Zod.
-- **Hosting:** Vercel (project root is the `comedycampsplit/` subdirectory).
+- **Hosting:** Vercel (project root is the `the-trip-handler/` subdirectory).
 - **Lint:** ESLint 9 with `eslint-config-next`.
 
 ## Architecture
 
-The repository is a single Next.js application living under `comedycampsplit/`. The root of the repo holds repo-level docs; the app itself is in the subdirectory because Vercel is configured with `Root Directory = comedycampsplit`.
+The repository is a single Next.js application living under `the-trip-handler/`. The root of the repo holds repo-level docs; the app itself is in the subdirectory because Vercel is configured with `Root Directory = the-trip-handler`.
 
 ```
-comedycampsplit/
+the-trip-handler/
 ├── app/
 │   ├── (root pages)         # /, /login, /signup
 │   ├── actions/             # Server actions: auth, trips, board, contributions,
@@ -114,7 +114,7 @@ Everything that changes data goes through a typed server action in `app/actions/
 
 ```bash
 git clone https://github.com/taylordrew4u2/COMEDYSUMMERCAMP.git
-cd COMEDYSUMMERCAMP/comedycampsplit
+cd COMEDYSUMMERCAMP/the-trip-handler
 npm install
 cp .env.example .env.local   # fill in values, see below
 npm run dev
@@ -151,7 +151,7 @@ NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
 NEXT_PUBLIC_APP_URL=
 ```
 
-`.env.example` at `comedycampsplit/.env.example` is the source of truth for which variables are required.
+`.env.example` at `the-trip-handler/.env.example` is the source of truth for which variables are required.
 
 ## Usage
 

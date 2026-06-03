@@ -1,5 +1,5 @@
 # Build artifacts and dependencies that may appear at the repo root.
-# The Next.js app keeps its own .gitignore in comedycampsplit/.
+# The Next.js app keeps its own .gitignore in the-trip-handler/.
 .next/
 node_modules/
 *.tsbuildinfo
