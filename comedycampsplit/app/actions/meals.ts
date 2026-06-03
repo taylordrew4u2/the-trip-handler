@@ -28,6 +28,14 @@ async function tripIdOfSlot(slotId: string): Promise<string | null> {
   return slot?.tripId ?? null;
 }
 
+async function suggestionBelongsToSlot(suggestionId: string, mealSlotId: string): Promise<boolean> {
+  const s = await prisma.mealSuggestion.findUnique({
+    where: { id: suggestionId },
+    select: { mealSlotId: true },
+  });
+  return s?.mealSlotId === mealSlotId;
+}
+
 /** Authorize a meal-management action on a trip the caller must own. */
 async function requireMealManager(
   tripId: string | null,
@@ -237,6 +245,12 @@ export async function castVote(mealSlotId: string, suggestionId: string | null, 
   if (isDontCare && suggestionId) return { error: "Pick one or the other." };
   if (!isDontCare && !suggestionId) return { error: "Pick a meal or 'I don't care'." };
 
+  // The suggestion being voted for must belong to this slot (not another
+  // slot's or another trip's suggestion).
+  if (!isDontCare && suggestionId && !(await suggestionBelongsToSlot(suggestionId, mealSlotId))) {
+    return { error: "That suggestion isn't on this meal." };
+  }
+
   await prisma.mealVote.upsert({
     where: { userId_mealSlotId: { userId: auth.id, mealSlotId } },
     create: { userId: auth.id, mealSlotId, suggestionId: isDontCare ? null : suggestionId, isDontCare },
@@ -252,6 +266,10 @@ export async function castVote(mealSlotId: string, suggestionId: string | null, 
 export async function confirmMeal(mealSlotId: string, suggestionId: string | null, overrideNote?: string) {
   const auth = await requireMealManager(await tripIdOfSlot(mealSlotId));
   if ("error" in auth) return auth;
+
+  if (suggestionId && !(await suggestionBelongsToSlot(suggestionId, mealSlotId))) {
+    return { error: "That suggestion isn't on this meal." };
+  }
 
   await prisma.mealSlot.update({
     where: { id: mealSlotId },
@@ -284,6 +302,13 @@ export async function setSlotStatus(
 export async function addHelper(mealSlotId: string, userId: string, helpType: string) {
   const auth = await requireMealManager(await tripIdOfSlot(mealSlotId));
   if ("error" in auth) return auth;
+  // The helper must be a member of this trip — don't let an arbitrary or
+  // cross-trip user id be attached to the meal slot.
+  const member = await prisma.user.findFirst({
+    where: { id: userId, tripId: auth.tripId },
+    select: { id: true },
+  });
+  if (!member) return { error: "That person isn't on this trip." };
   await prisma.mealHelper.create({ data: { mealSlotId, userId, helpType } });
   revalidatePath("/dashboard/meals");
   revalidatePath(`/dashboard/my-trips/${auth.tripId}/meals`);
