@@ -155,6 +155,22 @@ export async function applyToTrip(token: string) {
     return { error: "You own this trip — you can't apply to it." };
   }
 
+  // A user's bed, payments, contributions, and votes are scoped to their
+  // single tripId. Don't silently move someone off a trip they're still on —
+  // only let them apply when they have no trip or have left/been removed.
+  const me = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { tripId: true, status: true },
+  });
+  if (me?.tripId === trip.id && me.status !== "CANCELLED") {
+    return { error: "You've already applied to this trip." };
+  }
+  if (me?.tripId && me.tripId !== trip.id && me.status !== "CANCELLED") {
+    return {
+      error: "You're already on another trip. Withdraw from it before applying to a new one.",
+    };
+  }
+
   await prisma.user.update({
     where: { id: userId },
     data: { tripId: trip.id, status: "PENDING" },
