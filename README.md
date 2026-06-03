@@ -1,6 +1,6 @@
 # The Trip Handler
 
-[![CI](https://github.com/taylordrew4u2/COMEDYSUMMERCAMP/actions/workflows/ci.yml/badge.svg)](https://github.com/taylordrew4u2/COMEDYSUMMERCAMP/actions/workflows/ci.yml)
+[![CI](https://github.com/taylordrew4u2/the-trip-handler/actions/workflows/ci.yml/badge.svg)](https://github.com/taylordrew4u2/the-trip-handler/actions/workflows/ci.yml)
 
 A full-stack Next.js application for organizing group trips. Anyone can create a trip, share a private invite link, collect applications, approve who comes, and plan the logistics — lodging, meals, itinerary, contributions, expenses, and Stripe-collected per-person payments.
 
@@ -59,15 +59,15 @@ The Trip Handler centralizes a trip owner's workflow and each participant's view
 - **File uploads:** Vercel Blob (avatars, lodging photos, expense receipts).
 - **Email:** Resend.
 - **Validation:** Zod.
-- **Hosting:** Vercel (project root is the `comedycampsplit/` subdirectory).
+- **Hosting:** Vercel (deployed from the repository root).
 - **Lint:** ESLint 9 with `eslint-config-next`.
 
 ## Architecture
 
-The repository is a single Next.js application living under `comedycampsplit/`. The root of the repo holds repo-level docs; the app itself is in the subdirectory because Vercel is configured with `Root Directory = comedycampsplit`.
+The repository is a single Next.js application at its root, deployed by Vercel from the repo root.
 
 ```
-comedycampsplit/
+.
 ├── app/
 │   ├── (root pages)         # /, /login, /signup
 │   ├── actions/             # Server actions: auth, trips, board, contributions,
@@ -113,8 +113,8 @@ Everything that changes data goes through a typed server action in `app/actions/
 ## How to Run Locally
 
 ```bash
-git clone https://github.com/taylordrew4u2/COMEDYSUMMERCAMP.git
-cd COMEDYSUMMERCAMP/comedycampsplit
+git clone https://github.com/taylordrew4u2/the-trip-handler.git
+cd the-trip-handler
 npm install
 cp .env.example .env.local   # fill in values, see below
 npm run dev
@@ -151,7 +151,7 @@ NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
 NEXT_PUBLIC_APP_URL=
 ```
 
-`.env.example` at `comedycampsplit/.env.example` is the source of truth for which variables are required.
+`.env.example` at the repository root is the source of truth for which variables are required.
 
 ## Usage
 
