@@ -7,6 +7,7 @@ import { TripEditForm } from "./TripEditForm";
 import { PricingPanel } from "./PricingPanel";
 import { ContributionsPanel } from "./ContributionsPanel";
 import { ExpensesPanel } from "./ExpensesPanel";
+import { BedsPanel } from "./BedsPanel";
 
 export const dynamic = "force-dynamic";
 
@@ -29,7 +30,7 @@ export default async function ManageTripPage({
   });
   if (!trip) redirect("/dashboard/my-trips");
 
-  const [contributions, expenses] = await Promise.all([
+  const [contributions, expenses, beds] = await Promise.all([
     prisma.contribution.findMany({
       where: { tripId },
       orderBy: { createdAt: "desc" },
@@ -39,6 +40,11 @@ export default async function ManageTripPage({
       where: { tripId },
       orderBy: { createdAt: "desc" },
       include: { submitter: { select: { name: true } } },
+    }),
+    prisma.bed.findMany({
+      where: { tripId },
+      orderBy: [{ room: "asc" }, { label: "asc" }],
+      include: { assignments: { include: { user: { select: { name: true } } } } },
     }),
   ]);
 
@@ -57,6 +63,15 @@ export default async function ManageTripPage({
     approved: e.approved,
     submitter: e.submitter?.name ?? null,
     receiptUrl: e.receiptUrl,
+  }));
+
+  const bedData = beds.map((b) => ({
+    id: b.id,
+    label: b.label,
+    room: b.room,
+    type: b.type,
+    womenOnly: b.womenOnly,
+    occupants: b.assignments.map((a) => a.user.name),
   }));
 
   return (
@@ -94,6 +109,7 @@ export default async function ManageTripPage({
           finalPrice: trip.finalPrice,
         }}
       />
+      <BedsPanel tripId={trip.id} beds={bedData} />
       <ContributionsPanel tripId={trip.id} items={contributionData} />
       <ExpensesPanel expenses={expenseData} totalExpenses={trip.totalExpenses} />
     </div>
