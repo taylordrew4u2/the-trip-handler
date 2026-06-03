@@ -24,7 +24,7 @@ coordinate disclosure with you.
 
 In scope:
 
-- The Next.js application in [`comedycampsplit/`](./comedycampsplit).
+- The Next.js application in [`the-trip-handler/`](./the-trip-handler).
 - Authentication and authorization flows (NextAuth + server-action checks).
 - The Stripe Checkout integration and webhook handler.
 - File-upload endpoints (Vercel Blob).
