@@ -3,7 +3,8 @@
 import { randomBytes } from "crypto";
 import { prisma } from "@/lib/db";
 import { authOptions } from "@/lib/auth";
-import { sendApprovalEmail, sendRejectionEmail } from "@/lib/resend";
+import { sendApprovalEmail, sendRejectionEmail, sendTripLockedEmail } from "@/lib/resend";
+import { COST_SHARE_DIVISOR } from "@/lib/pricing";
 import { getServerSession } from "next-auth";
 import { revalidatePath } from "next/cache";
 
@@ -158,5 +159,143 @@ export async function applyToTrip(token: string) {
     data: { tripId: trip.id, status: "PENDING" },
   });
   revalidatePath("/dashboard");
+  return { success: true };
+}
+
+// ---------- pricing (owner-scoped) ----------
+
+export type PriceKind = "housing" | "transport" | "meals";
+
+const PRICE_FIELDS: Record<
+  PriceKind,
+  {
+    amount: "housingPrice" | "transportPrice" | "mealsPrice";
+    locked: "housingLocked" | "transportLocked" | "mealsLocked";
+  }
+> = {
+  housing: { amount: "housingPrice", locked: "housingLocked" },
+  transport: { amount: "transportPrice", locked: "transportLocked" },
+  meals: { amount: "mealsPrice", locked: "mealsLocked" },
+};
+
+/** Set one of the three cost lines on a trip you own. */
+export async function updateMyTripPrice(
+  tripId: string,
+  kind: PriceKind,
+  amount: number | null,
+) {
+  const userId = await currentUserId();
+  if (!userId) return { error: "Sign in first." };
+  const trip = await ownedTrip(tripId, userId);
+  if (!trip) return { error: "Not your trip." };
+  if (trip.isLocked) return { error: "Unlock the trip before editing prices." };
+
+  const fields = PRICE_FIELDS[kind];
+  if (trip[fields.locked]) return { error: "Unlock this line first." };
+  if (amount !== null && (Number.isNaN(amount) || amount < 0)) {
+    return { error: "Amount must be a non-negative number." };
+  }
+
+  await prisma.trip.update({
+    where: { id: tripId },
+    data: { [fields.amount]: amount },
+  });
+  revalidatePath(`/dashboard/my-trips/${tripId}`);
+  return { success: true };
+}
+
+/**
+ * Lock one cost line. When all three lock, the trip auto-solidifies: the
+ * per-person share is computed, the trip locks, this trip's approved
+ * participants move to PENDING_PAYMENT, and each gets a payment email.
+ */
+export async function lockMyTripPrice(tripId: string, kind: PriceKind) {
+  const userId = await currentUserId();
+  if (!userId) return { error: "Sign in first." };
+  const trip = await ownedTrip(tripId, userId);
+  if (!trip) return { error: "Not your trip." };
+
+  const fields = PRICE_FIELDS[kind];
+  if (trip[fields.amount] == null) return { error: "Set an amount before locking." };
+
+  await prisma.trip.update({
+    where: { id: tripId },
+    data: { [fields.locked]: true },
+  });
+
+  const updated = await prisma.trip.findUnique({ where: { id: tripId } });
+  if (
+    updated &&
+    updated.housingLocked &&
+    updated.transportLocked &&
+    updated.mealsLocked &&
+    !updated.isLocked
+  ) {
+    const total =
+      (updated.housingPrice ?? 0) +
+      (updated.transportPrice ?? 0) +
+      (updated.mealsPrice ?? 0);
+    const share = total / COST_SHARE_DIVISOR;
+
+    await prisma.trip.update({
+      where: { id: tripId },
+      data: { finalPrice: share, isLocked: true, lockedAt: new Date() },
+    });
+    // Scope status changes and emails to THIS trip's participants only.
+    await prisma.user.updateMany({
+      where: { tripId, status: "APPROVED" },
+      data: { status: "PENDING_PAYMENT" },
+    });
+    const participants = await prisma.user.findMany({
+      where: { tripId, status: { in: ["PENDING_PAYMENT", "APPROVED"] } },
+    });
+    for (const p of participants) {
+      try {
+        await sendTripLockedEmail(p.email, p.name, share);
+      } catch (e) {
+        console.error("Email failed:", e);
+      }
+    }
+  }
+
+  revalidatePath(`/dashboard/my-trips/${tripId}`);
+  revalidatePath("/dashboard/payment");
+  return { success: true };
+}
+
+export async function unlockMyTripPrice(tripId: string, kind: PriceKind) {
+  const userId = await currentUserId();
+  if (!userId) return { error: "Sign in first." };
+  const trip = await ownedTrip(tripId, userId);
+  if (!trip) return { error: "Not your trip." };
+  if (trip.isLocked) return { error: "Unlock the whole trip first." };
+
+  await prisma.trip.update({
+    where: { id: tripId },
+    data: { [PRICE_FIELDS[kind].locked]: false },
+  });
+  revalidatePath(`/dashboard/my-trips/${tripId}`);
+  return { success: true };
+}
+
+/** Reopen a locked trip for price edits (clears the per-line locks too). */
+export async function unlockMyTrip(tripId: string) {
+  const userId = await currentUserId();
+  if (!userId) return { error: "Sign in first." };
+  if (!(await ownedTrip(tripId, userId))) return { error: "Not your trip." };
+
+  await prisma.trip.update({
+    where: { id: tripId },
+    data: {
+      isLocked: false,
+      lockedAt: null,
+      finalPrice: null,
+      housingLocked: false,
+      transportLocked: false,
+      mealsLocked: false,
+    },
+  });
+  revalidatePath(`/dashboard/my-trips/${tripId}`);
+  revalidatePath("/dashboard/payment");
   return { success: true };
 }
