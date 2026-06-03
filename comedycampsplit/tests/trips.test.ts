@@ -13,13 +13,13 @@ vi.mock("@/lib/blob", () => ({ deleteBlob: vi.fn() }));
 vi.mock("@/lib/db", () => ({
   prisma: {
     trip: { findUnique: vi.fn(), findFirst: vi.fn(), update: vi.fn(), create: vi.fn() },
-    user: { findUnique: vi.fn(), update: vi.fn() },
+    user: { findUnique: vi.fn(), update: vi.fn(), count: vi.fn() },
   },
 }));
 
 import { getServerSession } from "next-auth";
 import { prisma } from "@/lib/db";
-import { createMyTrip, updateMyTrip, applyToTrip } from "@/app/actions/trips";
+import { createMyTrip, updateMyTrip, applyToTrip, unlockMyTrip } from "@/app/actions/trips";
 
 const session = getServerSession as unknown as Mock;
 const tripFindFirst = prisma.trip.findFirst as unknown as Mock;
@@ -76,5 +76,17 @@ describe("applyToTrip", () => {
     expect(await applyToTrip("bad")).toEqual({
       error: "This invite isn't accepting applications.",
     });
+  });
+});
+
+describe("unlockMyTrip", () => {
+  it("refuses to reopen prices once a member has paid", async () => {
+    session.mockResolvedValue({ user: { id: "owner1" } });
+    tripFindFirst.mockResolvedValue({ id: "t1", ownerId: "owner1" }); // ownedTrip
+    (prisma.user.count as unknown as Mock).mockResolvedValue(1); // a CONFIRMED_PAID member
+    expect(await unlockMyTrip("t1")).toEqual({
+      error: "Can't change prices — members have already paid.",
+    });
+    expect(prisma.trip.update).not.toHaveBeenCalled();
   });
 });

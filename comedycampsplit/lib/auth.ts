@@ -14,16 +14,14 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         if (!credentials?.identifier || !credentials?.password) return null;
 
-        // Sign in by email or username. Everyone is a regular member; trips
-        // are managed by whoever creates them.
-        const user = await prisma.user.findFirst({
-          where: {
-            OR: [
-              { email: credentials.identifier },
-              { username: credentials.identifier },
-            ],
-          },
-        });
+        // Sign in by email or username. Resolve email first (both columns are
+        // unique, but a username could equal another user's email, so an
+        // OR/findFirst would be ambiguous); email always wins to keep auth
+        // deterministic. Everyone is a regular member; trips are managed by
+        // whoever creates them.
+        const user =
+          (await prisma.user.findUnique({ where: { email: credentials.identifier } })) ??
+          (await prisma.user.findUnique({ where: { username: credentials.identifier } }));
         if (!user) return null;
 
         const valid = await bcrypt.compare(credentials.password, user.password);

@@ -1,6 +1,7 @@
 "use server";
 
 import { randomBytes } from "crypto";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { authOptions } from "@/lib/auth";
 import { deleteBlob } from "@/lib/blob";
@@ -252,25 +253,31 @@ export async function lockMyTripPrice(tripId: string, kind: PriceKind) {
       (updated.housingPrice ?? 0) +
       (updated.transportPrice ?? 0) +
       (updated.mealsPrice ?? 0);
-    const share = total / COST_SHARE_DIVISOR;
+    // Round to whole cents so the stored amount-owed is exact.
+    const share = Math.round((total / COST_SHARE_DIVISOR) * 100) / 100;
 
-    await prisma.trip.update({
-      where: { id: tripId },
+    // Atomically claim finalization: only the call that actually flips
+    // isLocked from false proceeds to move members and send emails, so two
+    // concurrent/double-fired locks can't double-bill or double-email.
+    const claim = await prisma.trip.updateMany({
+      where: { id: tripId, isLocked: false },
       data: { finalPrice: share, isLocked: true, lockedAt: new Date() },
     });
-    // Scope status changes and emails to THIS trip's participants only.
-    await prisma.user.updateMany({
-      where: { tripId, status: "APPROVED" },
-      data: { status: "PENDING_PAYMENT" },
-    });
-    const participants = await prisma.user.findMany({
-      where: { tripId, status: { in: ["PENDING_PAYMENT", "APPROVED"] } },
-    });
-    for (const p of participants) {
-      try {
-        await sendTripLockedEmail(p.email, p.name, share);
-      } catch (e) {
-        console.error("Email failed:", e);
+    if (claim.count > 0) {
+      // Scope status changes and emails to THIS trip's participants only.
+      await prisma.user.updateMany({
+        where: { tripId, status: "APPROVED" },
+        data: { status: "PENDING_PAYMENT" },
+      });
+      const participants = await prisma.user.findMany({
+        where: { tripId, status: { in: ["PENDING_PAYMENT", "APPROVED"] } },
+      });
+      for (const p of participants) {
+        try {
+          await sendTripLockedEmail(p.email, p.name, share);
+        } catch (e) {
+          console.error("Email failed:", e);
+        }
       }
     }
   }
@@ -300,6 +307,13 @@ export async function unlockMyTrip(tripId: string) {
   const userId = await currentUserId();
   if (!userId) return { error: "Sign in first." };
   if (!(await ownedTrip(tripId, userId))) return { error: "Not your trip." };
+
+  // Once anyone has paid, the price is settled — reopening it would leave
+  // paid members on a stale amount with no clean way to re-bill them.
+  const paid = await prisma.user.count({ where: { tripId, status: "CONFIRMED_PAID" } });
+  if (paid > 0) {
+    return { error: "Can't change prices — members have already paid." };
+  }
 
   await prisma.trip.update({
     where: { id: tripId },
@@ -364,12 +378,15 @@ export async function deleteTripContribution(contributionId: string) {
 
 // ---------- expenses (owner-scoped) ----------
 
-async function recomputeTripExpenses(tripId: string) {
-  const total = await prisma.expense.aggregate({
+// Recompute the trip's approved-expense total inside the caller's
+// transaction, so the expense mutation and the total update commit together
+// and concurrent approvals/deletes can't lose updates.
+async function recomputeTripExpenses(tx: Prisma.TransactionClient, tripId: string) {
+  const total = await tx.expense.aggregate({
     where: { tripId, approved: true },
     _sum: { amount: true },
   });
-  await prisma.trip.update({
+  await tx.trip.update({
     where: { id: tripId },
     data: { totalExpenses: total._sum.amount ?? 0 },
   });
@@ -384,8 +401,10 @@ export async function approveTripExpense(expenseId: string) {
   });
   if (!expense || !(await ownedTrip(expense.tripId, userId))) return { error: "Not your trip." };
 
-  await prisma.expense.update({ where: { id: expenseId }, data: { approved: true } });
-  await recomputeTripExpenses(expense.tripId);
+  await prisma.$transaction(async (tx) => {
+    await tx.expense.update({ where: { id: expenseId }, data: { approved: true } });
+    await recomputeTripExpenses(tx, expense.tripId);
+  });
   revalidatePath(`/dashboard/my-trips/${expense.tripId}`);
   revalidatePath("/dashboard/expenses");
   return { success: true };
@@ -404,8 +423,10 @@ export async function deleteTripExpense(expenseId: string) {
       console.error("Failed to delete receipt blob:", err);
     }
   }
-  await prisma.expense.delete({ where: { id: expenseId } });
-  await recomputeTripExpenses(expense.tripId);
+  await prisma.$transaction(async (tx) => {
+    await tx.expense.delete({ where: { id: expenseId } });
+    await recomputeTripExpenses(tx, expense.tripId);
+  });
   revalidatePath(`/dashboard/my-trips/${expense.tripId}`);
   revalidatePath("/dashboard/expenses");
   return { success: true };
