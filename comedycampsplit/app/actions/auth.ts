@@ -11,7 +11,9 @@ const SignupSchema = z.object({
   username: z.string().optional(),
   bio: z.string().optional(),
   phone: z.string().optional(),
-  tripId: z.string().min(1, "Pick which trip you're applying to."),
+  // Optional: present when applying to a specific trip via an invite link.
+  // Absent when creating a plain account (e.g. to host your own trip).
+  inviteToken: z.string().optional(),
 });
 
 export async function signupAction(formData: FormData) {
@@ -22,7 +24,7 @@ export async function signupAction(formData: FormData) {
     username: (formData.get("username") as string) || undefined,
     bio: (formData.get("bio") as string) || undefined,
     phone: (formData.get("phone") as string) || undefined,
-    tripId: (formData.get("tripId") as string) || "",
+    inviteToken: (formData.get("inviteToken") as string) || undefined,
   };
 
   const parsed = SignupSchema.safeParse(raw);
@@ -30,9 +32,14 @@ export async function signupAction(formData: FormData) {
     return { error: parsed.error.issues[0].message };
   }
 
-  const trip = await prisma.trip.findUnique({ where: { id: raw.tripId } });
-  if (!trip || !trip.isApplicationOpen) {
-    return { error: "That trip isn't accepting applications." };
+  // If they came through an invite link, tie the new account to that trip.
+  let tripId: string | null = null;
+  if (raw.inviteToken) {
+    const trip = await prisma.trip.findUnique({ where: { inviteToken: raw.inviteToken } });
+    if (!trip || !trip.isApplicationOpen) {
+      return { error: "This invite isn't accepting applications." };
+    }
+    tripId = trip.id;
   }
 
   const existing = await prisma.user.findUnique({ where: { email: raw.email } });
@@ -54,7 +61,7 @@ export async function signupAction(formData: FormData) {
       phone: raw.phone || null,
       status: "PENDING",
       role: "PARTICIPANT",
-      tripId: trip.id,
+      tripId,
     },
   });
 

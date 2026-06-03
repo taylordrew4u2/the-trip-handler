@@ -11,7 +11,17 @@ export default async function MemberLayout({ children }: { children: React.React
   const sessionUser = session?.user as { id?: string; status?: string } | undefined;
   if (!sessionUser?.id) redirect("/login");
 
-  // Make sure legacy users without a tripId get attached to the active trip.
+  // A member who hosts a trip but isn't a participant on any trip belongs in
+  // their own trip-management area, not the participant intake flow.
+  const membership = await prisma.user.findUnique({
+    where: { id: sessionUser.id },
+    select: { tripId: true, _count: { select: { ownedTrips: true } } },
+  });
+  if (!membership?.tripId && (membership?._count.ownedTrips ?? 0) > 0) {
+    redirect("/dashboard/my-trips");
+  }
+
+  // Make sure legacy participants without a tripId get attached to the active trip.
   await getUserTripOrActive(sessionUser.id);
 
   // PENDING users with no form must finish the intake first.

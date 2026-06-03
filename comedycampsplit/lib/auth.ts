@@ -10,30 +10,19 @@ export const authOptions: NextAuthOptions = {
       credentials: {
         identifier: { label: "Email or Username", type: "text" },
         password: { label: "Password", type: "password" },
-        isAdmin: { label: "Admin", type: "text" },
       },
       async authorize(credentials) {
         if (!credentials?.identifier || !credentials?.password) return null;
 
-        // Admin login
-        if (credentials.isAdmin === "true") {
-          if (
-            credentials.identifier === "Taylor" &&
-            credentials.password === "weed69"
-          ) {
-            return {
-              id: "admin",
-              email: "admin@comedycampsplit.com",
-              name: "Taylor",
-              role: "ADMIN",
-            };
-          }
-          return null;
-        }
-
-        // Participant login by email
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.identifier },
+        // Sign in by email or username. Everyone is a regular member; trips
+        // are managed by whoever creates them.
+        const user = await prisma.user.findFirst({
+          where: {
+            OR: [
+              { email: credentials.identifier },
+              { username: credentials.identifier },
+            ],
+          },
         });
         if (!user) return null;
 
