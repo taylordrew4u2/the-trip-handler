@@ -82,6 +82,12 @@ export default async function ManageTripPage({
         </Link>
         <h1 className="font-serif text-3xl font-medium text-stone-900 mt-2">{trip.name}</h1>
         <p className="text-stone-500 text-sm mt-1">Edit the details people see on your invite page.</p>
+        <Link
+          href={`/dashboard/my-trips/${trip.id}/meals`}
+          className="inline-block mt-2 text-sm font-medium text-stone-900 underline underline-offset-2"
+        >
+          Manage meal poll →
+        </Link>
       </div>
       <TripEditForm
         tripId={trip.id}

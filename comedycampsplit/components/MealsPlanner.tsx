@@ -196,7 +196,7 @@ export function MealsPlanner({
       )}
 
       {isAdmin && (
-        <AdminPhaseControls phase={phase} completion={completion} run={run} />
+        <AdminPhaseControls tripId={tripId} phase={phase} completion={completion} run={run} />
       )}
 
       {!isAdmin && phase === "suggestions_open" && (
@@ -273,10 +273,12 @@ export function MealsPlanner({
 }
 
 function AdminPhaseControls({
+  tripId,
   phase,
   completion,
   run,
 }: {
+  tripId: string;
   phase: Phase;
   completion: CompletionSummary | null;
   run: <T>(label: string, fn: () => Promise<T>) => Promise<void>;
@@ -290,7 +292,7 @@ function AdminPhaseControls({
         <div className="flex flex-wrap gap-2">
           {phase === "suggestions_open" && (
             <button
-              onClick={() => run("phase-vote", () => setPhase("voting_open"))}
+              onClick={() => run("phase-vote", () => setPhase(tripId, "voting_open"))}
               className="text-xs px-3 py-1.5 bg-stone-100 text-stone-900 rounded-md font-medium hover:bg-white"
             >
               Open voting →
@@ -299,13 +301,13 @@ function AdminPhaseControls({
           {phase === "voting_open" && (
             <>
               <button
-                onClick={() => run("phase-fin", () => setPhase("admin_finalizing"))}
+                onClick={() => run("phase-fin", () => setPhase(tripId, "admin_finalizing"))}
                 className="text-xs px-3 py-1.5 bg-stone-100 text-stone-900 rounded-md font-medium hover:bg-white"
               >
                 Close voting →
               </button>
               <button
-                onClick={() => run("phase-suggest", () => setPhase("suggestions_open"))}
+                onClick={() => run("phase-suggest", () => setPhase(tripId, "suggestions_open"))}
                 className="text-xs px-3 py-1.5 border border-stone-600 text-stone-200 rounded-md hover:bg-stone-800"
               >
                 ← Reopen suggestions
@@ -315,7 +317,7 @@ function AdminPhaseControls({
           {phase === "admin_finalizing" && (
             <>
               <button
-                onClick={() => run("phase-final", () => setPhase("finalized"))}
+                onClick={() => run("phase-final", () => setPhase(tripId, "finalized"))}
                 className="text-xs px-3 py-1.5 bg-emerald-300 text-emerald-950 rounded-md font-medium hover:bg-emerald-200"
               >
                 Finalize meals
@@ -323,14 +325,14 @@ function AdminPhaseControls({
               <button
                 onClick={() => {
                   if (!confirm("Finalize anyway, even though some users haven't voted?")) return;
-                  run("phase-force", () => setPhase("finalized", { force: true }));
+                  run("phase-force", () => setPhase(tripId, "finalized", { force: true }));
                 }}
                 className="text-xs px-3 py-1.5 border border-amber-400 text-amber-200 rounded-md hover:bg-stone-800"
               >
                 Finalize anyway (override)
               </button>
               <button
-                onClick={() => run("phase-vote-back", () => setPhase("voting_open"))}
+                onClick={() => run("phase-vote-back", () => setPhase(tripId, "voting_open"))}
                 className="text-xs px-3 py-1.5 border border-stone-600 text-stone-200 rounded-md hover:bg-stone-800"
               >
                 ← Reopen voting
@@ -341,7 +343,7 @@ function AdminPhaseControls({
             <button
               onClick={() => {
                 if (!confirm("Reopen suggestions? Confirmed meals stay confirmed but you can re-edit.")) return;
-                run("phase-reset", () => setPhase("suggestions_open"));
+                run("phase-reset", () => setPhase(tripId, "suggestions_open"));
               }}
               className="text-xs px-3 py-1.5 border border-stone-600 text-stone-200 rounded-md hover:bg-stone-800"
             >

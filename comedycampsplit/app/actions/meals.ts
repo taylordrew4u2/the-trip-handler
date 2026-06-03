@@ -8,31 +8,58 @@ import { SLOT_DEFS, type Phase } from "@/lib/meals";
 
 const APPROVED = new Set(["APPROVED", "PENDING_PAYMENT", "CONFIRMED_PAID"]);
 
-async function getCurrentTripId(): Promise<string | null> {
-  const { getActiveTrip } = await import("@/lib/trip");
-  const trip = await getActiveTrip();
-  return trip?.id ?? null;
+async function sessionUserId(): Promise<string | null> {
+  const session = await getServerSession(authOptions);
+  const id = (session?.user as { id?: string } | undefined)?.id;
+  return id && id !== "admin" ? id : null;
 }
 
-async function isAdmin(): Promise<boolean> {
-  const session = await getServerSession(authOptions);
-  return (session?.user as { role?: string } | undefined)?.role === "ADMIN";
+/** True when the signed-in user owns the given trip. */
+async function ownsTrip(tripId: string, userId: string): Promise<boolean> {
+  const trip = await prisma.trip.findFirst({
+    where: { id: tripId, ownerId: userId },
+    select: { id: true },
+  });
+  return Boolean(trip);
 }
 
-async function requireApprovedUser(): Promise<{ id: string } | { error: string }> {
-  const session = await getServerSession(authOptions);
-  const u = session?.user as { id?: string; status?: string; role?: string } | undefined;
-  if (!u?.id || u.id === "admin" || u.role === "ADMIN") return { error: "Sign in as a participant first." };
-  if (!APPROVED.has(u.status ?? "")) return { error: "You need to be approved first." };
-  return { id: u.id };
+async function tripIdOfSlot(slotId: string): Promise<string | null> {
+  const slot = await prisma.mealSlot.findUnique({ where: { id: slotId }, select: { tripId: true } });
+  return slot?.tripId ?? null;
+}
+
+/** Authorize a meal-management action on a trip the caller must own. */
+async function requireMealManager(
+  tripId: string | null,
+): Promise<{ tripId: string } | { error: string }> {
+  const userId = await sessionUserId();
+  if (!userId) return { error: "Sign in first." };
+  if (!tripId || !(await ownsTrip(tripId, userId))) return { error: "Not your trip." };
+  return { tripId };
 }
 
 /**
- * Seed the 9 default meal slots and phase row on first page load.
- * Only seeds when the trip has zero slots — admin edits/deletes are preserved.
+ * Authorize a participant action on a specific trip: the caller must be an
+ * approved member of that trip.
  */
-export async function ensureMealPlanSetup() {
-  const tripId = await getCurrentTripId();
+async function requireApprovedMember(tripId: string): Promise<{ id: string } | { error: string }> {
+  const userId = await sessionUserId();
+  if (!userId) return { error: "Sign in as a participant first." };
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { status: true, tripId: true, role: true },
+  });
+  if (!user || user.role === "ADMIN") return { error: "Sign in as a participant first." };
+  if (user.tripId !== tripId) return { error: "That meal isn't on your trip." };
+  if (!APPROVED.has(user.status ?? "")) return { error: "You need to be approved first." };
+  return { id: userId };
+}
+
+/**
+ * Seed the default meal slots and phase row for a trip on first view.
+ * Only seeds when the trip has zero slots — owner edits/deletes are preserved.
+ */
+export async function ensureMealPlanSetup(tripId: string) {
   if (!tripId) return;
 
   const slotCount = await prisma.mealSlot.count({ where: { tripId } });
@@ -50,21 +77,16 @@ export async function ensureMealPlanSetup() {
 
   await prisma.mealPlanPhase.upsert({
     where: { tripId },
-    create: {
-      tripId,
-      currentPhase: "suggestions_open",
-      suggestionsOpenedAt: new Date(),
-    },
+    create: { tripId, currentPhase: "suggestions_open", suggestionsOpenedAt: new Date() },
     update: {},
   });
 }
 
-// ---------- Slot management (admin only) ----------
+// ---------- Slot management (trip owner) ----------
 
-export async function addMealSlot(formData: FormData) {
-  if (!(await isAdmin())) return { error: "Admin only." };
-  const tripId = await getCurrentTripId();
-  if (!tripId) return { error: "No trip yet." };
+export async function addMealSlot(tripId: string, formData: FormData) {
+  const auth = await requireMealManager(tripId);
+  if ("error" in auth) return auth;
 
   const dayName = ((formData.get("dayName") as string) ?? "").trim();
   const mealType = ((formData.get("mealType") as string) ?? "").trim();
@@ -76,25 +98,18 @@ export async function addMealSlot(formData: FormData) {
   });
   if (existing) return { error: `${dayName} ${mealType} already exists.` };
 
-  const max = await prisma.mealSlot.aggregate({
-    where: { tripId },
-    _max: { orderIndex: true },
-  });
+  const max = await prisma.mealSlot.aggregate({ where: { tripId }, _max: { orderIndex: true } });
   const orderIndex = (max._max.orderIndex ?? -1) + 1;
 
-  await prisma.mealSlot.create({
-    data: { tripId, dayName, mealType, orderIndex, isOptional },
-  });
-
+  await prisma.mealSlot.create({ data: { tripId, dayName, mealType, orderIndex, isOptional } });
   revalidatePath("/dashboard/meals");
-  revalidatePath("/admin/meal-plan");
+  revalidatePath(`/dashboard/my-trips/${tripId}/meals`);
   return { success: true };
 }
 
 export async function editMealSlot(slotId: string, formData: FormData) {
-  if (!(await isAdmin())) return { error: "Admin only." };
-  const tripId = await getCurrentTripId();
-  if (!tripId) return { error: "No trip yet." };
+  const auth = await requireMealManager(await tripIdOfSlot(slotId));
+  if ("error" in auth) return auth;
 
   const dayName = ((formData.get("dayName") as string) ?? "").trim();
   const mealType = ((formData.get("mealType") as string) ?? "").trim();
@@ -102,37 +117,31 @@ export async function editMealSlot(slotId: string, formData: FormData) {
   if (!dayName || !mealType) return { error: "Day and meal type are required." };
 
   const conflict = await prisma.mealSlot.findUnique({
-    where: { tripId_dayName_mealType: { tripId, dayName, mealType } },
+    where: { tripId_dayName_mealType: { tripId: auth.tripId, dayName, mealType } },
   });
-  if (conflict && conflict.id !== slotId) {
-    return { error: `${dayName} ${mealType} already exists.` };
-  }
+  if (conflict && conflict.id !== slotId) return { error: `${dayName} ${mealType} already exists.` };
 
-  await prisma.mealSlot.update({
-    where: { id: slotId },
-    data: { dayName, mealType, isOptional },
-  });
-
+  await prisma.mealSlot.update({ where: { id: slotId }, data: { dayName, mealType, isOptional } });
   revalidatePath("/dashboard/meals");
-  revalidatePath("/admin/meal-plan");
+  revalidatePath(`/dashboard/my-trips/${auth.tripId}/meals`);
   return { success: true };
 }
 
 export async function deleteMealSlot(slotId: string) {
-  if (!(await isAdmin())) return { error: "Admin only." };
+  const auth = await requireMealManager(await tripIdOfSlot(slotId));
+  if ("error" in auth) return auth;
   // Cascades: suggestions, votes, helpers, groceries are all onDelete: Cascade.
   await prisma.mealSlot.delete({ where: { id: slotId } });
   revalidatePath("/dashboard/meals");
-  revalidatePath("/admin/meal-plan");
+  revalidatePath(`/dashboard/my-trips/${auth.tripId}/meals`);
   return { success: true };
 }
 
-// ---------- Phase transitions (admin only) ----------
+// ---------- Phase transitions (trip owner) ----------
 
-export async function setPhase(next: Phase, opts?: { force?: boolean }) {
-  if (!(await isAdmin())) return { error: "Admin only." };
-  const tripId = await getCurrentTripId();
-  if (!tripId) return { error: "No trip yet." };
+export async function setPhase(tripId: string, next: Phase, opts?: { force?: boolean }) {
+  const auth = await requireMealManager(tripId);
+  if ("error" in auth) return auth;
 
   const data: Record<string, Date | string> = { currentPhase: next };
   const now = new Date();
@@ -141,9 +150,8 @@ export async function setPhase(next: Phase, opts?: { force?: boolean }) {
   if (next === "admin_finalizing") data.votingClosedAt = now;
   if (next === "finalized") data.finalizedAt = now;
 
-  // Optional safety: guard finalize behind the "force" flag if not all required votes done.
   if (next === "finalized" && !opts?.force) {
-    const incomplete = await votingCompletionSummary();
+    const incomplete = await votingCompletionSummary(tripId);
     if (incomplete && incomplete.usersIncomplete > 0) {
       return {
         error: `${incomplete.usersIncomplete} user(s) haven't finished voting. Use "Finalize anyway" to override.`,
@@ -158,63 +166,69 @@ export async function setPhase(next: Phase, opts?: { force?: boolean }) {
   });
 
   revalidatePath("/dashboard/meals");
-  revalidatePath("/admin/meal-plan");
+  revalidatePath(`/dashboard/my-trips/${tripId}/meals`);
   return { success: true };
 }
 
-// ---------- Suggestions ----------
+// ---------- Suggestions (participant) ----------
 
 export async function createSuggestion(formData: FormData) {
-  const auth = await requireApprovedUser();
+  const mealSlotId = formData.get("mealSlotId") as string;
+  if (!mealSlotId) return { error: "Pick a slot." };
+  const tripId = await tripIdOfSlot(mealSlotId);
+  if (!tripId) return { error: "Meal slot not found." };
+
+  const auth = await requireApprovedMember(tripId);
   if ("error" in auth) return auth;
 
-  const tripId = await getCurrentTripId();
-  if (!tripId) return { error: "No trip yet." };
   const phase = await prisma.mealPlanPhase.findUnique({ where: { tripId } });
   if (!["suggestions_open", "voting_open"].includes(phase?.currentPhase ?? "")) {
     return { error: "Suggestions are closed." };
   }
 
-  const mealSlotId = formData.get("mealSlotId") as string;
   const mealName = ((formData.get("mealName") as string) ?? "").trim();
   const note = ((formData.get("note") as string) ?? "").trim() || null;
   const helpOffered = formData.getAll("helpOffered").map((v) => v.toString());
   const dietaryTags = formData.getAll("dietaryTags").map((v) => v.toString());
-
-  if (!mealSlotId || !mealName) return { error: "Pick a slot and a meal name." };
+  if (!mealName) return { error: "Enter a meal name." };
 
   await prisma.mealSuggestion.create({
     data: { mealSlotId, mealName, submittedByUserId: auth.id, note, helpOffered, dietaryTags },
   });
 
   revalidatePath("/dashboard/meals");
-  revalidatePath("/admin/meal-plan");
   return { success: true };
 }
 
 export async function deleteSuggestion(suggestionId: string) {
-  const session = await getServerSession(authOptions);
-  const u = session?.user as { id?: string; role?: string } | undefined;
-  if (!u?.id) return { error: "Sign in first." };
+  const userId = await sessionUserId();
+  if (!userId) return { error: "Sign in first." };
 
-  const s = await prisma.mealSuggestion.findUnique({ where: { id: suggestionId } });
+  const s = await prisma.mealSuggestion.findUnique({
+    where: { id: suggestionId },
+    include: { mealSlot: { select: { tripId: true } } },
+  });
   if (!s) return { success: true };
-  if (s.submittedByUserId !== u.id && u.role !== "ADMIN") return { error: "Not yours." };
+
+  const isSubmitter = s.submittedByUserId === userId;
+  const isOwner = await ownsTrip(s.mealSlot.tripId, userId);
+  if (!isSubmitter && !isOwner) return { error: "Not yours." };
 
   await prisma.mealSuggestion.delete({ where: { id: suggestionId } });
   revalidatePath("/dashboard/meals");
-  revalidatePath("/admin/meal-plan");
+  revalidatePath(`/dashboard/my-trips/${s.mealSlot.tripId}/meals`);
   return { success: true };
 }
 
-// ---------- Voting ----------
+// ---------- Voting (participant) ----------
 
 export async function castVote(mealSlotId: string, suggestionId: string | null, isDontCare: boolean) {
-  const auth = await requireApprovedUser();
+  const tripId = await tripIdOfSlot(mealSlotId);
+  if (!tripId) return { error: "Meal slot not found." };
+
+  const auth = await requireApprovedMember(tripId);
   if ("error" in auth) return auth;
 
-  const tripId = await getCurrentTripId();
-  if (!tripId) return { error: "No trip yet." };
   const phase = await prisma.mealPlanPhase.findUnique({ where: { tripId } });
   if (!["suggestions_open", "voting_open"].includes(phase?.currentPhase ?? "")) {
     return { error: "Voting is closed." };
@@ -225,27 +239,19 @@ export async function castVote(mealSlotId: string, suggestionId: string | null, 
 
   await prisma.mealVote.upsert({
     where: { userId_mealSlotId: { userId: auth.id, mealSlotId } },
-    create: {
-      userId: auth.id,
-      mealSlotId,
-      suggestionId: isDontCare ? null : suggestionId,
-      isDontCare,
-    },
-    update: {
-      suggestionId: isDontCare ? null : suggestionId,
-      isDontCare,
-    },
+    create: { userId: auth.id, mealSlotId, suggestionId: isDontCare ? null : suggestionId, isDontCare },
+    update: { suggestionId: isDontCare ? null : suggestionId, isDontCare },
   });
 
   revalidatePath("/dashboard/meals");
-  revalidatePath("/admin/meal-plan");
   return { success: true };
 }
 
-// ---------- Admin: finalize ----------
+// ---------- Finalize / slot status (trip owner) ----------
 
 export async function confirmMeal(mealSlotId: string, suggestionId: string | null, overrideNote?: string) {
-  if (!(await isAdmin())) return { error: "Admin only." };
+  const auth = await requireMealManager(await tripIdOfSlot(mealSlotId));
+  if ("error" in auth) return auth;
 
   await prisma.mealSlot.update({
     where: { id: mealSlotId },
@@ -257,73 +263,96 @@ export async function confirmMeal(mealSlotId: string, suggestionId: string | nul
   });
 
   revalidatePath("/dashboard/meals");
-  revalidatePath("/admin/meal-plan");
+  revalidatePath(`/dashboard/my-trips/${auth.tripId}/meals`);
   return { success: true };
 }
 
-export async function setSlotStatus(mealSlotId: string, status: "PENDING" | "CONFIRMED" | "GROCERIES_BOUGHT" | "HANDLED") {
-  if (!(await isAdmin())) return { error: "Admin only." };
+export async function setSlotStatus(
+  mealSlotId: string,
+  status: "PENDING" | "CONFIRMED" | "GROCERIES_BOUGHT" | "HANDLED",
+) {
+  const auth = await requireMealManager(await tripIdOfSlot(mealSlotId));
+  if ("error" in auth) return auth;
   await prisma.mealSlot.update({ where: { id: mealSlotId }, data: { status } });
   revalidatePath("/dashboard/meals");
-  revalidatePath("/admin/meal-plan");
+  revalidatePath(`/dashboard/my-trips/${auth.tripId}/meals`);
   return { success: true };
 }
 
 // ---------- Helpers (cook/prep/shop/clean) ----------
 
 export async function addHelper(mealSlotId: string, userId: string, helpType: string) {
-  if (!(await isAdmin())) return { error: "Admin only." };
+  const auth = await requireMealManager(await tripIdOfSlot(mealSlotId));
+  if ("error" in auth) return auth;
   await prisma.mealHelper.create({ data: { mealSlotId, userId, helpType } });
   revalidatePath("/dashboard/meals");
-  revalidatePath("/admin/meal-plan");
+  revalidatePath(`/dashboard/my-trips/${auth.tripId}/meals`);
   return { success: true };
 }
 
 export async function removeHelper(helperId: string) {
-  if (!(await isAdmin())) return { error: "Admin only." };
+  const helper = await prisma.mealHelper.findUnique({
+    where: { id: helperId },
+    include: { mealSlot: { select: { tripId: true } } },
+  });
+  if (!helper) return { success: true };
+  const auth = await requireMealManager(helper.mealSlot.tripId);
+  if ("error" in auth) return auth;
   await prisma.mealHelper.delete({ where: { id: helperId } });
   revalidatePath("/dashboard/meals");
-  revalidatePath("/admin/meal-plan");
+  revalidatePath(`/dashboard/my-trips/${helper.mealSlot.tripId}/meals`);
   return { success: true };
 }
 
-// ---------- Groceries ----------
+// ---------- Groceries (trip owner) ----------
 
 export async function addGroceryItem(formData: FormData) {
-  if (!(await isAdmin())) return { error: "Admin only." };
   const mealSlotId = formData.get("mealSlotId") as string;
+  if (!mealSlotId) return { error: "Missing slot." };
+  const auth = await requireMealManager(await tripIdOfSlot(mealSlotId));
+  if ("error" in auth) return auth;
+
   const name = ((formData.get("name") as string) ?? "").trim();
   const category = ((formData.get("category") as string) ?? "Other").trim();
   const quantity = ((formData.get("quantity") as string) ?? "").trim() || null;
   const notes = ((formData.get("notes") as string) ?? "").trim() || null;
-  if (!mealSlotId || !name) return { error: "Missing fields." };
+  if (!name) return { error: "Enter an item name." };
 
   await prisma.groceryItem.create({ data: { mealSlotId, name, category, quantity, notes } });
   revalidatePath("/dashboard/meals");
-  revalidatePath("/admin/meal-plan");
+  revalidatePath(`/dashboard/my-trips/${auth.tripId}/meals`);
   return { success: true };
 }
 
+async function tripIdOfGrocery(itemId: string): Promise<string | null> {
+  const item = await prisma.groceryItem.findUnique({
+    where: { id: itemId },
+    include: { mealSlot: { select: { tripId: true } } },
+  });
+  return item?.mealSlot.tripId ?? null;
+}
+
 export async function toggleBought(itemId: string, bought: boolean) {
-  if (!(await isAdmin())) return { error: "Admin only." };
+  const auth = await requireMealManager(await tripIdOfGrocery(itemId));
+  if ("error" in auth) return auth;
   await prisma.groceryItem.update({ where: { id: itemId }, data: { bought } });
   revalidatePath("/dashboard/meals");
-  revalidatePath("/admin/meal-plan");
+  revalidatePath(`/dashboard/my-trips/${auth.tripId}/meals`);
   return { success: true };
 }
 
 export async function deleteGroceryItem(itemId: string) {
-  if (!(await isAdmin())) return { error: "Admin only." };
+  const auth = await requireMealManager(await tripIdOfGrocery(itemId));
+  if ("error" in auth) return auth;
   await prisma.groceryItem.delete({ where: { id: itemId } });
   revalidatePath("/dashboard/meals");
-  revalidatePath("/admin/meal-plan");
+  revalidatePath(`/dashboard/my-trips/${auth.tripId}/meals`);
   return { success: true };
 }
 
-// ---------- Voting completion summary (for admin panel + user tracker) ----------
+// ---------- Voting completion summary (owner panel + user tracker) ----------
 
-async function votingCompletionSummary() {
-  const tripId = await getCurrentTripId();
+async function votingCompletionSummary(tripId: string) {
   if (!tripId) return null;
 
   const requiredSlots = await prisma.mealSlot.findMany({
