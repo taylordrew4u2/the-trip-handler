@@ -1,0 +1,8 @@
+# Build artifacts and dependencies that may appear at the repo root.
+# The Next.js app keeps its own .gitignore in comedycampsplit/.
+.next/
+node_modules/
+*.tsbuildinfo
+.DS_Store
+.env
+.env*.local

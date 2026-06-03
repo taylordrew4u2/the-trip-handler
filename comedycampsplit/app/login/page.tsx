@@ -54,15 +54,12 @@ export default async function LoginPage() {
 
         <LoginForm />
 
-        <div className="mt-6 text-center space-y-2">
+        <div className="mt-6 text-center">
           <p className="text-sm text-stone-600">
             New here?{" "}
             <Link href="/signup" className="text-stone-900 font-medium underline underline-offset-2 decoration-stone-300 hover:decoration-stone-900">
-              Apply for a trip
+              Create an account
             </Link>
-          </p>
-          <p className="text-xs text-stone-400">
-            <Link href="/admin" className="hover:text-stone-700">Admin login →</Link>
           </p>
         </div>
       </div>

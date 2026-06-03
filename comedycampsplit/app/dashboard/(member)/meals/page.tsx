@@ -17,8 +17,8 @@ export default async function MealsPage() {
   if (!isApproved(sessionUser?.status)) return <ApprovalRequired what="Meal planning" />;
   const userId = sessionUser?.id ?? "";
 
-  await ensureMealPlanSetup();
   const trip = await getUserTripOrActive(userId);
+  if (trip) await ensureMealPlanSetup(trip.id);
 
   const [slots, phase, completion] = await Promise.all([
     prisma.mealSlot.findMany({
@@ -37,7 +37,7 @@ export default async function MealsPage() {
       },
     }),
     trip ? prisma.mealPlanPhase.findUnique({ where: { tripId: trip.id } }) : null,
-    votingCompletionSummary(),
+    trip ? votingCompletionSummary(trip.id) : null,
   ]);
 
   return (

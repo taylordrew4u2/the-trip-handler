@@ -4,9 +4,9 @@ import { useState } from "react";
 import { signupAction } from "@/app/actions/auth";
 import Link from "next/link";
 
-interface TripOption {
-  id: string;
-  name: string;
+interface InviteInfo {
+  token: string;
+  tripName: string;
   destination: string | null;
   startDate: Date | string | null;
   endDate: Date | string | null;
@@ -21,25 +21,26 @@ function dateLabel(start: Date | string | null, end: Date | string | null): stri
   return "Dates TBD";
 }
 
-export function SignupForm({ trips }: { trips: TripOption[] }) {
+/**
+ * Account creation. In invite mode (an `invite` is passed) the new account is
+ * tied to that trip as an application. Without an invite it's a plain account
+ * the person can use to host their own trips or apply later via a link.
+ */
+export function SignupForm({ invite }: { invite?: InviteInfo | null }) {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [tripId, setTripId] = useState<string>(trips[0]?.id ?? "");
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
     setError("");
     const formData = new FormData(e.currentTarget);
-    if (!formData.get("tripId")) formData.set("tripId", tripId);
+    if (invite) formData.set("inviteToken", invite.token);
     const result = await signupAction(formData);
     setLoading(false);
-    if (result.error) {
-      setError(result.error);
-    } else {
-      setSuccess(true);
-    }
+    if (result.error) setError(result.error);
+    else setSuccess(true);
   }
 
   if (success) {
@@ -47,11 +48,20 @@ export function SignupForm({ trips }: { trips: TripOption[] }) {
       <div className="w-full max-w-md text-center">
         <p className="text-xs uppercase tracking-[0.2em] text-stone-500 mb-3">Account created</p>
         <h1 className="font-serif text-3xl font-medium text-stone-900 mb-3">
-          One more step.
+          {invite ? "One more step." : "You're all set."}
         </h1>
         <p className="text-stone-600 mb-8 leading-relaxed">
-          Sign in and complete the <strong>guest form</strong> — admin reviews this before
-          approving you for the trip. We&apos;ll email you once you&apos;re in.
+          {invite ? (
+            <>
+              Sign in and complete the <strong>guest form</strong> — the trip&apos;s organizer
+              reviews this before approving you. We&apos;ll email you once you&apos;re in.
+            </>
+          ) : (
+            <>
+              Sign in to <strong>host your own trip</strong> and invite people, or apply to a
+              trip you&apos;ve been invited to.
+            </>
+          )}
         </p>
         <Link
           href="/login"
@@ -63,19 +73,21 @@ export function SignupForm({ trips }: { trips: TripOption[] }) {
     );
   }
 
-  if (trips.length === 0) {
-    return (
-      <div className="bg-white rounded-xl border border-stone-200 p-7 text-center">
-        <p className="text-sm text-stone-700">
-          No trips are accepting applications right now. Check back later.
-        </p>
-      </div>
-    );
-  }
-
   return (
     <>
       <div className="bg-white rounded-xl border border-stone-200 p-7">
+        {invite && (
+          <div className="mb-5 rounded-lg border border-stone-900 bg-stone-50 px-4 py-3">
+            <p className="text-xs uppercase tracking-wide text-stone-500">You&apos;re applying to</p>
+            <p className="text-sm font-medium text-stone-900 mt-0.5">{invite.tripName}</p>
+            <p className="text-xs text-stone-500 mt-0.5">
+              {[invite.destination, dateLabel(invite.startDate, invite.endDate)]
+                .filter(Boolean)
+                .join(" · ")}
+            </p>
+          </div>
+        )}
+
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2 mb-4 text-sm">
             {error}
@@ -83,41 +95,6 @@ export function SignupForm({ trips }: { trips: TripOption[] }) {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <fieldset>
-            <legend className="block text-xs font-medium text-stone-700 mb-2 tracking-wide">
-              WHICH TRIP? *
-            </legend>
-            <div className="space-y-2">
-              {trips.map((t) => (
-                <label
-                  key={t.id}
-                  className={`flex items-start gap-3 px-3 py-2.5 rounded-lg border cursor-pointer transition-colors ${
-                    tripId === t.id
-                      ? "border-stone-900 bg-stone-50"
-                      : "border-stone-300 hover:bg-stone-50"
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="tripId"
-                    value={t.id}
-                    checked={tripId === t.id}
-                    onChange={() => setTripId(t.id)}
-                    className="mt-0.5 accent-stone-900"
-                    required
-                  />
-                  <span className="text-sm">
-                    <span className="block font-medium text-stone-900">{t.name}</span>
-                    <span className="block text-xs text-stone-500 mt-0.5">
-                      {[t.destination, dateLabel(t.startDate, t.endDate)]
-                        .filter(Boolean)
-                        .join(" · ")}
-                    </span>
-                  </span>
-                </label>
-              ))}
-            </div>
-          </fieldset>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-medium text-stone-700 mb-1.5 tracking-wide">NAME *</label>
@@ -173,7 +150,7 @@ export function SignupForm({ trips }: { trips: TripOption[] }) {
             disabled={loading}
             className="w-full py-2.5 px-4 bg-stone-900 hover:bg-stone-800 text-white rounded-lg font-medium text-sm transition-colors disabled:opacity-50 mt-2"
           >
-            {loading ? "Submitting…" : "Apply for trip"}
+            {loading ? "Submitting…" : invite ? `Apply to ${invite.tripName}` : "Create account"}
           </button>
         </form>
       </div>
