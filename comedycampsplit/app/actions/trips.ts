@@ -3,6 +3,7 @@
 import { randomBytes } from "crypto";
 import { prisma } from "@/lib/db";
 import { authOptions } from "@/lib/auth";
+import { deleteBlob } from "@/lib/blob";
 import { sendApprovalEmail, sendRejectionEmail, sendTripLockedEmail } from "@/lib/resend";
 import { COST_SHARE_DIVISOR } from "@/lib/pricing";
 import { getServerSession } from "next-auth";
@@ -297,5 +298,99 @@ export async function unlockMyTrip(tripId: string) {
   });
   revalidatePath(`/dashboard/my-trips/${tripId}`);
   revalidatePath("/dashboard/payment");
+  return { success: true };
+}
+
+// ---------- contributions (owner-scoped) ----------
+
+/** Post an item for participants to bring on a trip you own. */
+export async function addTripContribution(
+  tripId: string,
+  title: string,
+  description?: string,
+  category?: string,
+) {
+  const userId = await currentUserId();
+  if (!userId) return { error: "Sign in first." };
+  if (!(await ownedTrip(tripId, userId))) return { error: "Not your trip." };
+
+  const trimmed = title.trim();
+  if (!trimmed) return { error: "Give the item a title." };
+
+  await prisma.contribution.create({
+    data: {
+      tripId,
+      title: trimmed,
+      description: description?.trim() || undefined,
+      category: category?.trim() || undefined,
+    },
+  });
+  revalidatePath(`/dashboard/my-trips/${tripId}`);
+  revalidatePath("/dashboard/contributions");
+  return { success: true };
+}
+
+export async function deleteTripContribution(contributionId: string) {
+  const userId = await currentUserId();
+  if (!userId) return { error: "Sign in first." };
+  const item = await prisma.contribution.findUnique({
+    where: { id: contributionId },
+    select: { tripId: true },
+  });
+  if (!item || !(await ownedTrip(item.tripId, userId))) return { error: "Not your trip." };
+
+  await prisma.userContribution.deleteMany({ where: { contributionId } });
+  await prisma.contribution.delete({ where: { id: contributionId } });
+  revalidatePath(`/dashboard/my-trips/${item.tripId}`);
+  revalidatePath("/dashboard/contributions");
+  return { success: true };
+}
+
+// ---------- expenses (owner-scoped) ----------
+
+async function recomputeTripExpenses(tripId: string) {
+  const total = await prisma.expense.aggregate({
+    where: { tripId, approved: true },
+    _sum: { amount: true },
+  });
+  await prisma.trip.update({
+    where: { id: tripId },
+    data: { totalExpenses: total._sum.amount ?? 0 },
+  });
+}
+
+export async function approveTripExpense(expenseId: string) {
+  const userId = await currentUserId();
+  if (!userId) return { error: "Sign in first." };
+  const expense = await prisma.expense.findUnique({
+    where: { id: expenseId },
+    select: { tripId: true },
+  });
+  if (!expense || !(await ownedTrip(expense.tripId, userId))) return { error: "Not your trip." };
+
+  await prisma.expense.update({ where: { id: expenseId }, data: { approved: true } });
+  await recomputeTripExpenses(expense.tripId);
+  revalidatePath(`/dashboard/my-trips/${expense.tripId}`);
+  revalidatePath("/dashboard/expenses");
+  return { success: true };
+}
+
+export async function deleteTripExpense(expenseId: string) {
+  const userId = await currentUserId();
+  if (!userId) return { error: "Sign in first." };
+  const expense = await prisma.expense.findUnique({ where: { id: expenseId } });
+  if (!expense || !(await ownedTrip(expense.tripId, userId))) return { error: "Not your trip." };
+
+  if (expense.receiptUrl) {
+    try {
+      await deleteBlob(expense.receiptUrl);
+    } catch (err) {
+      console.error("Failed to delete receipt blob:", err);
+    }
+  }
+  await prisma.expense.delete({ where: { id: expenseId } });
+  await recomputeTripExpenses(expense.tripId);
+  revalidatePath(`/dashboard/my-trips/${expense.tripId}`);
+  revalidatePath("/dashboard/expenses");
   return { success: true };
 }

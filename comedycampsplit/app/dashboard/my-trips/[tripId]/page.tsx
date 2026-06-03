@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { TripEditForm } from "./TripEditForm";
 import { PricingPanel } from "./PricingPanel";
+import { ContributionsPanel } from "./ContributionsPanel";
+import { ExpensesPanel } from "./ExpensesPanel";
 
 export const dynamic = "force-dynamic";
 
@@ -26,6 +28,36 @@ export default async function ManageTripPage({
     where: { id: tripId, ownerId: userId },
   });
   if (!trip) redirect("/dashboard/my-trips");
+
+  const [contributions, expenses] = await Promise.all([
+    prisma.contribution.findMany({
+      where: { tripId },
+      orderBy: { createdAt: "desc" },
+      include: { users: { include: { user: { select: { name: true } } } } },
+    }),
+    prisma.expense.findMany({
+      where: { tripId },
+      orderBy: { createdAt: "desc" },
+      include: { submitter: { select: { name: true } } },
+    }),
+  ]);
+
+  const contributionData = contributions.map((c) => ({
+    id: c.id,
+    title: c.title,
+    category: c.category,
+    claimedBy: c.users.map((u) => u.user.name),
+  }));
+
+  const expenseData = expenses.map((e) => ({
+    id: e.id,
+    title: e.title,
+    amount: e.amount,
+    category: e.category,
+    approved: e.approved,
+    submitter: e.submitter?.name ?? null,
+    receiptUrl: e.receiptUrl,
+  }));
 
   return (
     <div className="space-y-6">
@@ -62,6 +94,8 @@ export default async function ManageTripPage({
           finalPrice: trip.finalPrice,
         }}
       />
+      <ContributionsPanel tripId={trip.id} items={contributionData} />
+      <ExpensesPanel expenses={expenseData} totalExpenses={trip.totalExpenses} />
     </div>
   );
 }
