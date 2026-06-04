@@ -145,13 +145,8 @@ Everything that changes data goes through a typed server action in `app/actions/
 ## How to Run Locally
 
 ```bash
-<<<<<<< HEAD
 git clone https://github.com/taylordrew4u2/the-trip-handler.git
 cd the-trip-handler
-=======
-git clone https://github.com/taylordrew4u2/COMEDYSUMMERCAMP.git
-cd COMEDYSUMMERCAMP/the-trip-handler
->>>>>>> claude/rename-app-folder
 npm install
 cp .env.example .env.local   # fill in values, see below
 npm run dev
