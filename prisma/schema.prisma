@@ -17,6 +17,7 @@ model User {
   avatarUrl     String?
   status        UserStatus    @default(PENDING)
   role          Role          @default(PARTICIPANT)
+  rejectedTripId String?      // set when an owner rejects this user's application; blocks re-applying to that trip
   phone         String?
   gender        String?
   sleepTags     String[]      @default([])
