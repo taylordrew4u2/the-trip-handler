@@ -82,7 +82,7 @@ The Trip Handler centralizes a trip owner's workflow and each participant's view
 - **Framework:** Next.js 16 (App Router) with React 19, server components, and server actions.
 - **Styling:** Tailwind CSS v4 (via `@tailwindcss/postcss`) and a custom serif/sans system (Fraunces + Inter).
 - **Database:** PostgreSQL (Vercel Postgres in production).
-- **ORM:** Prisma v5 (`prisma generate` + `prisma db push` on every build; no migration history kept in repo).
+- **ORM:** Prisma v5 (`prisma generate` + versioned `prisma migrate deploy` on every build; migration history committed under `prisma/migrations`).
 - **Authentication:** NextAuth.js v4, credentials provider, JWT sessions, bcrypt password hashing.
 - **Payments:** Stripe (Checkout sessions + signed webhook endpoint).
 - **File uploads:** Vercel Blob (avatars, lodging photos, expense receipts).
@@ -154,9 +154,11 @@ The dev server runs at `http://localhost:3000`.
 ### Build, lint, database scripts
 
 ```bash
-npm run build      # prisma generate && prisma db push && next build
+npm run build      # prisma generate && apply migrations && next build
 npm run lint       # ESLint
-npm run db:push    # Apply schema to the database
+npm run db:migrate # Create a new migration from schema changes (dev)
+npm run db:deploy  # Apply committed migrations to the database
+npm run db:push    # Push schema without a migration (prototyping only)
 npm run db:seed    # Seed a demo organizer + trip + applicants (see Live Demo)
 npm run db:studio  # Open Prisma Studio
 ```
@@ -207,7 +209,7 @@ After running the app locally and seeding the database:
 ## Technical Decisions
 
 - **Next.js App Router + server actions.** Picked over a separate Express/REST backend because every mutation has session context and Postgres access, so co-locating the auth check, validation, and DB write in one server action removes an entire layer of API surface area. Easier to audit ("does every server action check the session?") than scanning a sprawling API route tree.
-- **Prisma + `prisma db push`, no migration history.** The schema is owned by one developer and Vercel runs `prisma db push --accept-data-loss` on each build; this is documented as intentional and appropriate for the trade-off here, but is called out under "Known Limitations" because it is not suitable for data you can't afford to lose.
+- **Prisma with versioned migrations.** Migration history is committed under `prisma/migrations`, and Vercel runs `prisma migrate deploy` on each build (via `scripts/db-deploy.sh`), so schema changes are reviewable in the diff and applied without dropping data. CI applies the migrations to a real Postgres and fails on any drift between `schema.prisma` and the committed migrations, so the two can never silently diverge.
 - **Status machine over feature flags.** Access control is keyed off a single enum (`PENDING`/`APPROVED`/`PENDING_PAYMENT`/`CONFIRMED_PAID`/`CANCELLED`) rather than scattered boolean flags. `lib/approval.ts` centralizes the "is this user approved for X" predicate.
 - **Server-side authorization first, UI affordances second.** Read-only mode on the itinerary for pending users hides the comment composer in the client, but the underlying `createItineraryComment` server action also rejects the call from any unapproved user. The UI change is a hint, not the security boundary.
 - **Ownership checks for owner actions.** Trip-management actions resolve the trip from its id and confirm `trip.ownerId === session.user.id` before mutating, so a member can never act on a trip they don't own even by crafting the request directly.
@@ -257,8 +259,6 @@ A dedicated accessibility audit (screen reader testing, focus management, keyboa
 
 ## Known Limitations
 
-- No automated test suite.
-- Prisma migration history is not committed; the app uses `prisma db push --accept-data-loss` at build time.
 - The deeper relational subsystems (per-person cost-split lock/solidify, bed-layout setup, meal-poll phase control, contribution posting, expense approval) are modeled and partly surfaced to participants, but their owner-facing management UI is still being built — owners currently get trip creation, invites, applicant approval, and descriptive details.
 - Screenshots are not yet included.
 
@@ -266,7 +266,6 @@ A dedicated accessibility audit (screen reader testing, focus management, keyboa
 
 - Wire the full per-trip management toolset (pricing, bed layout, meal-poll control, contributions, expenses) to trip owners.
 - Add automated tests (Vitest or Playwright) starting with the auth + approval + payment flow.
-- Replace `prisma db push --accept-data-loss` with a real migration history.
 - Add screenshots of the main flows.
 - Accessibility review and rate-limiting on auth and signup.
 
