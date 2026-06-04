@@ -24,11 +24,7 @@ coordinate disclosure with you.
 
 In scope:
 
-<<<<<<< HEAD
 - The Next.js application in this repository.
-=======
-- The Next.js application in [`the-trip-handler/`](./the-trip-handler).
->>>>>>> claude/rename-app-folder
 - Authentication and authorization flows (NextAuth + server-action checks).
 - The Stripe Checkout integration and webhook handler.
 - File-upload endpoints (Vercel Blob).
