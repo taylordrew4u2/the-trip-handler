@@ -9,7 +9,6 @@ on:
 jobs:
   check:
     runs-on: ubuntu-latest
-<<<<<<< HEAD
 
     # Real Postgres so we can actually apply migrations and detect schema drift,
     # rather than trusting that the committed SQL is correct.
