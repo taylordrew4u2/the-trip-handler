@@ -100,12 +100,6 @@ The repository is a single Next.js application at its root, deployed by Vercel f
 
 ```
 .
-=======
-The repository is a single Next.js application living under `the-trip-handler/`. The root of the repo holds repo-level docs; the app itself is in the subdirectory because Vercel is configured with `Root Directory = the-trip-handler`.
-
-```
-the-trip-handler/
->>>>>>> claude/rename-app-folder
 ├── app/
 │   ├── (root pages)         # /, /login, /signup
 │   ├── actions/             # Server actions: auth, trips, board, contributions,
