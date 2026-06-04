@@ -5,7 +5,7 @@ import { ExpensesClient } from "./ExpensesClient";
 import { PageNote } from "@/components/PageNote";
 import { ApprovalRequired } from "@/components/ApprovalRequired";
 import { getUserStatus, isApproved } from "@/lib/approval";
-import { getUserTripOrActive } from "@/lib/trip";
+import { getUserTrip } from "@/lib/trip";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +14,7 @@ export default async function ExpensesPage() {
 
   const session = await getServerSession(authOptions);
   const userId = (session?.user as { id?: string } | undefined)?.id ?? "";
-  const trip = await getUserTripOrActive(userId);
+  const trip = await getUserTrip(userId);
 
   const expenses = await prisma.expense.findMany({
     where: trip ? { tripId: trip.id } : { tripId: "__none__" },

@@ -26,6 +26,7 @@ export default async function MyTripsPage() {
     id: t.id,
     name: t.name,
     inviteToken: t.inviteToken,
+    joinCode: t.joinCode,
     isApplicationOpen: t.isApplicationOpen,
     applicants: t.users,
   }));
@@ -35,7 +36,7 @@ export default async function MyTripsPage() {
       <div>
         <h1 className="font-serif text-3xl font-medium text-stone-900">My trips</h1>
         <p className="text-stone-500 text-sm mt-1">
-          Create a trip, share its invite link, and approve who comes.
+          Create a trip, share its invite link or join code, and approve who comes.
         </p>
       </div>
       <MyTripsClient trips={data} />

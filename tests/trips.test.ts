@@ -19,7 +19,14 @@ vi.mock("@/lib/db", () => ({
 
 import { getServerSession } from "next-auth";
 import { prisma } from "@/lib/db";
-import { createMyTrip, updateMyTrip, applyToTrip, unlockMyTrip } from "@/app/actions/trips";
+import {
+  createMyTrip,
+  updateMyTrip,
+  applyToTrip,
+  unlockMyTrip,
+  findTripByCode,
+  generateMyTripJoinCode,
+} from "@/app/actions/trips";
 
 const session = getServerSession as unknown as Mock;
 const tripFindFirst = prisma.trip.findFirst as unknown as Mock;
@@ -85,6 +92,70 @@ describe("applyToTrip", () => {
     tripFindUnique.mockResolvedValue(null);
     expect(await applyToTrip("bad")).toEqual({
       error: "This invite isn't accepting applications.",
+    });
+  });
+});
+
+describe("findTripByCode", () => {
+  it("rejects an empty code", async () => {
+    expect(await findTripByCode("   ")).toEqual({ error: "Enter a trip code." });
+  });
+
+  it("normalizes the code to uppercase before looking it up", async () => {
+    tripFindUnique.mockResolvedValue({ id: "t1", isApplicationOpen: true, inviteToken: "tok" });
+    await findTripByCode("k7p4qx");
+    expect(tripFindUnique).toHaveBeenCalledWith({ where: { joinCode: "K7P4QX" } });
+  });
+
+  it("reports an unknown code", async () => {
+    tripFindUnique.mockResolvedValue(null);
+    expect(await findTripByCode("ZZZZZZ")).toEqual({ error: "No trip matches that code." });
+  });
+
+  it("won't hand off a trip that's closed to applications", async () => {
+    tripFindUnique.mockResolvedValue({ id: "t1", isApplicationOpen: false, inviteToken: "tok" });
+    const result = await findTripByCode("K7P4QX");
+    expect((result as { error: string }).error).toMatch(/isn't accepting applications/i);
+  });
+
+  it("returns the invite token for the apply flow when open", async () => {
+    tripFindUnique.mockResolvedValue({ id: "t1", isApplicationOpen: true, inviteToken: "tok" });
+    expect(await findTripByCode("K7P4QX")).toEqual({ success: true, token: "tok" });
+    expect(prisma.trip.update).not.toHaveBeenCalled();
+  });
+
+  it("backfills a missing invite token so the apply page has a URL", async () => {
+    tripFindUnique.mockResolvedValue({ id: "t1", isApplicationOpen: true, inviteToken: null });
+    const result = await findTripByCode("K7P4QX");
+    expect(prisma.trip.update).toHaveBeenCalledTimes(1);
+    expect((result as { success: boolean; token: string }).token).toMatch(/^[0-9a-f]{24}$/);
+  });
+});
+
+describe("generateMyTripJoinCode", () => {
+  it("requires a signed-in user", async () => {
+    session.mockResolvedValue(null);
+    expect(await generateMyTripJoinCode("t1")).toEqual({ error: "Sign in first." });
+  });
+
+  it("rejects a trip the user doesn't own", async () => {
+    session.mockResolvedValue({ user: { id: "u1" } });
+    tripFindFirst.mockResolvedValue(null); // ownedTrip() finds nothing
+    expect(await generateMyTripJoinCode("t1")).toEqual({ error: "Not your trip." });
+    expect(prisma.trip.update).not.toHaveBeenCalled();
+  });
+
+  it("issues a code from the unambiguous alphabet for an owned trip", async () => {
+    session.mockResolvedValue({ user: { id: "owner1" } });
+    tripFindFirst.mockResolvedValue({ id: "t1", ownerId: "owner1" }); // ownedTrip
+    tripFindUnique.mockResolvedValue(null); // no collision
+    const result = (await generateMyTripJoinCode("t1")) as { success: boolean; joinCode: string };
+    expect(result.success).toBe(true);
+    // 6 chars, uppercase, no 0/O/1/I/L.
+    expect(result.joinCode).toMatch(/^[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{6}$/);
+    expect(prisma.trip.update).toHaveBeenCalledWith({
+      where: { id: "t1" },
+      data: { joinCode: result.joinCode },
     });
   });
 });
