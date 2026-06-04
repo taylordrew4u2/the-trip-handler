@@ -3,12 +3,12 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { WithdrawButton } from "@/components/WithdrawButton";
 import { PageNote } from "@/components/PageNote";
-import { getUserTripOrActive } from "@/lib/trip";
+import { getUserTrip } from "@/lib/trip";
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as { id?: string })?.id;
-  const trip = userId && userId !== "admin" ? await getUserTripOrActive(userId) : null;
+  const trip = userId && userId !== "admin" ? await getUserTrip(userId) : null;
   const rosterFilter = trip
     ? { tripId: trip.id, role: "PARTICIPANT" as const }
     : { role: "PARTICIPANT" as const };

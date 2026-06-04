@@ -5,6 +5,7 @@ import { useState, useTransition } from "react";
 import {
   approveTripApplicant,
   createMyTrip,
+  generateMyTripJoinCode,
   rejectTripApplicant,
   setMyTripApplicationOpen,
 } from "@/app/actions/trips";
@@ -14,6 +15,7 @@ type TripData = {
   id: string;
   name: string;
   inviteToken: string | null;
+  joinCode: string | null;
   isApplicationOpen: boolean;
   applicants: Applicant[];
 };
@@ -45,6 +47,65 @@ function InviteLink({ token }: { token: string }) {
         className="px-3 py-2 rounded-lg bg-stone-900 hover:bg-stone-800 text-white text-xs font-medium whitespace-nowrap"
       >
         {copied ? "Copied" : "Copy link"}
+      </button>
+    </div>
+  );
+}
+
+function JoinCode({
+  code,
+  onGenerate,
+  pending,
+}: {
+  code: string | null;
+  onGenerate: () => void;
+  pending: boolean;
+}) {
+  const [copied, setCopied] = useState(false);
+
+  async function copy() {
+    if (!code) return;
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      /* clipboard unavailable — the code is still selectable above */
+    }
+  }
+
+  if (!code) {
+    return (
+      <button
+        type="button"
+        onClick={onGenerate}
+        disabled={pending}
+        className="text-xs font-medium text-stone-700 underline underline-offset-2 hover:text-stone-900 disabled:opacity-50"
+      >
+        Create a join code
+      </button>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      <code className="text-sm font-mono tracking-widest bg-stone-100 border border-stone-200 rounded-lg px-3 py-2 text-stone-900">
+        {code}
+      </code>
+      <button
+        type="button"
+        onClick={copy}
+        className="px-3 py-2 rounded-lg bg-stone-900 hover:bg-stone-800 text-white text-xs font-medium whitespace-nowrap"
+      >
+        {copied ? "Copied" : "Copy code"}
+      </button>
+      <button
+        type="button"
+        onClick={onGenerate}
+        disabled={pending}
+        className="px-3 py-2 rounded-lg border border-stone-300 hover:bg-stone-100 text-stone-700 text-xs font-medium whitespace-nowrap disabled:opacity-50"
+      >
+        Regenerate
       </button>
     </div>
   );
@@ -116,7 +177,7 @@ export function MyTripsClient({ trips }: { trips: TripData[] }) {
 
       {trips.length === 0 ? (
         <p className="text-stone-400 text-sm">
-          You haven&apos;t created any trips yet. Name one above to get an invite link.
+          You haven&apos;t created any trips yet. Name one above to get an invite link and join code.
         </p>
       ) : (
         <ul className="space-y-5">
@@ -147,11 +208,31 @@ export function MyTripsClient({ trips }: { trips: TripData[] }) {
                 </label>
               </div>
 
-              {trip.inviteToken ? (
-                <InviteLink token={trip.inviteToken} />
-              ) : (
-                <p className="text-xs text-stone-400">No invite link on this trip.</p>
-              )}
+              <div className="space-y-3">
+                <div>
+                  <p className="text-xs font-semibold text-stone-700 uppercase tracking-wide mb-1.5">
+                    Invite link
+                  </p>
+                  {trip.inviteToken ? (
+                    <InviteLink token={trip.inviteToken} />
+                  ) : (
+                    <p className="text-xs text-stone-400">No invite link on this trip.</p>
+                  )}
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-stone-700 uppercase tracking-wide mb-1.5">
+                    Join code
+                  </p>
+                  <JoinCode
+                    code={trip.joinCode}
+                    onGenerate={() => run(() => generateMyTripJoinCode(trip.id))}
+                    pending={isPending}
+                  />
+                  <p className="text-[11px] text-stone-400 mt-1.5">
+                    Members can enter this on their home screen to find and apply to the trip.
+                  </p>
+                </div>
+              </div>
 
               <div>
                 <p className="text-xs font-semibold text-stone-700 uppercase tracking-wide mb-2">

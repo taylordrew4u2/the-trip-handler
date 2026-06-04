@@ -6,7 +6,7 @@ import { AddContributionForm } from "@/components/AddContributionForm";
 import { ApprovalRequired } from "@/components/ApprovalRequired";
 import { isApproved } from "@/lib/approval";
 import { PageNote } from "@/components/PageNote";
-import { getUserTripOrActive } from "@/lib/trip";
+import { getUserTrip } from "@/lib/trip";
 
 export default async function ContributionsPage() {
   const session = await getServerSession(authOptions);
@@ -14,7 +14,7 @@ export default async function ContributionsPage() {
   if (!isApproved(sessionUser?.status)) return <ApprovalRequired what="Contributions" />;
   const userId = sessionUser?.id ?? "";
 
-  const trip = await getUserTripOrActive(userId);
+  const trip = await getUserTrip(userId);
   const contributions = trip
     ? await prisma.contribution.findMany({
         where: { tripId: trip.id },

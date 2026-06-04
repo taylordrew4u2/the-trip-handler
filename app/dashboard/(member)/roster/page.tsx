@@ -5,7 +5,7 @@ import { RosterClientView } from "./RosterClientView";
 import { ApprovalRequired } from "@/components/ApprovalRequired";
 import { getUserStatus, isApproved } from "@/lib/approval";
 import { PageNote } from "@/components/PageNote";
-import { getUserTripOrActive } from "@/lib/trip";
+import { getUserTrip } from "@/lib/trip";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +14,7 @@ export default async function RosterPage() {
 
   const session = await getServerSession(authOptions);
   const userId = (session?.user as { id?: string } | undefined)?.id ?? "";
-  const trip = userId ? await getUserTripOrActive(userId) : null;
+  const trip = userId ? await getUserTrip(userId) : null;
   const scope = trip
     ? { tripId: trip.id, role: "PARTICIPANT" as const }
     : { role: "PARTICIPANT" as const };

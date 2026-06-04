@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/taylordrew4u2/the-trip-handler/actions/workflows/ci.yml/badge.svg)](https://github.com/taylordrew4u2/the-trip-handler/actions/workflows/ci.yml)
 
-A full-stack Next.js application for organizing group trips. Anyone can create a trip, share a private invite link, collect applications, approve who comes, and plan the logistics — lodging, meals, itinerary, contributions, expenses, and Stripe-collected per-person payments.
+A full-stack Next.js application for organizing group trips. Anyone can create a trip, share a private invite link or join code, collect applications, approve who comes, and plan the logistics — lodging, meals, itinerary, contributions, expenses, and Stripe-collected per-person payments. Members who aren't on a trip yet get a home screen to create one, take a guided walkthrough, or join by code.
 
 ## Live Demo
 
@@ -23,9 +23,10 @@ The organizer account owns a seeded "Demo Cabin Weekend" trip — sign in and op
 
 It is multi-tenant and invite-only:
 
+- A signed-in member with no trip lands on a **home screen** (`/dashboard/start`) where they choose to create a trip, take a guided **walkthrough**, or **find a trip by code** — they are never auto-dropped into someone else's trip.
 - Any signed-in member can **create a trip** and becomes its **owner**.
-- Each trip has a **private invite link** (`/join/[token]`). There is no public trip directory — you only get in with a link.
-- People who open the link **apply**; the owner **approves or rejects** them.
+- Each trip has a **private invite link** (`/join/[token]`) and a short, owner-issued **join code**. There is no public trip directory — you only get in with a link or a code from the organizer.
+- People who open the link (or enter the code) **apply**; the owner **approves or rejects** them.
 - The owner edits the trip's details (destination, dates, description, itinerary/lodging/meals notes) and only ever sees and manages **their own** trips.
 
 Each invited person has a single dashboard that unlocks more functionality as their status moves from `PENDING` → `APPROVED` → `PENDING_PAYMENT` → `CONFIRMED_PAID`.
@@ -34,9 +35,10 @@ Each invited person has a single dashboard that unlocks more functionality as th
 
 ```mermaid
 flowchart LR
-  S[Sign up] --> Q{Host or join?}
+  S[Sign up] --> H["Home screen<br/>(/dashboard/start)"]
+  H --> Q{Host or join?}
   Q -- Host --> C["Create trip<br/>(/dashboard/my-trips)"]
-  C --> L["Share private<br/>invite link"]
+  C --> L["Share invite link<br/>or join code"]
   Q -- Join --> L
   L --> A["Apply + guest form<br/>(/join/&lt;token&gt;)"]
   A --> R{Owner reviews}
@@ -131,11 +133,12 @@ The repository is a single Next.js application at its root, deployed by Vercel f
 ### App flow in plain English
 
 1. A visitor lands on `/login`. New visitors go to `/signup` and create an account (name + email + password) with status `PENDING`.
-2. To **host**, they open `/dashboard/my-trips`, name a trip (becoming its owner), and get a private invite link to share.
-3. To **join**, they open someone's invite link (`/join/[token]`). Logged-out visitors apply by signing up to that trip; logged-in members apply in one click. Applicants fill in the guest form.
-4. The trip owner reviews applicants on `/dashboard/my-trips` and approves or rejects them. Resend sends the matching email.
-5. Once approved, the participant can browse the itinerary, lodging, roster, meals, contributions, sleeping plan, and expenses, and take the actions their status allows.
-6. Payment runs through Stripe Checkout; a webhook at `/api/webhooks/stripe` records it and flips the user to `CONFIRMED_PAID`.
+2. A signed-in member who isn't on a trip lands on the **home screen** (`/dashboard/start`): create a trip, take the guided walkthrough (`/dashboard/walkthrough`), or enter a trip's join code. (If they followed an invite link, they go straight to that trip's apply page instead.)
+3. To **host**, they open `/dashboard/my-trips`, name a trip (becoming its owner), and get a private invite link plus a short join code to share.
+4. To **join**, they open someone's invite link (`/join/[token]`) or enter the trip's join code on the home screen (which resolves to the same apply page). Logged-out visitors apply by signing up to that trip; logged-in members apply in one click. Applicants fill in the guest form.
+5. The trip owner reviews applicants on `/dashboard/my-trips` and approves or rejects them. Resend sends the matching email.
+6. Once approved, the participant can browse the itinerary, lodging, roster, meals, contributions, sleeping plan, and expenses, and take the actions their status allows.
+7. Payment runs through Stripe Checkout; a webhook at `/api/webhooks/stripe` records it and flips the user to `CONFIRMED_PAID`.
 
 Everything that changes data goes through a typed server action in `app/actions/`. The Prisma client is instantiated once in `lib/db.ts`. Approval gating uses `lib/approval.ts` and a `requireApprovedUser()` pattern; owner actions verify trip ownership against the session user.
 

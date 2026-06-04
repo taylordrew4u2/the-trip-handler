@@ -22,6 +22,29 @@ async function ownedTrip(tripId: string, userId: string) {
   return prisma.trip.findFirst({ where: { id: tripId, ownerId: userId } });
 }
 
+// Human-friendly code alphabet: no 0/O/1/I/L to avoid read-aloud ambiguity.
+const CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+
+function randomJoinCode(length = 6): string {
+  const bytes = randomBytes(length);
+  let code = "";
+  for (let i = 0; i < length; i++) {
+    code += CODE_ALPHABET[bytes[i] % CODE_ALPHABET.length];
+  }
+  return code;
+}
+
+/** Generate a unique join code, retrying on the (rare) collision. */
+async function uniqueJoinCode(): Promise<string> {
+  for (let attempt = 0; attempt < 6; attempt++) {
+    const code = randomJoinCode();
+    const taken = await prisma.trip.findUnique({ where: { joinCode: code } });
+    if (!taken) return code;
+  }
+  // Fall back to a longer code if we somehow kept colliding.
+  return randomJoinCode(8);
+}
+
 /**
  * Any signed-in member can create a trip. They become its owner and get a
  * unique invite token to share. The trip is reachable only via that link.
@@ -84,6 +107,57 @@ export async function updateMyTrip(
   revalidatePath("/dashboard/my-trips");
   revalidatePath(`/dashboard/my-trips/${tripId}`);
   return { success: true };
+}
+
+/**
+ * Issue (or rotate) the short join code for a trip you own. Members can enter
+ * this code on the home screen to find the trip and apply. Returns the code.
+ */
+export async function generateMyTripJoinCode(tripId: string) {
+  const userId = await currentUserId();
+  if (!userId) return { error: "Sign in first." };
+  if (!(await ownedTrip(tripId, userId))) return { error: "Not your trip." };
+
+  const joinCode = await uniqueJoinCode();
+  await prisma.trip.update({ where: { id: tripId }, data: { joinCode } });
+  revalidatePath("/dashboard/my-trips");
+  return { success: true, joinCode };
+}
+
+/** Remove a trip's join code so it can no longer be found by search. */
+export async function clearMyTripJoinCode(tripId: string) {
+  const userId = await currentUserId();
+  if (!userId) return { error: "Sign in first." };
+  if (!(await ownedTrip(tripId, userId))) return { error: "Not your trip." };
+
+  await prisma.trip.update({ where: { id: tripId }, data: { joinCode: null } });
+  revalidatePath("/dashboard/my-trips");
+  return { success: true };
+}
+
+/**
+ * Resolve a join code typed on the home screen to the trip's invite link, so
+ * the member lands on the normal apply flow. Doesn't apply them — that still
+ * goes through the trip page so the owner approves, same as an invite link.
+ */
+export async function findTripByCode(code: string) {
+  const normalized = code.trim().toUpperCase();
+  if (!normalized) return { error: "Enter a trip code." };
+
+  const trip = await prisma.trip.findUnique({ where: { joinCode: normalized } });
+  if (!trip) return { error: "No trip matches that code." };
+  if (!trip.isApplicationOpen) {
+    return { error: "That trip isn't accepting applications right now." };
+  }
+
+  // Every trip created in-app has an invite token; backfill the rare legacy
+  // trip that doesn't so the apply page has a stable URL to land on.
+  let token = trip.inviteToken;
+  if (!token) {
+    token = randomBytes(12).toString("hex");
+    await prisma.trip.update({ where: { id: trip.id }, data: { inviteToken: token } });
+  }
+  return { success: true, token };
 }
 
 export async function setMyTripApplicationOpen(tripId: string, open: boolean) {
