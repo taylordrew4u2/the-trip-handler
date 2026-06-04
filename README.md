@@ -90,15 +90,26 @@ The Trip Handler centralizes a trip owner's workflow and each participant's view
 - **File uploads:** Vercel Blob (avatars, lodging photos, expense receipts).
 - **Email:** Resend.
 - **Validation:** Zod.
+<<<<<<< HEAD
 - **Hosting:** Vercel (deployed from the repository root).
+=======
+- **Hosting:** Vercel (project root is the `the-trip-handler/` subdirectory).
+>>>>>>> claude/rename-app-folder
 - **Lint:** ESLint 9 with `eslint-config-next`.
 
 ## Architecture
 
+<<<<<<< HEAD
 The repository is a single Next.js application at its root, deployed by Vercel from the repo root.
 
 ```
 .
+=======
+The repository is a single Next.js application living under `the-trip-handler/`. The root of the repo holds repo-level docs; the app itself is in the subdirectory because Vercel is configured with `Root Directory = the-trip-handler`.
+
+```
+the-trip-handler/
+>>>>>>> claude/rename-app-folder
 ├── app/
 │   ├── (root pages)         # /, /login, /signup
 │   ├── actions/             # Server actions: auth, trips, board, contributions,
@@ -145,8 +156,13 @@ Everything that changes data goes through a typed server action in `app/actions/
 ## How to Run Locally
 
 ```bash
+<<<<<<< HEAD
 git clone https://github.com/taylordrew4u2/the-trip-handler.git
 cd the-trip-handler
+=======
+git clone https://github.com/taylordrew4u2/COMEDYSUMMERCAMP.git
+cd COMEDYSUMMERCAMP/the-trip-handler
+>>>>>>> claude/rename-app-folder
 npm install
 cp .env.example .env.local   # fill in values, see below
 npm run dev
@@ -185,7 +201,11 @@ NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
 NEXT_PUBLIC_APP_URL=
 ```
 
+<<<<<<< HEAD
 `.env.example` at the repository root is the source of truth for which variables are required.
+=======
+`.env.example` at `the-trip-handler/.env.example` is the source of truth for which variables are required.
+>>>>>>> claude/rename-app-folder
 
 ## Usage
 
