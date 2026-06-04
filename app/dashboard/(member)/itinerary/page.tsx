@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 import { isApproved } from "@/lib/approval";
 import { PageNote } from "@/components/PageNote";
 import { ItineraryView } from "@/components/ItineraryView";
-import { getUserTripOrActive } from "@/lib/trip";
+import { getUserTrip } from "@/lib/trip";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +15,7 @@ export default async function ItineraryPage() {
   const isAdmin = sessionUser?.role === "ADMIN";
   const canComment = isAdmin || isApproved(sessionUser?.status);
 
-  const trip = userId ? await getUserTripOrActive(userId) : null;
+  const trip = userId ? await getUserTrip(userId) : null;
   const days = trip
     ? await prisma.day.findMany({
         where: { tripId: trip.id },

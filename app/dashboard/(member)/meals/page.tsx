@@ -7,7 +7,7 @@ import { ensureMealPlanSetup, votingCompletionSummary } from "@/app/actions/meal
 import { MealsPlanner } from "@/components/MealsPlanner";
 import { SignOutButton } from "@/components/SignOutButton";
 import { PageNote } from "@/components/PageNote";
-import { getUserTripOrActive } from "@/lib/trip";
+import { getUserTrip } from "@/lib/trip";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +17,7 @@ export default async function MealsPage() {
   if (!isApproved(sessionUser?.status)) return <ApprovalRequired what="Meal planning" />;
   const userId = sessionUser?.id ?? "";
 
-  const trip = await getUserTripOrActive(userId);
+  const trip = await getUserTrip(userId);
   if (trip) await ensureMealPlanSetup(trip.id);
 
   const [slots, phase, completion] = await Promise.all([

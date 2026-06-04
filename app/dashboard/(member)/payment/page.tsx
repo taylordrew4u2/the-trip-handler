@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { ApprovalRequired } from "@/components/ApprovalRequired";
 import { isApproved } from "@/lib/approval";
 import { PageNote } from "@/components/PageNote";
-import { getUserTripOrActive } from "@/lib/trip";
+import { getUserTrip } from "@/lib/trip";
 
 export default async function PaymentPage() {
   const session = await getServerSession(authOptions);
@@ -16,7 +16,7 @@ export default async function PaymentPage() {
   if (!userId) redirect("/login");
 
   const [trip, user, payment] = await Promise.all([
-    getUserTripOrActive(userId),
+    getUserTrip(userId),
     prisma.user.findUnique({ where: { id: userId } }),
     prisma.payment.findFirst({
       where: { userId },
