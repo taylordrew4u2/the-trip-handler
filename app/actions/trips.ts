@@ -35,14 +35,13 @@ function randomJoinCode(length = 6): string {
 }
 
 /** Generate a unique join code, retrying on the (rare) collision. */
-async function uniqueJoinCode(): Promise<string> {
+async function uniqueJoinCode(length = 6): Promise<string | null> {
   for (let attempt = 0; attempt < 6; attempt++) {
-    const code = randomJoinCode();
+    const code = randomJoinCode(length);
     const taken = await prisma.trip.findUnique({ where: { joinCode: code } });
     if (!taken) return code;
   }
-  // Fall back to a longer code if we somehow kept colliding.
-  return randomJoinCode(8);
+  return null;
 }
 
 /**
@@ -118,10 +117,20 @@ export async function generateMyTripJoinCode(tripId: string) {
   if (!userId) return { error: "Sign in first." };
   if (!(await ownedTrip(tripId, userId))) return { error: "Not your trip." };
 
-  const joinCode = await uniqueJoinCode();
-  await prisma.trip.update({ where: { id: tripId }, data: { joinCode } });
-  revalidatePath("/dashboard/my-trips");
-  return { success: true, joinCode };
+  for (let attempt = 0; attempt < 12; attempt++) {
+    const joinCode = (await uniqueJoinCode(6)) ?? (await uniqueJoinCode(8));
+    if (!joinCode) continue;
+    try {
+      await prisma.trip.update({ where: { id: tripId }, data: { joinCode } });
+      revalidatePath("/dashboard/my-trips");
+      return { success: true, joinCode };
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") continue;
+      throw error;
+    }
+  }
+
+  return { error: "Couldn't generate a unique trip code. Try again." };
 }
 
 /** Remove a trip's join code so it can no longer be found by search. */
