@@ -4,25 +4,24 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { DashboardNav } from "@/components/DashboardNav";
 import { SignOutLink } from "@/components/SignOutLink";
-import { getUserTripOrActive } from "@/lib/trip";
 
 export default async function MemberLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession(authOptions);
   const sessionUser = session?.user as { id?: string; status?: string } | undefined;
   if (!sessionUser?.id) redirect("/login");
 
-  // A member who hosts a trip but isn't a participant on any trip belongs in
-  // their own trip-management area, not the participant intake flow.
   const membership = await prisma.user.findUnique({
     where: { id: sessionUser.id },
     select: { tripId: true, _count: { select: { ownedTrips: true } } },
   });
-  if (!membership?.tripId && (membership?._count.ownedTrips ?? 0) > 0) {
-    redirect("/dashboard/my-trips");
-  }
 
-  // Make sure legacy participants without a tripId get attached to the active trip.
-  await getUserTripOrActive(sessionUser.id);
+  // A member who isn't a participant on any trip doesn't get dropped into one.
+  // Owners go to their trip-management area; everyone else picks what to do
+  // from the home screen (create a trip, take the tour, or enter a code).
+  if (!membership?.tripId) {
+    if ((membership?._count.ownedTrips ?? 0) > 0) redirect("/dashboard/my-trips");
+    redirect("/dashboard/start");
+  }
 
   // PENDING users with no form must finish the intake first.
   if (sessionUser.status === "PENDING") {
@@ -37,9 +36,15 @@ export default async function MemberLayout({ children }: { children: React.React
           <p className="text-xs uppercase tracking-[0.2em] text-stone-500 mb-3">Cancelled</p>
           <h2 className="font-serif text-2xl font-medium text-stone-900 mb-3">You&apos;re not on the trip</h2>
           <p className="text-stone-600">
-            Either you withdrew or the application wasn&apos;t approved. Reach out to admin if you
-            want to come back.
+            Either you withdrew or the application wasn&apos;t approved. You can look for another
+            trip, or reach out to the organizer if you want to come back.
           </p>
+          <a
+            href="/dashboard/start"
+            className="inline-block mt-6 px-4 py-2 bg-stone-900 hover:bg-stone-800 text-white rounded-lg text-sm font-medium"
+          >
+            Find another trip →
+          </a>
           <div className="mt-6"><SignOutLink /></div>
         </div>
       </div>

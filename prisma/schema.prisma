@@ -62,6 +62,7 @@ model Trip {
   ownerId         String?
   owner           User?       @relation("TripOwner", fields: [ownerId], references: [id])
   inviteToken     String?     @unique
+  joinCode        String?     @unique
   isActive        Boolean     @default(false)
   isApplicationOpen Boolean   @default(true)
   destination     String?
