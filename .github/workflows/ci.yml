@@ -9,6 +9,27 @@ on:
 jobs:
   check:
     runs-on: ubuntu-latest
+
+    # Real Postgres so we can actually apply migrations and detect schema drift,
+    # rather than trusting that the committed SQL is correct.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: trip_handler_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/trip_handler_test
+
     steps:
       - uses: actions/checkout@v4
 
@@ -24,6 +45,21 @@ jobs:
       - name: Generate Prisma client
         run: npx prisma generate
 
+      - name: Apply migrations
+        # Validates that the committed migrations apply cleanly to a fresh DB —
+        # the same `prisma migrate deploy` that runs on deploy.
+        run: npx prisma migrate deploy
+
+      - name: Check for migration drift
+        # Fails if prisma/schema.prisma has changes that aren't captured by a
+        # migration, so schema and migrations can never silently diverge.
+        run: >-
+          npx prisma migrate diff
+          --from-schema-datamodel prisma/schema.prisma
+          --to-url "$DATABASE_URL"
+          --exit-code
+          || (echo "::error::schema.prisma has changes with no matching migration. Run 'prisma migrate dev' and commit the result." && exit 1)
+
       - name: Type-check
         run: npx tsc --noEmit
 
@@ -32,3 +68,13 @@ jobs:
 
       - name: Test
         run: npm test
+
+      - name: Build
+        # Run `next build` directly to catch build-time breakage before it
+        # reaches Vercel. (Deploys run the full `npm run build`, which also
+        # applies migrations via scripts/db-deploy.sh.)
+        run: npx next build
+        env:
+          NEXTAUTH_SECRET: ci-dummy-secret
+          NEXTAUTH_URL: http://localhost:3000
+          NEXT_PUBLIC_APP_URL: http://localhost:3000
