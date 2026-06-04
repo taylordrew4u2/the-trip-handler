@@ -133,7 +133,7 @@ export async function rejectTripApplicant(applicantId: string) {
 
   await prisma.user.update({
     where: { id: applicant.id },
-    data: { status: "CANCELLED" },
+    data: { status: "CANCELLED", rejectedTripId: applicant.tripId },
   });
   await sendRejectionEmail(applicant.email, applicant.name);
   revalidatePath("/dashboard/my-trips");
@@ -161,8 +161,13 @@ export async function applyToTrip(token: string) {
   // only let them apply when they have no trip or have left/been removed.
   const me = await prisma.user.findUnique({
     where: { id: userId },
-    select: { tripId: true, status: true },
+    select: { tripId: true, status: true, rejectedTripId: true },
   });
+  // A rejected applicant can't silently re-apply (withdrawals can, since they
+  // set CANCELLED without a rejectedTripId).
+  if (me?.rejectedTripId === trip.id) {
+    return { error: "Your application to this trip was declined." };
+  }
   if (me?.tripId === trip.id && me.status !== "CANCELLED") {
     return { error: "You've already applied to this trip." };
   }

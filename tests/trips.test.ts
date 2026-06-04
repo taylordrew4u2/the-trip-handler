@@ -70,6 +70,16 @@ describe("applyToTrip", () => {
     expect((result as { error: string }).error).toMatch(/you own this trip/i);
   });
 
+  it("blocks a previously-rejected applicant from re-applying", async () => {
+    session.mockResolvedValue({ user: { id: "u1" } });
+    tripFindUnique.mockResolvedValue({ id: "tripA", isApplicationOpen: true, ownerId: "owner1" });
+    userFindUnique.mockResolvedValue({ tripId: "tripA", status: "CANCELLED", rejectedTripId: "tripA" });
+
+    const result = await applyToTrip("invite-token");
+    expect((result as { error: string }).error).toMatch(/declined/i);
+    expect(prisma.user.update).not.toHaveBeenCalled();
+  });
+
   it("rejects a closed or unknown invite", async () => {
     session.mockResolvedValue({ user: { id: "u1" } });
     tripFindUnique.mockResolvedValue(null);
