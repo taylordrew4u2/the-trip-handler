@@ -95,7 +95,6 @@ The Trip Handler centralizes a trip owner's workflow and each participant's view
 
 ## Architecture
 
-<<<<<<< HEAD
 The repository is a single Next.js application at its root, deployed by Vercel from the repo root.
 
 ```
