@@ -190,11 +190,7 @@ NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
 NEXT_PUBLIC_APP_URL=
 ```
 
-<<<<<<< HEAD
 `.env.example` at the repository root is the source of truth for which variables are required.
-=======
-`.env.example` at `the-trip-handler/.env.example` is the source of truth for which variables are required.
->>>>>>> claude/rename-app-folder
 
 ## Usage
 
