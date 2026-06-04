@@ -6,7 +6,7 @@ A full-stack Next.js application for organizing group trips. Anyone can create a
 
 ## Live Demo
 
-<https://comedysummercamp.vercel.app>
+<https://my-trip-handler.vercel.app>
 
 **Try it as an organizer** (seed the demo data with `npm run db:seed` first):
 
