@@ -31,11 +31,6 @@ jobs:
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/trip_handler_test
 
-=======
-    defaults:
-      run:
-        working-directory: the-trip-handler
->>>>>>> claude/rename-app-folder
     steps:
       - uses: actions/checkout@v4
 
