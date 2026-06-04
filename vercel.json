@@ -1,6 +1,6 @@
 {
   "framework": "nextjs",
-  "buildCommand": "prisma generate && prisma db push --skip-generate --accept-data-loss && next build",
+  "buildCommand": "prisma generate && bash scripts/db-deploy.sh && next build",
   "devCommand": "next dev",
   "installCommand": "npm install"
 }
