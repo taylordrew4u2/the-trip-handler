@@ -90,11 +90,7 @@ The Trip Handler centralizes a trip owner's workflow and each participant's view
 - **File uploads:** Vercel Blob (avatars, lodging photos, expense receipts).
 - **Email:** Resend.
 - **Validation:** Zod.
-<<<<<<< HEAD
 - **Hosting:** Vercel (deployed from the repository root).
-=======
-- **Hosting:** Vercel (project root is the `the-trip-handler/` subdirectory).
->>>>>>> claude/rename-app-folder
 - **Lint:** ESLint 9 with `eslint-config-next`.
 
 ## Architecture
