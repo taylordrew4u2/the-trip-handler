@@ -38,11 +38,7 @@ jobs:
         with:
           node-version: 20
           cache: npm
-<<<<<<< HEAD
           cache-dependency-path: package-lock.json
-=======
-          cache-dependency-path: the-trip-handler/package-lock.json
->>>>>>> claude/rename-app-folder
 
       - name: Install dependencies
         run: npm ci
