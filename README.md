@@ -8,6 +8,15 @@ A full-stack Next.js application for organizing group trips. Anyone can create a
 
 <https://comedysummercamp.vercel.app>
 
+**Try it as an organizer** (seed the demo data with `npm run db:seed` first):
+
+| Role | Email | Password |
+| --- | --- | --- |
+| Organizer (owns a trip) | `demo@thetriphandler.app` | `demo1234` |
+| Approved participant | `alex@example.com` | `demo1234` |
+
+The organizer account owns a seeded "Demo Cabin Weekend" trip — sign in and open **My trips** to manage pricing, applicants, beds, contributions, expenses, and the meal poll. The shareable invite link is `/join/demo-invite-token`.
+
 ## Overview
 
 **The Trip Handler** is a web app for the friend who accidentally became the adult in charge of making the plan. Instead of juggling group chats, spreadsheets, and Venmo requests, a trip organizer gets one place to run their trip end to end — and everyone they invite gets one dashboard for their share of it.
@@ -20,6 +29,26 @@ It is multi-tenant and invite-only:
 - The owner edits the trip's details (destination, dates, description, itinerary/lodging/meals notes) and only ever sees and manages **their own** trips.
 
 Each invited person has a single dashboard that unlocks more functionality as their status moves from `PENDING` → `APPROVED` → `PENDING_PAYMENT` → `CONFIRMED_PAID`.
+
+## How it works
+
+```mermaid
+flowchart LR
+  S[Sign up] --> Q{Host or join?}
+  Q -- Host --> C["Create trip<br/>(/dashboard/my-trips)"]
+  C --> L["Share private<br/>invite link"]
+  Q -- Join --> L
+  L --> A["Apply + guest form<br/>(/join/&lt;token&gt;)"]
+  A --> R{Owner reviews}
+  R -- Reject --> X[Declined]
+  R -- Approve --> AP[APPROVED]
+  AP --> P["Owner locks the<br/>3-line pricing"]
+  P --> PP["PENDING_PAYMENT<br/>+ checkout email"]
+  PP --> ST[Stripe Checkout]
+  ST --> CP[CONFIRMED_PAID]
+```
+
+Every state transition is enforced server-side, and every owner action is scoped to trips that owner created.
 
 ## Problem
 
@@ -128,7 +157,7 @@ The dev server runs at `http://localhost:3000`.
 npm run build      # prisma generate && prisma db push && next build
 npm run lint       # ESLint
 npm run db:push    # Apply schema to the database
-npm run db:seed    # Insert a placeholder Trip row
+npm run db:seed    # Seed a demo organizer + trip + applicants (see Live Demo)
 npm run db:studio  # Open Prisma Studio
 ```
 
