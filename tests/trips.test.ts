@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi, type Mock } from "vitest";
+import { Prisma } from "@prisma/client";
 
 // Mock the boundaries the owner actions touch so we can exercise their
 // authorization logic without a database, session, or email provider.
@@ -157,6 +158,43 @@ describe("generateMyTripJoinCode", () => {
       where: { id: "t1" },
       data: { joinCode: result.joinCode },
     });
+  });
+
+  it("retries when the update hits a unique-constraint race", async () => {
+    session.mockResolvedValue({ user: { id: "owner1" } });
+    tripFindFirst.mockResolvedValue({ id: "t1", ownerId: "owner1" });
+    tripFindUnique.mockResolvedValue(null);
+    (prisma.trip.update as unknown as Mock)
+      .mockRejectedValueOnce(
+        new Prisma.PrismaClientKnownRequestError("unique constraint failed", {
+          code: "P2002",
+          clientVersion: "test",
+        }),
+      )
+      .mockResolvedValueOnce({ id: "t1" });
+
+    const result = (await generateMyTripJoinCode("t1")) as { success: boolean; joinCode: string };
+    expect(result.success).toBe(true);
+    expect(prisma.trip.update).toHaveBeenCalledTimes(2);
+  });
+
+  it("falls back to an 8-character code and still checks uniqueness", async () => {
+    session.mockResolvedValue({ user: { id: "owner1" } });
+    tripFindFirst.mockResolvedValue({ id: "t1", ownerId: "owner1" });
+    tripFindUnique
+      .mockResolvedValueOnce({ id: "taken-1" })
+      .mockResolvedValueOnce({ id: "taken-2" })
+      .mockResolvedValueOnce({ id: "taken-3" })
+      .mockResolvedValueOnce({ id: "taken-4" })
+      .mockResolvedValueOnce({ id: "taken-5" })
+      .mockResolvedValueOnce({ id: "taken-6" })
+      .mockResolvedValueOnce(null);
+    (prisma.trip.update as unknown as Mock).mockResolvedValue({ id: "t1" });
+
+    const result = (await generateMyTripJoinCode("t1")) as { success: boolean; joinCode: string };
+    expect(result.success).toBe(true);
+    expect(result.joinCode).toMatch(/^[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{8}$/);
+    expect(tripFindUnique).toHaveBeenCalledTimes(7);
   });
 });
 
