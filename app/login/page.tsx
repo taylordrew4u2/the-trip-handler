@@ -1,28 +1,9 @@
 import Link from "next/link";
-import { getActiveTrip } from "@/lib/trip";
 import { LoginForm } from "./LoginForm";
 
 export const dynamic = "force-dynamic";
 
-function formatDateRange(start: Date | null, end: Date | null): string {
-  if (!start && !end) return "";
-  const fmt = (d: Date) =>
-    d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
-  if (start && end) {
-    const sameYear = start.getFullYear() === end.getFullYear();
-    if (sameYear) {
-      const startShort = start.toLocaleDateString("en-US", { month: "long", day: "numeric" });
-      return `${startShort} – ${fmt(end)}`;
-    }
-    return `${fmt(start)} – ${fmt(end)}`;
-  }
-  return fmt((start ?? end) as Date);
-}
-
-export default async function LoginPage() {
-  const trip = await getActiveTrip();
-  const dateRange = trip ? formatDateRange(trip.startDate, trip.endDate) : "";
-
+export default function LoginPage() {
   return (
     <div className="min-h-screen bg-stone-50 flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
@@ -37,20 +18,6 @@ export default async function LoginPage() {
             For the friend who accidentally became the adult in charge of making the plan.
           </p>
         </div>
-
-        {trip && (
-          <div className="bg-white rounded-xl border border-stone-200 p-5 mb-5 text-center">
-            <p className="font-serif text-lg font-medium text-stone-900">{trip.name}</p>
-            {trip.destination && (
-              <p className="text-sm text-stone-700 mt-1">{trip.destination}</p>
-            )}
-            {dateRange && (
-              <p className="text-xs uppercase tracking-[0.15em] text-stone-500 mt-2">
-                {dateRange}
-              </p>
-            )}
-          </div>
-        )}
 
         <LoginForm />
 

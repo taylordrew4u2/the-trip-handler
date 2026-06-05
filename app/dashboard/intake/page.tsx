@@ -43,13 +43,13 @@ export default async function IntakePage() {
           {isPending ? (
             <>
               Admin needs this filled out before approving you for the trip. We use it to plan food, sleeping,
-              van transportation, group activities, comedy workshops, and social-media content — without
+              van transportation, group activities, workshops, and social-media content — without
               texting everyone individually 400 times. <strong>Submit this and you&apos;ll be reviewed for approval.</strong>
             </>
           ) : (
             <>
               Fill this out so we can plan food, sleeping arrangements, van transportation, group activities,
-              comedy workshops, and social-media content without texting everyone individually 400 times.
+              workshops, and social-media content without texting everyone individually 400 times.
             </>
           )}
         </p>

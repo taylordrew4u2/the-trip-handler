@@ -391,7 +391,7 @@ model GuestForm {
   locked                   Boolean  @default(true)
   editRequested            Boolean  @default(false)
 
-  // Preferences (van, food, comedy, emergency contact) are filled in
+  // Preferences (van, food, activities, emergency contact) are filled in
   // post-approval and stay editable; this records when they were last saved.
   preferencesSubmittedAt   DateTime?
 
@@ -450,7 +450,7 @@ model GuestForm {
   cannotDo                 String?
   safetyNotes              String?
 
-  // Comedy / Workshop
+  // Activities / Workshop
   workOnGoals              String[]
   workOnOther              String?
   materialAmount           String?

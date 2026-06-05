@@ -88,7 +88,7 @@ export async function submitGuestForm(formData: FormData) {
   }
   const jokeProtection = (data.jokeProtectionAcks as string[]) || [];
   for (const rule of REQUIRED_JOKE_PROTECTION) {
-    if (!jokeProtection.includes(rule)) return { error: "Please agree to all joke / material protection items." };
+    if (!jokeProtection.includes(rule)) return { error: "Please agree to all material / content protection items." };
   }
   const securityDeposit = (data.securityDepositAcks as string[]) || [];
   for (const rule of REQUIRED_SECURITY_DEPOSIT) {
@@ -214,7 +214,7 @@ const PREFERENCES_STRING_FIELDS = [
   "drinkOther",
   "communalMeals",
   "helpCookClean",
-  // Comedy
+  // Activities / Workshop
   "workOnOther",
 ];
 

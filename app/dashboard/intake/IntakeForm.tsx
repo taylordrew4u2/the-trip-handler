@@ -183,7 +183,7 @@ export function IntakeForm({ defaultEmail, defaultName, defaultPhone, existing, 
 
       <Section title="Basic info">
         <Field label="Full name" required><TextInput name="fullName" defaultValue={e?.fullName ?? defaultName} required /></Field>
-        <Field label="Stage name (or N/A)" required><TextInput name="stageName" defaultValue={e?.stageName} required placeholder="N/A if you don't use one" /></Field>
+        <Field label="Stage / display name (or N/A)" required><TextInput name="stageName" defaultValue={e?.stageName} required placeholder="N/A if you don't use one" /></Field>
         <Field label="Phone number" required><TextInput name="phoneNumber" type="tel" defaultValue={e?.phoneNumber ?? defaultPhone} required /></Field>
         <Field label="Email"><input type="email" value={defaultEmail} disabled className={`${inputCls} bg-stone-100 text-stone-500 cursor-not-allowed`} /></Field>
         <Field label="Pronouns" required><TextInput name="pronouns" defaultValue={e?.pronouns} required placeholder="e.g. she/her, they/them, N/A" /></Field>
@@ -288,14 +288,14 @@ export function IntakeForm({ defaultEmail, defaultName, defaultPhone, existing, 
         </Field>
       </Section>
 
-      <Section title="Joke / material protection" intro="This part matters. People can make content together without stealing or posting unfinished jokes. All five required.">
+      <Section title="Material / content protection" intro="This part matters. People can create together without taking or posting each other's unfinished work. All five required.">
         <Field label="" required>
           <CheckboxGroup name="jokeProtectionAcks" defaultValue={e?.jokeProtectionAcks} options={[
-            { value: "noPostMaterial", label: "No one may post my stand-up material without my permission." },
+            { value: "noPostMaterial", label: "No one may post my material without my permission." },
             { value: "workshopPrivate", label: "Workshop footage is private unless I approve it being posted." },
-            { value: "groupOk", label: "Group/social content is okay, but my actual jokes should not be posted without approval." },
-            { value: "noRepeat", label: "I understand other comics' jokes, premises, unfinished ideas, and personal stories should not be repeated, posted, or used without permission." },
-            { value: "noPost", label: "I will not post another comic's material without asking them first." },
+            { value: "groupOk", label: "Group/social content is okay, but my own material should not be posted without approval." },
+            { value: "noRepeat", label: "I understand other people's ideas, premises, unfinished work, and personal stories should not be repeated, posted, or used without permission." },
+            { value: "noPost", label: "I will not post another person's material without asking them first." },
           ]} />
         </Field>
       </Section>
@@ -303,11 +303,11 @@ export function IntakeForm({ defaultEmail, defaultName, defaultPhone, existing, 
       <Section title="Group activities" intro="Group activities, content creation, writing sessions, workshops, and other trip activities.">
         <Field label="Which activities are you interested in?">
           <CheckboxGroup name="activitiesInterested" defaultValue={e?.activitiesInterested} options={[
-            { value: "Joke writing sessions", label: "Joke writing sessions" },
-            { value: "Set workshop", label: "Set workshop" },
-            { value: "Mock comedy show", label: "Mock comedy show" },
-            { value: "Roast games", label: "Roast games" },
-            { value: "Group sketches", label: "Group sketches" },
+            { value: "Writing sessions", label: "Writing sessions" },
+            { value: "Skill workshop", label: "Skill workshop" },
+            { value: "Talent show / showcase", label: "Talent show / showcase" },
+            { value: "Group games", label: "Group games" },
+            { value: "Group creative projects", label: "Group creative projects" },
             { value: "Social media content", label: "Social media content" },
             { value: "Podcast-style recordings", label: "Podcast-style recordings" },
             { value: "Campfire hang", label: "Campfire hang" },

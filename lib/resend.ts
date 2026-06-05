@@ -71,7 +71,7 @@ export async function sendApprovalEmail(email: string, name: string) {
       <div style="font-family: ui-sans-serif, system-ui, sans-serif; max-width: 560px; margin: 0 auto; color: #1c1917;">
         <p style="font-size: 12px; text-transform: uppercase; letter-spacing: 2px; color: #888; margin: 0 0 8px;">The Trip Handler</p>
         <h1 style="font-size: 22px; margin: 0 0 12px;">Hey ${name} — you&apos;re in.</h1>
-        <p style="font-size: 14px; line-height: 1.5; color: #444;">Admin approved your application. Next step: log in and finish your <strong>trip preferences</strong> (emergency contact, transportation, food, comedy/workshop) so we can plan around you. You can see the roster, itinerary, contributions board, and meet everyone else who&apos;s coming.</p>
+        <p style="font-size: 14px; line-height: 1.5; color: #444;">Admin approved your application. Next step: log in and finish your <strong>trip preferences</strong> (emergency contact, transportation, food, activities/workshop) so we can plan around you. You can see the roster, itinerary, contributions board, and meet everyone else who&apos;s coming.</p>
         <p style="font-size: 14px; line-height: 1.5; color: #444;">When the trip is locked you&apos;ll get another email asking you to pay (your trip share + the refundable $75 security deposit).</p>
         <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard/preferences" style="background:#1c1917;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;display:inline-block;margin-top:16px;font-size:14px;">Open the preferences form</a>
       </div>

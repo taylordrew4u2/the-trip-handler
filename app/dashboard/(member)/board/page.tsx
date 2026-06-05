@@ -28,7 +28,7 @@ export default async function BoardPage() {
       <div>
         <h1 className="font-serif text-3xl font-medium text-stone-900">The Board</h1>
         <p className="text-stone-500 text-sm mt-1">
-          Hot takes, half-formed jokes, schedule chaos, anything.
+          Updates, questions, schedule chaos, anything.
         </p>
       </div>
       <BoardClient comments={comments} currentUserId={userId} />

@@ -26,7 +26,7 @@ export default async function PreferencesPage() {
         <h1 className="font-serif text-3xl font-medium text-stone-900">Help plan the trip</h1>
         <p className="text-stone-600 mt-3 text-sm leading-relaxed">
           Now that you&apos;re approved, fill this out so we can plan emergency contacts, vans, food,
-          and the comedy itinerary. <strong>Every field is required</strong> — write &ldquo;N/A&rdquo;
+          and the activity itinerary. <strong>Every field is required</strong> — write &ldquo;N/A&rdquo;
           if something genuinely doesn&apos;t apply. You can come back and update this anytime.
         </p>
       </div>

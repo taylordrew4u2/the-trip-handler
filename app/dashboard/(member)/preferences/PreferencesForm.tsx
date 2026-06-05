@@ -319,18 +319,18 @@ export function PreferencesForm({ existing }: { existing: GuestForm | null }) {
         </Field>
       </Section>
 
-      <Section title="Comedy / workshop" intro="Helps shape the itinerary.">
+      <Section title="Activities / workshop" intro="Helps shape the itinerary.">
         <Field
           label="What are you hoping to work on?"
           required
-          hint="Examples: new jokes, existing set, longer set, crowd work, characters, sketches, roast jokes, social-media ideas, podcast ideas, writing discipline."
+          hint="Examples: a skill you want to practice, a project to finish, content ideas, performance prep, or just relaxing."
         >
           <TextArea
             name="workOnOther"
             defaultValue={e?.workOnOther}
             rows={3}
             required
-            placeholder="Type whatever — e.g. “tightening my 5-minute set” or “sketch ideas with a partner”. N/A if you're just here to vibe."
+            placeholder="Type whatever — e.g. “finishing a project” or “practicing with a partner”. N/A if you're just here to vibe."
           />
         </Field>
       </Section>

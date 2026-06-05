@@ -85,7 +85,7 @@ export default async function DashboardPage() {
           <p className="text-xs uppercase tracking-[0.15em] text-blue-800">Next step</p>
           <h2 className="font-serif text-xl font-medium text-stone-900 mt-1">Fill out your trip preferences</h2>
           <p className="text-sm text-stone-700 mt-2 leading-relaxed">
-            Now that you&apos;re approved, share your emergency contact, transportation, food, and comedy
+            Now that you&apos;re approved, share your emergency contact, transportation, food, and activity
             preferences so the trip can actually be planned.
           </p>
           <a href="/dashboard/preferences" className="inline-block mt-4 px-4 py-2 bg-stone-900 hover:bg-stone-800 text-white rounded-lg text-sm font-medium">

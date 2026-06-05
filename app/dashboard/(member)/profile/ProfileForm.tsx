@@ -129,7 +129,7 @@ export function ProfileForm({
       </div>
 
       <div>
-        <label className="block text-xs font-medium text-stone-700 mb-1.5 tracking-wide">COMEDY BIO</label>
+        <label className="block text-xs font-medium text-stone-700 mb-1.5 tracking-wide">BIO</label>
         <textarea
           name="bio"
           rows={4}
