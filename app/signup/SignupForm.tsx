@@ -58,7 +58,7 @@ export function SignupForm({ invite }: { invite?: InviteInfo | null }) {
             </>
           ) : (
             <>
-              Sign in to <strong>host your own trip</strong> and invite people, or apply to a
+              Sign in to <strong>host your own trip</strong>{" "}and invite people, or apply to a
               trip you&apos;ve been invited to.
             </>
           )}

@@ -47,6 +47,11 @@ export const metadata: Metadata = {
     title: "The Trip Handler",
     description: DESCRIPTION,
   },
+  appleWebApp: {
+    capable: true,
+    title: "Trip Handler",
+    statusBarStyle: "default",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
