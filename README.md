@@ -6,16 +6,28 @@ A full-stack Next.js application for organizing group trips. Anyone can create a
 
 ## Live Demo
 
-<https://the-trip-handler.vercel.app>
+**<https://the-trip-handler.vercel.app>** — click **"Try the demo →"** on the login page to enter a fully-populated trip in one click, no signup required.
 
-**Try it as an organizer** (seed the demo data with `npm run db:seed` first):
+Prefer to sign in manually (after seeding with `npm run db:seed`):
 
 | Role | Email | Password |
 | --- | --- | --- |
 | Organizer (owns a trip) | `demo@thetriphandler.app` | `demo1234` |
 | Approved participant | `alex@example.com` | `demo1234` |
 
-The organizer account owns a seeded "Demo Cabin Weekend" trip — sign in and open **My trips** to manage pricing, applicants, beds, contributions, expenses, and the meal poll. The shareable invite link is `/join/demo-invite-token`.
+The demo organizer owns a seeded **"Demo Cabin Weekend"** trip with an approved roster, a 3-day itinerary, a contributions board, logged expenses, beds, and per-person pricing. Open **My trips** to manage pricing, applicants, beds, contributions, expenses, and the meal poll. Invite link: `/join/demo-invite-token` · join code: `TAHOE`.
+
+## Screenshots
+
+Run the demo locally to capture these — `npm run db:seed && npm run dev` — then save PNGs to `docs/screenshots/` and uncomment the block below.
+
+<!--
+| Home screen | Trip dashboard | Meal poll |
+| --- | --- | --- |
+| ![Home screen](docs/screenshots/home.png) | ![Trip dashboard](docs/screenshots/dashboard.png) | ![Meal poll](docs/screenshots/meals.png) |
+-->
+
+The architecture diagram below renders directly on GitHub.
 
 ## Overview
 
@@ -94,6 +106,34 @@ The Trip Handler centralizes a trip owner's workflow and each participant's view
 - **Lint:** ESLint 9 with `eslint-config-next`.
 
 ## Architecture
+
+```mermaid
+flowchart TD
+    subgraph Client["Browser"]
+        UI["React 19 Server + Client Components<br/>Tailwind 4"]
+    end
+    subgraph Next["Next.js 16 on Vercel"]
+        Pages["App Router pages<br/>/login · /dashboard · /join/[token]"]
+        Actions["Typed Server Actions<br/>(auth + ownership checks)"]
+        API["Route Handlers<br/>NextAuth · uploads · Stripe webhook"]
+    end
+    DB[("PostgreSQL<br/>via Prisma ORM")]
+    Stripe["Stripe Checkout"]
+    Blob["Vercel Blob"]
+    Resend["Resend email"]
+
+    UI -->|form submit| Actions
+    UI -->|navigation| Pages
+    Pages --> Actions
+    Actions -->|"validated (Zod)"| DB
+    API --> DB
+    Actions -->|create session| Stripe
+    Stripe -->|webhook| API
+    Actions -->|avatars / receipts| Blob
+    Actions -->|approval / payment emails| Resend
+```
+
+Every state change flows through a typed **server action** that re-checks authentication and trip ownership before touching the database — the client never holds privileged logic.
 
 The repository is a single Next.js application at its root, deployed by Vercel from the repo root.
 
