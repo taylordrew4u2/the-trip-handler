@@ -4,10 +4,6 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
-// Demo organizer account, populated by `npm run db:seed`.
-const DEMO_IDENTIFIER = "demo@thetriphandler.app";
-const DEMO_PASSWORD = "demo1234";
-
 export function LoginForm() {
   const router = useRouter();
   const [identifier, setIdentifier] = useState("");
@@ -15,36 +11,24 @@ export function LoginForm() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  async function signInWith(id: string, pw: string, onError: string) {
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
     setLoading(true);
     setError("");
 
     const result = await signIn("credentials", {
       redirect: false,
-      identifier: id,
-      password: pw,
+      identifier,
+      password,
     });
 
     setLoading(false);
     if (result?.error) {
-      setError(onError);
+      setError("Invalid email or password");
     } else {
       router.push("/dashboard");
       router.refresh();
     }
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    await signInWith(identifier, password, "Invalid email or password");
-  }
-
-  function handleDemo() {
-    void signInWith(
-      DEMO_IDENTIFIER,
-      DEMO_PASSWORD,
-      "Demo data isn't seeded yet — run `npm run db:seed`.",
-    );
   }
 
   return (
@@ -86,24 +70,6 @@ export function LoginForm() {
           {loading ? "Signing in…" : "Sign in"}
         </button>
       </form>
-
-      <div className="flex items-center gap-3 my-5">
-        <span className="h-px flex-1 bg-stone-200" />
-        <span className="text-xs uppercase tracking-wide text-stone-400">or</span>
-        <span className="h-px flex-1 bg-stone-200" />
-      </div>
-
-      <button
-        type="button"
-        onClick={handleDemo}
-        disabled={loading}
-        className="w-full py-2.5 px-4 bg-white hover:bg-stone-50 text-stone-900 border border-stone-300 rounded-lg font-medium text-sm transition-colors disabled:opacity-50"
-      >
-        Try the demo →
-      </button>
-      <p className="text-xs text-stone-500 text-center mt-2">
-        Sign in as a demo organizer — no account needed.
-      </p>
     </div>
   );
 }

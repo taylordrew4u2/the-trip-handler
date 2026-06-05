@@ -6,16 +6,11 @@ A full-stack Next.js application for organizing group trips. Anyone can create a
 
 ## Live Demo
 
-**<https://the-trip-handler.vercel.app>** — click **"Try the demo →"** on the login page to enter a fully-populated trip in one click, no signup required.
+**<https://the-trip-handler.vercel.app>**
 
-Prefer to sign in manually (after seeding with `npm run db:seed`):
+It's invite-only by design, so there's no public trip directory. **Create an account** to land on the home screen, then start your own trip — name it, get a shareable invite link and join code, and manage applicants, lodging, the meal poll, contributions, expenses, and per-person pricing.
 
-| Role | Email | Password |
-| --- | --- | --- |
-| Organizer (owns a trip) | `demo@thetriphandler.app` | `demo1234` |
-| Approved participant | `alex@example.com` | `demo1234` |
-
-The demo organizer owns a seeded **"Demo Cabin Weekend"** trip with an approved roster, a 3-day itinerary, a contributions board, logged expenses, beds, and per-person pricing. Open **My trips** to manage pricing, applicants, beds, contributions, expenses, and the meal poll. Invite link: `/join/demo-invite-token` · join code: `TAHOE`.
+> Want to explore with pre-filled data locally? An optional seed script (`npm run db:seed`) creates a demo trip with a roster, itinerary, contributions, and expenses for development.
 
 ## Screenshots
 
