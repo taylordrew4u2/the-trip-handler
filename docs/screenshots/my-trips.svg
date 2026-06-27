@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="560" viewBox="0 0 900 560" font-family="system-ui, -apple-system, sans-serif">
+  <rect width="900" height="560" fill="#fafaf9"/>
+
+  <!-- Nav bar -->
+  <rect width="900" height="56" fill="#ffffff"/>
+  <line x1="0" y1="56" x2="900" y2="56" stroke="#e7e5e3" stroke-width="1"/>
+  <text x="24" y="34" font-family="Georgia, serif" font-size="17" font-weight="600" fill="#1c1917">The Trip Handler</text>
+  <text x="206" y="33" font-size="12" fill="#57534e">Home</text>
+  <rect x="240" y="16" width="58" height="26" rx="6" fill="#1c1917"/>
+  <text x="269" y="33" font-size="12" font-weight="500" fill="#ffffff" text-anchor="middle">My trips</text>
+  <text x="312" y="33" font-size="12" fill="#57534e">Roster</text>
+  <text x="364" y="33" font-size="12" fill="#57534e">Itinerary</text>
+  <text x="840" y="33" font-size="12" fill="#78716c">Sign out</text>
+
+  <g transform="translate(60, 76)">
+    <text x="0" y="30" font-family="Georgia, serif" font-size="28" font-weight="600" fill="#1c1917">My Trips</text>
+    <text x="0" y="52" font-size="14" fill="#78716c">Manage your trips, invite guests, and review applicants</text>
+
+    <!-- Trip card -->
+    <rect x="0" y="66" width="780" height="130" rx="12" fill="#1c1917"/>
+    <text x="20" y="96" font-size="10" font-weight="500" fill="#a8a29e" letter-spacing="3">ACTIVE TRIP</text>
+    <text x="20" y="128" font-family="Georgia, serif" font-size="26" font-weight="600" fill="#f5f5f4">Blue Ridge Mountain Retreat</text>
+    <text x="20" y="152" font-size="13" fill="#d6d3d1">Asheville, NC · Aug 14 – 18, 2025 · 14 approved · Applications open</text>
+
+    <!-- Invite link row -->
+    <rect x="20" y="164" width="400" height="24" rx="6" fill="#292524" stroke="#44403c" stroke-width="1"/>
+    <text x="32" y="179" font-size="11" fill="#a8a29e">the-trip-handler.vercel.app/join/tk_8xm92…</text>
+    <rect x="432" y="164" width="76" height="24" rx="6" fill="#44403c"/>
+    <text x="470" y="179" font-size="10" fill="#d6d3d1" text-anchor="middle">Copy link</text>
+    <rect x="516" y="164" width="80" height="24" rx="6" fill="#44403c"/>
+    <text x="556" y="179" font-size="10" fill="#d6d3d1" text-anchor="middle">Code: BLR24</text>
+
+    <!-- Applicants panel -->
+    <text x="0" y="222" font-size="15" font-weight="600" fill="#1c1917">Applicants</text>
+    <rect x="620" y="208" width="160" height="28" rx="7" fill="#ffffff" stroke="#e7e5e3" stroke-width="1"/>
+    <text x="700" y="226" font-size="11" fill="#57534e" text-anchor="middle">Close applications</text>
+
+    <!-- Applicant rows -->
+    <!-- Applicant 1 - Pending -->
+    <rect x="0" y="234" width="780" height="54" rx="8" fill="#ffffff" stroke="#e7e5e3" stroke-width="1"/>
+    <circle cx="28" cy="261" r="16" fill="#e7e5e3"/>
+    <text x="28" y="266" font-size="12" font-weight="600" fill="#57534e" text-anchor="middle">CR</text>
+    <text x="54" y="256" font-size="13" font-weight="600" fill="#1c1917">Casey Rodriguez</text>
+    <text x="54" y="272" font-size="11" fill="#78716c">casey@email.com · Applied 2 hours ago · Guest form submitted</text>
+    <rect x="556" y="244" width="96" height="26" rx="7" fill="#f0fdf4" stroke="#86efac" stroke-width="1"/>
+    <text x="604" y="261" font-size="11" font-weight="600" fill="#166534" text-anchor="middle">Approve ✓</text>
+    <rect x="660" y="244" width="104" height="26" rx="7" fill="#fff1f2" stroke="#fecdd3" stroke-width="1"/>
+    <text x="712" y="261" font-size="11" font-weight="600" fill="#9f1239" text-anchor="middle">Reject ✕</text>
+
+    <!-- Applicant 2 - No form -->
+    <rect x="0" y="296" width="780" height="54" rx="8" fill="#ffffff" stroke="#e7e5e3" stroke-width="1"/>
+    <circle cx="28" cy="323" r="16" fill="#e7e5e3"/>
+    <text x="28" y="328" font-size="12" font-weight="600" fill="#57534e" text-anchor="middle">TW</text>
+    <text x="54" y="318" font-size="13" font-weight="600" fill="#1c1917">Taylor Williams</text>
+    <text x="54" y="334" font-size="11" fill="#78716c">taylor@email.com · Applied 5 hours ago · </text>
+    <rect x="220" y="320" width="100" height="16" rx="8" fill="#fffbeb" stroke="#fcd34d" stroke-width="1"/>
+    <text x="270" y="331" font-size="9" fill="#92400e" text-anchor="middle">Guest form pending</text>
+    <rect x="556" y="306" width="96" height="26" rx="7" fill="#f5f5f4" stroke="#e7e5e3" stroke-width="1"/>
+    <text x="604" y="323" font-size="11" fill="#a8a29e" text-anchor="middle">Approve ✓</text>
+    <rect x="660" y="306" width="104" height="26" rx="7" fill="#fff1f2" stroke="#fecdd3" stroke-width="1"/>
+    <text x="712" y="323" font-size="11" font-weight="600" fill="#9f1239" text-anchor="middle">Reject ✕</text>
+
+    <!-- Applicant 3 - Approved -->
+    <rect x="0" y="358" width="780" height="54" rx="8" fill="#f0fdf4" stroke="#86efac" stroke-width="1"/>
+    <circle cx="28" cy="385" r="16" fill="#bbf7d0"/>
+    <text x="28" y="390" font-size="12" font-weight="600" fill="#15803d" text-anchor="middle">PK</text>
+    <text x="54" y="380" font-size="13" font-weight="600" fill="#1c1917">Priya Kumar</text>
+    <text x="54" y="396" font-size="11" fill="#78716c">priya@email.com · Approved · CONFIRMED_PAID</text>
+    <rect x="660" y="368" width="104" height="26" rx="7" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+    <text x="712" y="385" font-size="11" font-weight="600" fill="#15803d" text-anchor="middle">Paid ✓</text>
+
+    <!-- Create new trip -->
+    <rect x="0" y="430" width="780" height="56" rx="10" fill="#ffffff" stroke="#e7e5e3" stroke-width="1" stroke-dasharray="5,3"/>
+    <text x="390" y="455" font-size="13" fill="#a8a29e" text-anchor="middle">+ Create a new trip</text>
+    <text x="390" y="474" font-size="11" fill="#d6d3d1" text-anchor="middle">Each trip gets its own invite link and join code</text>
+
+  </g>
+</svg>

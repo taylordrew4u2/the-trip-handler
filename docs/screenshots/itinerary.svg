@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="560" viewBox="0 0 900 560" font-family="system-ui, -apple-system, sans-serif">
+  <rect width="900" height="560" fill="#fafaf9"/>
+
+  <!-- Nav bar -->
+  <rect width="900" height="56" fill="#ffffff"/>
+  <line x1="0" y1="56" x2="900" y2="56" stroke="#e7e5e3" stroke-width="1"/>
+  <text x="24" y="34" font-family="Georgia, serif" font-size="17" font-weight="600" fill="#1c1917">The Trip Handler</text>
+  <text x="206" y="33" font-size="12" fill="#57534e">Home</text>
+  <text x="254" y="33" font-size="12" fill="#57534e">My trips</text>
+  <text x="314" y="33" font-size="12" fill="#57534e">Roster</text>
+  <rect x="354" y="16" width="58" height="26" rx="6" fill="#1c1917"/>
+  <text x="383" y="33" font-size="12" font-weight="500" fill="#ffffff" text-anchor="middle">Itinerary</text>
+  <text x="425" y="33" font-size="12" fill="#57534e">Lodging</text>
+  <text x="484" y="33" font-size="12" fill="#57534e">Sleeping</text>
+  <text x="541" y="33" font-size="12" fill="#57534e">Meals</text>
+  <text x="588" y="33" font-size="12" fill="#57534e">Board</text>
+  <text x="840" y="33" font-size="12" fill="#78716c">Sign out</text>
+
+  <g transform="translate(60, 76)">
+
+    <text x="0" y="30" font-family="Georgia, serif" font-size="28" font-weight="600" fill="#1c1917">Itinerary</text>
+    <text x="0" y="52" font-size="14" fill="#78716c">Blue Ridge Mountain Retreat · Aug 14 – 18, 2025</text>
+
+    <!-- Day tabs -->
+    <rect x="0" y="64" width="780" height="36" rx="8" fill="#ffffff" stroke="#e7e5e3" stroke-width="1"/>
+    <rect x="4" y="68" width="66" height="28" rx="6" fill="#1c1917"/>
+    <text x="37" y="86" font-size="11" font-weight="600" fill="#ffffff" text-anchor="middle">Thu 8/14</text>
+    <text x="115" y="86" font-size="11" fill="#78716c" text-anchor="middle">Fri 8/15</text>
+    <text x="195" y="86" font-size="11" fill="#78716c" text-anchor="middle">Sat 8/16</text>
+    <text x="275" y="86" font-size="11" fill="#78716c" text-anchor="middle">Sun 8/17</text>
+    <text x="355" y="86" font-size="11" fill="#78716c" text-anchor="middle">Mon 8/18</text>
+
+    <!-- Itinerary item 1 - Pinned -->
+    <rect x="0" y="116" width="780" height="110" rx="10" fill="#ffffff" stroke="#fcd34d" stroke-width="1.5"/>
+    <rect x="0" y="116" width="4" height="110" rx="2" fill="#f59e0b"/>
+    <!-- Pin badge -->
+    <rect x="12" y="124" width="36" height="16" rx="8" fill="#fffbeb" stroke="#fcd34d" stroke-width="1"/>
+    <text x="30" y="135" font-size="9" fill="#92400e" text-anchor="middle">📌 pinned</text>
+    <text x="56" y="135" font-size="11" font-weight="600" fill="#44403c">3:00 PM</text>
+    <text x="12" y="158" font-size="15" font-weight="700" fill="#1c1917">Arrival &amp; check-in</text>
+    <text x="12" y="176" font-size="12" fill="#57534e">Meet at the main cabin. Keys are in the lockbox — code is in the details below.</text>
+    <text x="12" y="194" font-size="11" fill="#a8a29e">📍 123 Ridge Road, Asheville NC · 🔑 Lockbox code: 7742</text>
+    <!-- Comment thread preview -->
+    <line x1="12" y1="204" x2="768" y2="204" stroke="#f5f5f4" stroke-width="1"/>
+    <circle cx="26" cy="218" r="8" fill="#e7e5e3"/>
+    <text x="26" y="222" font-size="8" fill="#57534e" text-anchor="middle">P</text>
+    <text x="40" y="218" font-size="11" fill="#1c1917" font-weight="500">Priya</text>
+    <text x="74" y="218" font-size="11" fill="#57534e">Are we carpooling from Charlotte? I have room for 2 more.</text>
+    <text x="700" y="218" font-size="10" fill="#a8a29e">Thu 2:14 PM</text>
+
+    <!-- Itinerary item 2 -->
+    <rect x="0" y="240" width="780" height="90" rx="10" fill="#ffffff" stroke="#e7e5e3" stroke-width="1"/>
+    <rect x="0" y="240" width="4" height="90" rx="2" fill="#e7e5e3"/>
+    <text x="12" y="262" font-size="11" font-weight="600" fill="#44403c">6:00 PM</text>
+    <text x="12" y="280" font-size="15" font-weight="700" fill="#1c1917">Welcome dinner on the deck</text>
+    <text x="12" y="298" font-size="12" fill="#57534e">Grilled everything. Bring your appetite and something to drink.</text>
+    <line x1="12" y1="312" x2="768" y2="312" stroke="#f5f5f4" stroke-width="1"/>
+    <circle cx="26" cy="326" r="8" fill="#e7e5e3"/>
+    <text x="26" y="330" font-size="8" fill="#57534e" text-anchor="middle">M</text>
+    <text x="40" y="326" font-size="11" fill="#57534e">Marcus · </text>
+    <text x="97" y="326" font-size="11" fill="#57534e">I'll bring the charcoal and tongs.</text>
+    <circle cx="200" cy="326" r="8" fill="#e7e5e3"/>
+    <text x="200" y="330" font-size="8" fill="#57534e" text-anchor="middle">J</text>
+    <text x="214" y="326" font-size="11" fill="#57534e">Jordan · </text>
+    <text x="258" y="326" font-size="11" fill="#57534e">Should I bring my cast iron?</text>
+    <text x="650" y="326" font-size="10" fill="#a8a29e">2 comments</text>
+
+    <!-- Itinerary item 3 -->
+    <rect x="0" y="344" width="780" height="76" rx="10" fill="#ffffff" stroke="#e7e5e3" stroke-width="1"/>
+    <rect x="0" y="344" width="4" height="76" rx="2" fill="#e7e5e3"/>
+    <text x="12" y="366" font-size="11" font-weight="600" fill="#44403c">9:00 PM</text>
+    <text x="12" y="384" font-size="15" font-weight="700" fill="#1c1917">Bonfire &amp; stargazing</text>
+    <text x="12" y="402" font-size="12" fill="#57534e">Fire pit behind the cabin. Marshmallows and hot chocolate provided.</text>
+    <!-- Add comment -->
+    <rect x="12" y="404" width="756" height="1" fill="#f5f5f4"/>
+
+    <!-- Comment input -->
+    <rect x="0" y="432" width="780" height="40" rx="8" fill="#ffffff" stroke="#e7e5e3" stroke-width="1"/>
+    <circle cx="20" cy="452" r="10" fill="#1c1917"/>
+    <text x="20" y="456" font-size="8" fill="#ffffff" text-anchor="middle">Y</text>
+    <text x="40" y="456" font-size="12" fill="#a8a29e">Add a comment…</text>
+    <rect x="700" y="440" width="68" height="24" rx="6" fill="#1c1917"/>
+    <text x="734" y="456" font-size="11" font-weight="500" fill="#ffffff" text-anchor="middle">Post</text>
+
+  </g>
+</svg>
