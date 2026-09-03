@@ -4,59 +4,21 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { useEffect, useId, useState } from "react";
-
-type NavItem = { href: string; label: string; exact?: boolean; gated?: boolean };
-type NavGroup = { heading: string; items: NavItem[] };
-
-// Grouped so the mobile sheet reads as a map of the trip rather than a wall of
-// thirteen links. The desktop bar flattens these back into one row.
-const navGroups: NavGroup[] = [
-  {
-    heading: "Trip",
-    items: [
-      { href: "/dashboard", label: "Home", exact: true },
-      { href: "/dashboard/my-trips", label: "My trips" },
-      { href: "/dashboard/itinerary", label: "Itinerary" },
-      { href: "/dashboard/lodging", label: "Lodging" },
-    ],
-  },
-  {
-    heading: "The group",
-    items: [
-      { href: "/dashboard/roster", label: "Roster", gated: true },
-      { href: "/dashboard/sleeping", label: "Sleeping", gated: true },
-      { href: "/dashboard/meals", label: "Meals", gated: true },
-      { href: "/dashboard/board", label: "Board", gated: true },
-      { href: "/dashboard/contributions", label: "Contributions", gated: true },
-    ],
-  },
-  {
-    heading: "You",
-    items: [
-      { href: "/dashboard/intake", label: "Guest form" },
-      { href: "/dashboard/preferences", label: "Preferences", gated: true },
-      { href: "/dashboard/payment", label: "Payment", gated: true },
-      { href: "/dashboard/profile", label: "Profile" },
-    ],
-  },
-];
-
-function isActive(item: NavItem, pathname: string) {
-  return item.exact ? pathname === item.href : pathname.startsWith(item.href);
-}
+import {
+  currentNavItem,
+  isActiveNavItem,
+  visibleNavGroups,
+  visibleNavItems,
+} from "@/lib/nav";
 
 export function DashboardNav({ status }: { status: string | null }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const menuId = useId();
 
-  const isPending = status === "PENDING";
-  const groups = navGroups
-    .map((group) => ({ ...group, items: group.items.filter((i) => !i.gated || !isPending) }))
-    .filter((group) => group.items.length > 0);
-  const flatItems = groups.flatMap((group) => group.items);
-
-  const current = flatItems.find((item) => isActive(item, pathname));
+  const groups = visibleNavGroups(status);
+  const flatItems = visibleNavItems(status);
+  const current = currentNavItem(status, pathname);
 
   // Navigating away closes the sheet — including via the back button, which no
   // link handler would catch. Adjusting during render (rather than in an effect)
@@ -85,7 +47,12 @@ export function DashboardNav({ status }: { status: string | null }) {
 
   return (
     <nav className="bg-white border-b border-stone-200 sticky top-0 z-50 pt-safe">
-      <div className="max-w-6xl mx-auto gutter">
+      {/* The page content is capped at max-w-6xl, but the inline row of
+          destinations needs ~1330px including the wordmark. Widening the bar
+          (and only the bar) at the breakpoint where that row appears is what
+          keeps it from spilling past its container — the cap, not the viewport,
+          was what it overflowed. */}
+      <div className="max-w-6xl 2xl:max-w-[92rem] mx-auto gutter">
         {/* Sits above the dimming overlay so the toggle stays tappable. */}
         <div className="relative z-50 flex items-center justify-between gap-4 h-14 2xl:h-16">
           <Link
@@ -101,9 +68,9 @@ export function DashboardNav({ status }: { status: string | null }) {
               <Link
                 key={item.href}
                 href={item.href}
-                aria-current={isActive(item, pathname) ? "page" : undefined}
+                aria-current={isActiveNavItem(item, pathname) ? "page" : undefined}
                 className={`px-2.5 py-1.5 rounded-md text-sm font-medium whitespace-nowrap transition-colors ${
-                  isActive(item, pathname)
+                  isActiveNavItem(item, pathname)
                     ? "bg-stone-900 text-white"
                     : "text-stone-600 hover:text-stone-900 hover:bg-stone-100"
                 }`}
@@ -169,7 +136,7 @@ export function DashboardNav({ status }: { status: string | null }) {
                   </p>
                   <ul>
                     {group.items.map((item) => {
-                      const active = isActive(item, pathname);
+                      const active = isActiveNavItem(item, pathname);
                       return (
                         <li key={item.href}>
                           <Link
