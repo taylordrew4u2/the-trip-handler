@@ -78,13 +78,61 @@ Approval, rejection, cancellation, form-unlocked, bed-bump, and trip-locked emai
 
 ---
 
+## Designed for phones and desktops
+
+Most of this app gets used on a phone — someone claims a bed from the couch, votes
+on dinner from a queue, checks the itinerary from a car. The desktop layout is
+where an organizer sits down to approve applicants and set pricing. Both are
+first-class, and every screen is built to work at 320px and at 1536px.
+
+**Navigation adapts to the space it has.** The member area has thirteen
+destinations. On a wide screen they sit inline as a single row of tabs. Below
+that, the header collapses to the name of the page you're on plus one control
+that opens a grouped menu — *Trip*, *The group*, *You* — so the whole app is one
+tap away instead of hidden behind a sideways scroll. The menu closes on
+navigation (including the back button), closes on `Escape`, dims the page behind
+it, and locks background scrolling while open.
+
+**Touch targets are sized by pointer, not by width.** An iPad is 768px wide and
+still operated with a thumb, so a breakpoint is the wrong thing to key off.
+`app/globals.css` applies the 44px minimum from Apple's HIG and WCAG 2.5.5 under
+`@media (pointer: coarse)`, which leaves the compact look intact on machines with
+a mouse.
+
+**Forms behave like native ones.** Inputs carry `autocomplete`, `inputmode`, and
+`enterkeyhint` so password managers fill them and the on-screen keyboard shows
+the right layout and return key. Every control is at least 16px on touch devices,
+which is what stops iOS Safari from zooming the page in when a field is focused.
+
+**Layout details that matter on a small screen.** Rows that pair a label with
+controls stack rather than squeeze; long trip names, emails, and join codes wrap
+instead of pushing the page sideways; the viewport is declared `viewport-fit=cover`
+with matching `theme-color` so an installed home-screen app paints to the edges;
+and `*-safe` utilities keep content clear of the notch and home indicator.
+Motion respects `prefers-reduced-motion`, and a visible focus ring is restored
+globally for keyboard users.
+
+**Verified on every commit, not assumed.** None of the above is a claim you
+have to take on faith. `tests/e2e/` drives both journeys — organizer and member
+— through a real browser at five viewports against a seeded database, asserting
+on every page that nothing overflows horizontally and that no control falls
+below the touch minimum, plus the behaviour of the collapsed menu. It runs in CI
+on every pull request. See [Testing](#testing).
+
+It has already earned its place: it caught the inline nav overflowing its
+`max-w-6xl` container — a bug a manual pass had missed, because the row stayed
+inside the *viewport* at most widths while spilling out of its *container* at
+all of them.
+
+---
+
 ## Tech stack
 
 | Layer | Choice |
 |---|---|
 | Language | TypeScript (strict) |
 | Framework | Next.js 16 — App Router, React 19 server + client components, server actions |
-| Styling | Tailwind CSS v4 · Fraunces (serif) + Inter (sans) |
+| Styling | Tailwind CSS v4 — mobile-first, responsive to 320px · Fraunces (serif) + Inter (sans) |
 | Database | PostgreSQL via Vercel Postgres |
 | ORM | Prisma v5 — versioned migration history committed under `prisma/migrations` |
 | Auth | NextAuth.js v4 — credentials provider, JWT sessions, bcrypt (cost 10) |
@@ -92,7 +140,7 @@ Approval, rejection, cancellation, form-unlocked, bed-bump, and trip-locked emai
 | File storage | Vercel Blob — avatars, lodging photos, expense receipts |
 | Email | Resend |
 | Validation | Zod |
-| Testing | Vitest |
+| Testing | Vitest (unit) · Playwright (responsive end-to-end, five viewports) |
 | Hosting | Vercel |
 
 ---
@@ -179,6 +227,10 @@ stateDiagram-v2
 │                            # RosterCard · ApprovalRequired · StatusBadge
 ├── lib/                     # auth · db · approval · meals · pricing
 │                            # sleep · trip · stripe · blob · resend
+│                            # nav (dashboard routing map, unit-tested)
+├── tests/
+│   ├── *.test.ts            # Vitest unit tests (pricing, approval, nav, …)
+│   └── e2e/                 # Playwright responsive suite, five viewports
 ├── prisma/
 │   ├── schema.prisma        # Full data model
 │   ├── migrations/          # Versioned migration history
@@ -200,6 +252,20 @@ stateDiagram-v2
 
 **Ownership checks on every owner action.** Trip-management mutations resolve the trip from its ID and assert `trip.ownerId === session.user.id` before touching any data. A member cannot act on a trip they don't own by crafting the request directly.
 
+**Responsive behaviour asserted in CI rather than eyeballed.** Layout
+regressions are easy to ship and easy to miss: a change looks fine on the
+window you happen to have open. Encoding "nothing overflows, nothing is too
+small to tap" as executable assertions across five viewports turns a manual
+pass that decays into a gate that holds. It found a container-width bug on its
+first full run that a careful manual sweep had missed.
+
+**Touch sizing keyed to pointer type, not viewport width.** The obvious
+implementation — grow controls below the `sm` breakpoint — gets tablets wrong:
+a 768px iPad is a touch device that would fall through to the compact desktop
+sizes. Keying the 44px floor off `@media (pointer: coarse)` describes the actual
+constraint (how precisely the user can point) rather than a proxy for it, and
+correctly covers touch laptops and large tablets too.
+
 **Amount derived server-side at Stripe checkout.** The server action reads the locked per-person cost from the database; the client never passes an amount. The signed Stripe webhook is the only thing that advances a user to `CONFIRMED_PAID`.
 
 ---
@@ -215,11 +281,13 @@ npm run dev                  # http://localhost:3000
 ```
 
 ```bash
-npm run db:seed    # seed a demo trip, roster, itinerary, and contributions
-npm run build      # prisma generate + migrate deploy + next build
-npm run test       # Vitest unit tests
-npm run lint       # ESLint 9
-npm run db:studio  # Prisma Studio
+npm run db:seed     # seed a demo trip, roster, itinerary, and contributions
+npm run build       # prisma generate + migrate deploy + next build
+npm run test        # Vitest unit tests
+npm run test:e2e    # Playwright responsive suite (needs a build + seeded data)
+npm run test:e2e:ui # the same suite in Playwright's interactive runner
+npm run lint        # ESLint 9
+npm run db:studio   # Prisma Studio
 ```
 
 ### Environment variables
@@ -245,6 +313,9 @@ NEXT_PUBLIC_APP_URL
 
 ## End-to-end walkthrough
 
+Worth doing once with your browser narrowed to a phone width — the whole flow is
+built to work there.
+
 1. `/signup` — create an account. You land on the home screen (`/dashboard/start`).
 2. `/dashboard/my-trips` — name your trip, get a private invite link and short join code.
 3. Open the invite link in a second browser session, apply, and fill in the guest form.
@@ -257,12 +328,56 @@ NEXT_PUBLIC_APP_URL
 
 ## Testing
 
-Unit tests run with **Vitest** (`npm test`) and execute in CI on every PR. Coverage includes:
+Two suites, split by what they can actually prove. Both run in CI on every pull
+request.
+
+### Unit tests — `npm test`
+
+**Vitest**, no browser, ~2s. These cover the logic where a mistake is a
+correctness or security bug:
 
 - **Pricing logic** — per-person cost calculation across housing, transport, and meals lines, including the deposit.
 - **Approval guards** — `requireApprovedUser()` rejects `PENDING` and `CANCELLED` users for gated actions.
 - **Trip ownership** — owner actions assert `trip.ownerId === session.user.id`; cross-owner mutations are rejected.
 - **Authorization boundaries** — applying to a trip never silently reassigns a member already on another trip.
+- **Navigation rules** — `lib/nav.ts` holds the dashboard's routing map: which destinations exist, which are gated behind approval, and which one counts as "current" for a URL. Keeping it out of the component means a nested route resolving to the wrong label, or a gated link leaking to a `PENDING` member, is caught without rendering anything.
+
+### Responsive end-to-end tests — `npm run test:e2e`
+
+**Playwright**, against a production build serving seeded data — because what
+these assert (layout at a given width, computed control heights) only exists
+once the real CSS is compiled and real content is on the page.
+
+Every test runs at five viewports, declared as projects so a failure names the
+device it broke on:
+
+| Project | Width | Why it's in the matrix |
+|---|---|---|
+| `phone-320` | 320px | The narrowest screen still in real use — layouts break here first. |
+| `phone-390` | 390px | The common modern phone. |
+| `tablet-768` | 768px | A touch device that is *not* phone-width — the case a width-only breakpoint gets wrong. |
+| `laptop-1280` | 1280px | Where the inline navigation does not fit and must collapse. |
+| `desktop-1536` | 1536px | The breakpoint boundary where it turns back on. |
+
+The phone and tablet projects use Playwright device descriptors rather than a
+bare viewport size, because those set `hasTouch`/`isMobile` — which is what makes
+`@media (pointer: coarse)` match. A plain viewport override would test the
+desktop styles at a phone width and pass while the real thing was broken.
+
+What they assert:
+
+- **No horizontal overflow** — no element extends past the viewport, and the document does not scroll sideways. Elements that opt into their own `overflow-x: auto` are exempt, since a wide table in its own scroller is a deliberate choice.
+- **Touch targets** — on touch projects, every button, link, select and input clears the touch-target floor. Inline links inside prose are exempt: they are part of a sentence, not a control.
+- **Navigation** — every destination is reachable at every size; the wordmark is never squeezed to nothing; and the collapsed menu names the current page, closes on navigation, on the back button, and on `Escape`, and locks the page behind it while open.
+
+Each of those assertions exists because that exact thing broke at least once
+during development. The back-button test, for instance, guards a menu that
+closed on link clicks but stayed open over the previous page when you went back.
+
+**A named limitation:** the suite runs on Chromium only, to keep CI to a single
+browser download. What is under test is this app's layout and media queries
+rather than rendering-engine differences — but it does mean a Safari-specific
+bug would not be caught here, so Safari stays a manual check.
 
 ---
 
@@ -289,6 +404,13 @@ See [`SECURITY.md`](./SECURITY.md) for the vulnerability reporting process.
 - Implemented the approval-gated UI (read-only mode for `PENDING` users) as a complement to — not a replacement for — server-side authorization.
 - Integrated Stripe Checkout end-to-end: server action creates the session, signed webhook records payment, status update gates the rest of the app.
 - Integrated Vercel Blob for file uploads and Resend for transactional emails covering all key status transitions.
+- Made the whole app responsive from 320px up, including a nav that collapses
+  from thirteen inline tabs to a grouped menu sheet, pointer-based touch target
+  sizing, and native mobile keyboard and autofill hints on every form.
+- Built a Playwright suite that proves it: both user journeys driven through a
+  real browser at five viewports against seeded data, asserting no horizontal
+  overflow, touch-target minimums, and collapsed-menu behaviour — wired into CI
+  so a layout regression fails the build instead of reaching a phone.
 - Built `MealsPlanner` — a phase-aware React component handling suggestions, voting bars, helper sign-ups, and grocery list generation — and `ItineraryView` with per-item threaded comment sections.
 
 ---

@@ -30,7 +30,7 @@ export function FindTripForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
-      <div className="flex gap-2">
+      <div className="flex flex-col sm:flex-row gap-2">
         <input
           value={code}
           onChange={(e) => setCode(e.target.value.toUpperCase())}
@@ -40,12 +40,13 @@ export function FindTripForm() {
           spellCheck={false}
           maxLength={12}
           aria-label="Trip code"
-          className="flex-1 px-3 py-2.5 rounded-lg border border-stone-300 bg-white focus:outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900 text-sm font-mono tracking-widest uppercase placeholder:tracking-normal placeholder:font-sans"
+          enterKeyHint="go"
+          className="flex-1 min-w-0 px-3 min-h-[48px] rounded-lg border border-stone-300 bg-white focus:outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900 text-base font-mono tracking-widest uppercase placeholder:tracking-normal placeholder:font-sans"
         />
         <button
           type="submit"
           disabled={isPending || !code.trim()}
-          className="px-4 py-2.5 rounded-lg bg-stone-900 hover:bg-stone-800 text-white text-sm font-medium disabled:opacity-50 whitespace-nowrap"
+          className="inline-flex items-center justify-center px-4 min-h-[48px] rounded-lg bg-stone-900 hover:bg-stone-800 active:bg-stone-700 text-white text-sm font-medium disabled:opacity-50 whitespace-nowrap"
         >
           {isPending ? "Searching…" : "Find trip"}
         </button>

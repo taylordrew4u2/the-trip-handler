@@ -168,7 +168,7 @@ function ItineraryItemCard({
       <div className="mt-3 pt-3 border-t border-stone-100">
         <button
           onClick={() => setShowComments((s) => !s)}
-          className="text-xs text-stone-600 hover:text-stone-900"
+          className="inline-flex items-center text-xs text-stone-600 hover:text-stone-900"
         >
           {showComments ? "Hide" : "Show"} comments ({commentCount})
         </button>
@@ -255,7 +255,7 @@ function CommentsThread({
           <button
             type="submit"
             disabled={busy || !draft.trim()}
-            className="text-xs px-3 py-1.5 bg-stone-900 text-white rounded-md font-medium hover:bg-stone-800 disabled:opacity-40"
+            className="inline-flex items-center justify-center text-xs px-3 min-h-[30px] bg-stone-900 text-white rounded-md font-medium hover:bg-stone-800 disabled:opacity-40"
           >
             {busy ? "Posting…" : "Post comment"}
           </button>

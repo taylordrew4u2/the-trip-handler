@@ -171,14 +171,14 @@ export function SleepingClient({
                 <button
                   onClick={() => run("acc-" + r.id, () => respondToBedmateRequest(r.id, true))}
                   disabled={busy !== null}
-                  className="text-xs px-3 py-1.5 bg-stone-900 text-white rounded-md font-medium hover:bg-stone-800 disabled:opacity-50"
+                  className="inline-flex items-center justify-center text-xs px-3 min-h-[30px] bg-stone-900 text-white rounded-md font-medium hover:bg-stone-800 disabled:opacity-50"
                 >
                   Accept
                 </button>
                 <button
                   onClick={() => run("dec-" + r.id, () => respondToBedmateRequest(r.id, false))}
                   disabled={busy !== null}
-                  className="text-xs px-3 py-1.5 border border-stone-300 text-stone-700 rounded-md hover:bg-stone-100 disabled:opacity-50"
+                  className="inline-flex items-center justify-center text-xs px-3 min-h-[30px] border border-stone-300 text-stone-700 rounded-md hover:bg-stone-100 disabled:opacity-50"
                 >
                   Decline
                 </button>
@@ -202,7 +202,7 @@ export function SleepingClient({
               <button
                 onClick={() => run("can-" + r.id, () => cancelBedmateRequest(r.id))}
                 disabled={busy !== null}
-                className="text-xs px-2.5 py-1 border border-stone-300 text-stone-700 rounded-md hover:bg-stone-100 disabled:opacity-50"
+                className="inline-flex items-center justify-center text-xs px-2.5 min-h-[28px] border border-stone-300 text-stone-700 rounded-md hover:bg-stone-100 disabled:opacity-50"
               >
                 Cancel
               </button>
@@ -212,7 +212,7 @@ export function SleepingClient({
       )}
 
       {myBed && (
-        <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 flex items-center justify-between gap-3">
+        <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <p className="text-sm font-medium text-emerald-900">
               You&apos;re in <strong>{myBed.label}</strong>
@@ -227,7 +227,7 @@ export function SleepingClient({
           <button
             onClick={() => run("leave", () => leaveBedSlot())}
             disabled={busy !== null}
-            className="text-xs px-3 py-1.5 border border-emerald-700 text-emerald-900 rounded-md hover:bg-emerald-100 disabled:opacity-50 whitespace-nowrap"
+            className="inline-flex items-center justify-center text-xs px-3 min-h-[30px] border border-emerald-700 text-emerald-900 rounded-md hover:bg-emerald-100 disabled:opacity-50 whitespace-nowrap"
           >
             {busy === "leave" ? "Leaving…" : "Leave bed"}
           </button>
@@ -240,7 +240,7 @@ export function SleepingClient({
         const roomFull = roomTaken >= roomCapacity;
         return (
         <section key={room} className={`bg-white border rounded-xl overflow-hidden ${roomFull ? "border-stone-100 opacity-60" : "border-stone-200"}`}>
-          <div className="px-5 pt-4 pb-3 border-b border-stone-200 flex items-center justify-between">
+          <div className="px-5 pt-4 pb-3 border-b border-stone-200 flex flex-wrap items-center justify-between gap-2">
             <h3 className="font-medium text-stone-900">{room}</h3>
             <span className={`text-xs px-2 py-0.5 rounded tabular-nums ${roomFull ? "bg-stone-100 text-stone-500" : "bg-stone-100 text-stone-700"}`}>
               {roomTaken}/{roomCapacity}
@@ -290,7 +290,7 @@ export function SleepingClient({
                         <button
                           onClick={() => handleBump(bed.id, occupant?.user.name ?? "the occupant")}
                           disabled={busy !== null}
-                          className="text-xs px-3 py-1.5 border border-stone-700 text-stone-900 rounded-md font-medium hover:bg-stone-100 disabled:opacity-50"
+                          className="inline-flex items-center justify-center text-xs px-3 min-h-[30px] border border-stone-700 text-stone-900 rounded-md font-medium hover:bg-stone-100 disabled:opacity-50"
                         >
                           {busy === bed.id + "bump" ? "Requesting…" : "Take this single"}
                         </button>
@@ -305,7 +305,7 @@ export function SleepingClient({
                               handleRequestShare(bed.id, occupant.user.name, occupant.userId)
                             }
                             disabled={busy !== null}
-                            className="text-xs px-3 py-1.5 border border-stone-700 text-stone-900 rounded-md font-medium hover:bg-stone-100 disabled:opacity-50"
+                            className="inline-flex items-center justify-center text-xs px-3 min-h-[30px] border border-stone-700 text-stone-900 rounded-md font-medium hover:bg-stone-100 disabled:opacity-50"
                           >
                             {busy === bed.id + "req" ? "Asking…" : "Ask to share"}
                           </button>
@@ -314,7 +314,7 @@ export function SleepingClient({
                         <button
                           onClick={() => handleClaim(bed.id, bed.womenOnly)}
                           disabled={full || busy !== null}
-                          className="text-xs px-3 py-1.5 bg-stone-900 text-white rounded-md font-medium hover:bg-stone-800 disabled:bg-stone-300 disabled:cursor-not-allowed"
+                          className="inline-flex items-center justify-center text-xs px-3 min-h-[30px] bg-stone-900 text-white rounded-md font-medium hover:bg-stone-800 disabled:bg-stone-300 disabled:cursor-not-allowed"
                         >
                           {busy === bed.id ? "Claiming…" : full ? "Full" : myBedId ? "Move here" : "Claim"}
                         </button>

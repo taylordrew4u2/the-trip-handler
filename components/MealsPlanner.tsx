@@ -202,7 +202,7 @@ export function MealsPlanner({
       {!isAdmin && phase === "suggestions_open" && (
         <button
           onClick={() => setShowSuggestModal(true)}
-          className="px-4 py-2 bg-stone-900 text-white rounded-lg text-sm font-medium hover:bg-stone-800"
+          className="inline-flex items-center justify-center px-4 min-h-[44px] bg-stone-900 text-white rounded-lg text-sm font-medium hover:bg-stone-800 active:bg-stone-700"
         >
           + Suggest a meal
         </button>
@@ -293,7 +293,7 @@ function AdminPhaseControls({
           {phase === "suggestions_open" && (
             <button
               onClick={() => run("phase-vote", () => setPhase(tripId, "voting_open"))}
-              className="text-xs px-3 py-1.5 bg-stone-100 text-stone-900 rounded-md font-medium hover:bg-white"
+              className="inline-flex items-center justify-center text-xs px-3 min-h-[30px] bg-stone-100 text-stone-900 rounded-md font-medium hover:bg-white"
             >
               Open voting →
             </button>
@@ -302,13 +302,13 @@ function AdminPhaseControls({
             <>
               <button
                 onClick={() => run("phase-fin", () => setPhase(tripId, "admin_finalizing"))}
-                className="text-xs px-3 py-1.5 bg-stone-100 text-stone-900 rounded-md font-medium hover:bg-white"
+                className="inline-flex items-center justify-center text-xs px-3 min-h-[30px] bg-stone-100 text-stone-900 rounded-md font-medium hover:bg-white"
               >
                 Close voting →
               </button>
               <button
                 onClick={() => run("phase-suggest", () => setPhase(tripId, "suggestions_open"))}
-                className="text-xs px-3 py-1.5 border border-stone-600 text-stone-200 rounded-md hover:bg-stone-800"
+                className="inline-flex items-center justify-center text-xs px-3 min-h-[30px] border border-stone-600 text-stone-200 rounded-md hover:bg-stone-800"
               >
                 ← Reopen suggestions
               </button>
@@ -318,7 +318,7 @@ function AdminPhaseControls({
             <>
               <button
                 onClick={() => run("phase-final", () => setPhase(tripId, "finalized"))}
-                className="text-xs px-3 py-1.5 bg-emerald-300 text-emerald-950 rounded-md font-medium hover:bg-emerald-200"
+                className="inline-flex items-center justify-center text-xs px-3 min-h-[30px] bg-emerald-300 text-emerald-950 rounded-md font-medium hover:bg-emerald-200"
               >
                 Finalize meals
               </button>
@@ -327,13 +327,13 @@ function AdminPhaseControls({
                   if (!confirm("Finalize anyway, even though some users haven't voted?")) return;
                   run("phase-force", () => setPhase(tripId, "finalized", { force: true }));
                 }}
-                className="text-xs px-3 py-1.5 border border-amber-400 text-amber-200 rounded-md hover:bg-stone-800"
+                className="inline-flex items-center justify-center text-xs px-3 min-h-[30px] border border-amber-400 text-amber-200 rounded-md hover:bg-stone-800"
               >
                 Finalize anyway (override)
               </button>
               <button
                 onClick={() => run("phase-vote-back", () => setPhase(tripId, "voting_open"))}
-                className="text-xs px-3 py-1.5 border border-stone-600 text-stone-200 rounded-md hover:bg-stone-800"
+                className="inline-flex items-center justify-center text-xs px-3 min-h-[30px] border border-stone-600 text-stone-200 rounded-md hover:bg-stone-800"
               >
                 ← Reopen voting
               </button>
@@ -345,7 +345,7 @@ function AdminPhaseControls({
                 if (!confirm("Reopen suggestions? Confirmed meals stay confirmed but you can re-edit.")) return;
                 run("phase-reset", () => setPhase(tripId, "suggestions_open"));
               }}
-              className="text-xs px-3 py-1.5 border border-stone-600 text-stone-200 rounded-md hover:bg-stone-800"
+              className="inline-flex items-center justify-center text-xs px-3 min-h-[30px] border border-stone-600 text-stone-200 rounded-md hover:bg-stone-800"
             >
               ← Reopen suggestions
             </button>
@@ -800,12 +800,13 @@ function QuickSuggestForm({
         value={name}
         onChange={(e) => setName(e.target.value)}
         placeholder="Suggest a new idea (e.g. BBQ)"
-        className="flex-1 px-3 py-2 rounded-md border border-stone-300 bg-white text-sm focus:outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900"
+        enterKeyHint="send"
+        className="flex-1 min-w-0 px-3 min-h-[44px] rounded-md border border-stone-300 bg-white text-sm focus:outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900"
       />
       <button
         type="submit"
         disabled={busy !== null || !name.trim()}
-        className="px-3 py-2 bg-stone-900 text-white text-sm rounded-md font-medium hover:bg-stone-800 disabled:opacity-40"
+        className="inline-flex items-center justify-center shrink-0 px-3 min-h-[44px] bg-stone-900 text-white text-sm rounded-md font-medium hover:bg-stone-800 active:bg-stone-700 disabled:opacity-40"
       >
         Submit
       </button>
@@ -917,7 +918,7 @@ function FinalSlotPanel({
           {slot.status !== "GROCERIES_BOUGHT" && (
             <button
               onClick={() => run("st-" + slot.id, () => setSlotStatus(slot.id, "GROCERIES_BOUGHT"))}
-              className="text-xs px-2.5 py-1 border border-stone-300 text-stone-700 rounded-md hover:bg-stone-100"
+              className="inline-flex items-center justify-center text-xs px-2.5 min-h-[28px] border border-stone-300 text-stone-700 rounded-md hover:bg-stone-100"
             >
               Mark groceries bought
             </button>
@@ -925,7 +926,7 @@ function FinalSlotPanel({
           {slot.status !== "HANDLED" && (
             <button
               onClick={() => run("st-" + slot.id, () => setSlotStatus(slot.id, "HANDLED"))}
-              className="text-xs px-2.5 py-1 border border-emerald-400 text-emerald-800 rounded-md hover:bg-emerald-50"
+              className="inline-flex items-center justify-center text-xs px-2.5 min-h-[28px] border border-emerald-400 text-emerald-800 rounded-md hover:bg-emerald-50"
             >
               Mark handled
             </button>

@@ -38,7 +38,7 @@ export function AddContributionForm({
     return (
       <button
         onClick={() => setOpen(true)}
-        className="px-4 py-2 bg-stone-900 text-white rounded-lg text-sm font-medium hover:bg-stone-800"
+        className="inline-flex items-center justify-center px-4 min-h-[44px] bg-stone-900 text-white rounded-lg text-sm font-medium hover:bg-stone-800 active:bg-stone-700"
       >
         + Add what you&apos;re bringing
       </button>

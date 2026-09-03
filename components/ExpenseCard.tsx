@@ -18,7 +18,7 @@ interface ExpenseCardProps {
 export function ExpenseCard({ expense, isAdmin, onApprove, onDelete }: ExpenseCardProps) {
   return (
     <div className="bg-white rounded-xl border border-stone-200 p-4">
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <h3 className="font-medium text-stone-900">{expense.title}</h3>
@@ -40,20 +40,20 @@ export function ExpenseCard({ expense, isAdmin, onApprove, onDelete }: ExpenseCa
               href={expense.receiptUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xs text-stone-700 underline underline-offset-2 hover:text-stone-900 mt-2 inline-block"
+              className="inline-flex items-center min-h-[40px] text-xs text-stone-700 underline underline-offset-2 hover:text-stone-900"
             >
               View receipt →
             </a>
           )}
         </div>
-        <div className="flex flex-col items-end gap-2 ml-4 flex-shrink-0">
+        <div className="flex flex-row-reverse items-center justify-between gap-2 sm:flex-col sm:items-end sm:ml-4 sm:flex-shrink-0">
           <span className="font-semibold text-lg text-stone-900 tabular-nums">${expense.amount.toFixed(2)}</span>
           {isAdmin && (
             <div className="flex gap-2">
               {!expense.approved && onApprove && (
                 <button
                   onClick={() => onApprove(expense.id)}
-                  className="text-xs px-3 py-1 bg-stone-900 text-white rounded-md hover:bg-stone-800"
+                  className="inline-flex items-center justify-center text-xs px-3 min-h-[28px] bg-stone-900 text-white rounded-md hover:bg-stone-800 active:bg-stone-700"
                 >
                   Approve
                 </button>
@@ -61,7 +61,7 @@ export function ExpenseCard({ expense, isAdmin, onApprove, onDelete }: ExpenseCa
               {onDelete && (
                 <button
                   onClick={() => onDelete(expense.id)}
-                  className="text-xs px-3 py-1 border border-red-300 text-red-700 rounded-md hover:bg-red-50"
+                  className="inline-flex items-center justify-center text-xs px-3 min-h-[28px] border border-red-300 text-red-700 rounded-md hover:bg-red-50 active:bg-red-100"
                 >
                   Delete
                 </button>

@@ -37,14 +37,15 @@ function InviteLink({ token }: { token: string }) {
   }
 
   return (
-    <div className="flex items-center gap-2">
-      <code className="flex-1 truncate text-xs bg-stone-100 border border-stone-200 rounded-lg px-3 py-2 text-stone-700">
+    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+      <code className="flex-1 min-w-0 truncate text-xs bg-stone-100 border border-stone-200 rounded-lg px-3 py-2.5 text-stone-700">
         {path}
       </code>
       <button
         type="button"
         onClick={copy}
-        className="px-3 py-2 rounded-lg bg-stone-900 hover:bg-stone-800 text-white text-xs font-medium whitespace-nowrap"
+        aria-live="polite"
+        className="inline-flex items-center justify-center px-3 min-h-[44px] rounded-lg bg-stone-900 hover:bg-stone-800 active:bg-stone-700 text-white text-sm sm:text-xs font-medium whitespace-nowrap"
       >
         {copied ? "Copied" : "Copy link"}
       </button>
@@ -80,7 +81,7 @@ function JoinCode({
         type="button"
         onClick={onGenerate}
         disabled={pending}
-        className="text-xs font-medium text-stone-700 underline underline-offset-2 hover:text-stone-900 disabled:opacity-50"
+        className="inline-flex items-center min-h-[44px] text-sm font-medium text-stone-700 underline underline-offset-2 hover:text-stone-900 disabled:opacity-50"
       >
         Create a join code
       </button>
@@ -88,14 +89,15 @@ function JoinCode({
   }
 
   return (
-    <div className="flex items-center gap-2">
-      <code className="text-sm font-mono tracking-widest bg-stone-100 border border-stone-200 rounded-lg px-3 py-2 text-stone-900">
+    <div className="flex flex-wrap items-center gap-2">
+      <code className="inline-flex items-center min-h-[44px] text-base font-mono tracking-widest bg-stone-100 border border-stone-200 rounded-lg px-3 text-stone-900">
         {code}
       </code>
       <button
         type="button"
         onClick={copy}
-        className="px-3 py-2 rounded-lg bg-stone-900 hover:bg-stone-800 text-white text-xs font-medium whitespace-nowrap"
+        aria-live="polite"
+        className="inline-flex items-center justify-center px-3 min-h-[44px] rounded-lg bg-stone-900 hover:bg-stone-800 active:bg-stone-700 text-white text-sm sm:text-xs font-medium whitespace-nowrap"
       >
         {copied ? "Copied" : "Copy code"}
       </button>
@@ -103,7 +105,7 @@ function JoinCode({
         type="button"
         onClick={onGenerate}
         disabled={pending}
-        className="px-3 py-2 rounded-lg border border-stone-300 hover:bg-stone-100 text-stone-700 text-xs font-medium whitespace-nowrap disabled:opacity-50"
+        className="inline-flex items-center justify-center px-3 min-h-[44px] rounded-lg border border-stone-300 hover:bg-stone-100 text-stone-700 text-sm sm:text-xs font-medium whitespace-nowrap disabled:opacity-50"
       >
         Regenerate
       </button>
@@ -149,7 +151,7 @@ export function MyTripsClient({ trips }: { trips: TripData[] }) {
   return (
     <div className="space-y-8">
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2 text-sm">
+        <div role="alert" className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2 text-sm">
           {error}
         </div>
       )}
@@ -158,19 +160,21 @@ export function MyTripsClient({ trips }: { trips: TripData[] }) {
         <label className="block text-xs font-medium text-stone-700 mb-2 tracking-wide">
           NAME A NEW TRIP
         </label>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="e.g. Cabin weekend in Tahoe"
-            className="flex-1 px-3 py-2.5 rounded-lg border border-stone-300 bg-white focus:outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900 text-sm"
+            enterKeyHint="go"
+            autoComplete="off"
+            className="flex-1 min-w-0 px-3 min-h-[44px] rounded-lg border border-stone-300 bg-white focus:outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900 text-sm"
           />
           <button
             type="submit"
             disabled={isPending || !name.trim()}
-            className="px-4 py-2.5 rounded-lg bg-stone-900 hover:bg-stone-800 text-white text-sm font-medium disabled:opacity-50 whitespace-nowrap"
+            className="inline-flex items-center justify-center px-4 min-h-[44px] rounded-lg bg-stone-900 hover:bg-stone-800 active:bg-stone-700 text-white text-sm font-medium disabled:opacity-50 whitespace-nowrap"
           >
-            Create trip
+            {isPending ? "Creating…" : "Create trip"}
           </button>
         </div>
       </form>
@@ -183,9 +187,9 @@ export function MyTripsClient({ trips }: { trips: TripData[] }) {
         <ul className="space-y-5">
           {trips.map((trip) => (
             <li key={trip.id} className="bg-white rounded-xl border border-stone-200 p-5 space-y-4">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h2 className="font-serif text-xl font-medium text-stone-900">{trip.name}</h2>
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4">
+                <div className="min-w-0">
+                  <h2 className="font-serif text-xl font-medium text-stone-900 break-words">{trip.name}</h2>
                   <p className="text-xs text-stone-500 mt-0.5">
                     {trip.applicants.length} applicant{trip.applicants.length === 1 ? "" : "s"}
                     {" · "}
@@ -194,7 +198,7 @@ export function MyTripsClient({ trips }: { trips: TripData[] }) {
                     </Link>
                   </p>
                 </div>
-                <label className="flex items-center gap-2 text-xs text-stone-600 whitespace-nowrap">
+                <label className="flex items-center gap-2 min-h-[44px] text-sm sm:text-xs text-stone-600 whitespace-nowrap shrink-0 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={trip.isApplicationOpen}
@@ -202,7 +206,7 @@ export function MyTripsClient({ trips }: { trips: TripData[] }) {
                     onChange={(e) =>
                       run(() => setMyTripApplicationOpen(trip.id, e.target.checked))
                     }
-                    className="accent-stone-900"
+                    className="accent-stone-900 w-4 h-4"
                   />
                   Accepting applications
                 </label>
@@ -245,13 +249,13 @@ export function MyTripsClient({ trips }: { trips: TripData[] }) {
                     {trip.applicants.map((a) => (
                       <li
                         key={a.id}
-                        className="flex items-center justify-between gap-3 border border-stone-100 rounded-lg px-3 py-2"
+                        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 border border-stone-100 rounded-lg px-3 py-2.5"
                       >
                         <div className="min-w-0">
                           <p className="text-sm font-medium text-stone-900 truncate">{a.name}</p>
                           <p className="text-xs text-stone-500 truncate">{a.email}</p>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 shrink-0">
                           <span className={`px-2 py-0.5 rounded-full text-[11px] font-medium ${statusBadge(a.status)}`}>
                             {a.status.replace("_", " ").toLowerCase()}
                           </span>
@@ -261,7 +265,7 @@ export function MyTripsClient({ trips }: { trips: TripData[] }) {
                                 type="button"
                                 disabled={isPending}
                                 onClick={() => run(() => approveTripApplicant(a.id))}
-                                className="px-2.5 py-1 rounded-md bg-stone-900 hover:bg-stone-800 text-white text-xs font-medium disabled:opacity-50"
+                                className="flex-1 sm:flex-none inline-flex items-center justify-center px-3 min-h-[32px] rounded-md bg-stone-900 hover:bg-stone-800 active:bg-stone-700 text-white text-xs font-medium disabled:opacity-50"
                               >
                                 Approve
                               </button>
@@ -269,7 +273,7 @@ export function MyTripsClient({ trips }: { trips: TripData[] }) {
                                 type="button"
                                 disabled={isPending}
                                 onClick={() => run(() => rejectTripApplicant(a.id))}
-                                className="px-2.5 py-1 rounded-md border border-stone-300 hover:bg-stone-100 text-stone-700 text-xs font-medium disabled:opacity-50"
+                                className="flex-1 sm:flex-none inline-flex items-center justify-center px-3 min-h-[32px] rounded-md border border-stone-300 hover:bg-stone-100 active:bg-stone-200 text-stone-700 text-xs font-medium disabled:opacity-50"
                               >
                                 Reject
                               </button>

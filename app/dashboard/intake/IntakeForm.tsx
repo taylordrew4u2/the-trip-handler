@@ -30,7 +30,7 @@ function Field({ label, hint, children, required }: { label: string; hint?: stri
 }
 
 const inputCls =
-  "w-full px-3 py-2 rounded-lg border border-stone-300 bg-white text-sm focus:outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900";
+  "w-full px-3 py-2 min-h-[44px] rounded-lg border border-stone-300 bg-white text-sm focus:outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900";
 
 function TextInput({ name, defaultValue, placeholder, type = "text", required }: {
   name: string; defaultValue?: string | null; placeholder?: string; type?: string; required?: boolean;
@@ -167,7 +167,7 @@ export function IntakeForm({ defaultEmail, defaultName, defaultPhone, existing, 
               type="button"
               onClick={handleRequestEdit}
               disabled={requesting}
-              className="text-xs px-3 py-1.5 border border-stone-700 text-stone-900 rounded-md font-medium hover:bg-stone-900 hover:text-white disabled:opacity-50 whitespace-nowrap"
+              className="inline-flex items-center justify-center text-xs px-3 min-h-[30px] border border-stone-700 text-stone-900 rounded-md font-medium hover:bg-stone-900 hover:text-white disabled:opacity-50 whitespace-nowrap"
             >
               {requesting ? "Sending…" : "Request edit access"}
             </button>
@@ -370,7 +370,7 @@ export function IntakeForm({ defaultEmail, defaultName, defaultPhone, existing, 
       </fieldset>
 
       {!locked && (
-        <div className="border-t border-stone-200 mt-10 pt-6 flex items-center justify-between">
+        <div className="border-t border-stone-200 mt-10 pt-6 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3">
           <p className="text-xs text-stone-500">Required fields marked with <span className="text-red-600">*</span>.</p>
           <button
             type="submit"

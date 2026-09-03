@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Fraunces } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
@@ -54,10 +54,22 @@ export const metadata: Metadata = {
   },
 };
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  // Let the layout paint into the notch/home-indicator area; individual
+  // surfaces opt back in with the `*-safe` utilities.
+  viewportFit: "cover",
+  // Tints the browser chrome on Android and the status bar of an installed
+  // home-screen app so it matches the page rather than floating above it.
+  themeColor: "#fafaf9",
+  colorScheme: "light",
+};
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${inter.variable} ${fraunces.variable}`}>
-      <body className="antialiased bg-stone-50 text-stone-900 min-h-screen font-sans">
+      <body className="antialiased bg-stone-50 text-stone-900 min-h-dvh font-sans">
         <Providers>{children}</Providers>
       </body>
     </html>

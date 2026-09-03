@@ -15,7 +15,7 @@ type Fields = {
 };
 
 const inputClass =
-  "w-full px-3 py-2.5 rounded-lg border border-stone-300 bg-white focus:outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900 text-sm";
+  "w-full px-3 py-2.5 min-h-[44px] rounded-lg border border-stone-300 bg-white focus:outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900 text-sm";
 
 export function TripEditForm({ tripId, initial }: { tripId: string; initial: Fields }) {
   const [fields, setFields] = useState<Fields>(initial);
@@ -39,9 +39,9 @@ export function TripEditForm({ tripId, initial }: { tripId: string; initial: Fie
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-stone-200 p-6 space-y-5">
+    <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-stone-200 p-5 sm:p-6 space-y-5">
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2 text-sm">
+        <div role="alert" className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2 text-sm">
           {error}
         </div>
       )}
@@ -66,7 +66,7 @@ export function TripEditForm({ tripId, initial }: { tripId: string; initial: Fie
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label className="block text-xs font-medium text-stone-700 mb-1.5 tracking-wide">START DATE</label>
           <input type="date" className={inputClass} value={fields.startDate} onChange={(e) => set("startDate", e.target.value)} />
@@ -121,11 +121,15 @@ export function TripEditForm({ tripId, initial }: { tripId: string; initial: Fie
         <button
           type="submit"
           disabled={isPending}
-          className="px-5 py-2.5 rounded-lg bg-stone-900 hover:bg-stone-800 text-white text-sm font-medium disabled:opacity-50"
+          className="inline-flex items-center justify-center w-full sm:w-auto px-5 min-h-[44px] rounded-lg bg-stone-900 hover:bg-stone-800 active:bg-stone-700 text-white text-sm font-medium disabled:opacity-50"
         >
           {isPending ? "Saving…" : "Save changes"}
         </button>
-        {saved && <span className="text-sm text-green-700">Saved.</span>}
+        {saved && (
+          <span role="status" className="text-sm text-green-700">
+            Saved.
+          </span>
+        )}
       </div>
     </form>
   );

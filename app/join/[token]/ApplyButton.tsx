@@ -27,7 +27,7 @@ export function ApplyButton({ token, ownTrip }: { token: string; ownTrip: boolea
         </p>
         <button
           onClick={() => router.push("/dashboard")}
-          className="mt-2 inline-block px-5 py-2.5 bg-stone-900 hover:bg-stone-800 text-white rounded-lg text-sm font-medium"
+          className="inline-flex items-center justify-center mt-2 px-5 min-h-[48px] bg-stone-900 hover:bg-stone-800 active:bg-stone-700 text-white rounded-lg text-sm font-medium"
         >
           Go to dashboard
         </button>
@@ -50,14 +50,14 @@ export function ApplyButton({ token, ownTrip }: { token: string; ownTrip: boolea
   return (
     <div className="space-y-3">
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2 text-sm">
+        <div role="alert" className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2 text-sm">
           {error}
         </div>
       )}
       <button
         onClick={apply}
         disabled={loading}
-        className="w-full py-2.5 px-4 bg-stone-900 hover:bg-stone-800 text-white rounded-lg font-medium text-sm transition-colors disabled:opacity-50"
+        className="inline-flex items-center justify-center w-full min-h-[48px] px-4 bg-stone-900 hover:bg-stone-800 active:bg-stone-700 text-white rounded-lg font-medium text-sm transition-colors disabled:opacity-50"
       >
         {loading ? "Applying…" : "Apply to this trip"}
       </button>

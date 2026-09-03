@@ -22,7 +22,7 @@ export default async function IntakePage() {
   return (
     <div>
       {!user.tripId && (
-        <div className="mb-6 rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm flex items-center justify-between gap-3">
+        <div className="mb-6 rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">
           <span className="text-stone-600">
             Just here to organize a trip of your own?
           </span>

@@ -153,7 +153,7 @@ export function ProfileForm({
                 type="button"
                 aria-pressed={on}
                 onClick={() => toggleTag(t.value)}
-                className={`text-sm px-3 py-1.5 rounded-full border transition-colors ${
+                className={`inline-flex items-center justify-center text-sm px-3.5 min-h-[34px] rounded-full border transition-colors ${
                   on
                     ? "border-stone-900 bg-stone-900 text-white"
                     : "border-stone-300 bg-white text-stone-700 hover:bg-stone-50"

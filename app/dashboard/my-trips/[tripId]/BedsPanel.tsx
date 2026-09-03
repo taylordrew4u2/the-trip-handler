@@ -45,7 +45,7 @@ export function BedsPanel({ tripId, beds }: { tripId: string; beds: Bed[] }) {
   }
 
   return (
-    <div className="bg-white rounded-xl border border-stone-200 p-6 space-y-4">
+    <div className="bg-white rounded-xl border border-stone-200 p-5 sm:p-6 space-y-4">
       <div>
         <h2 className="font-serif text-xl font-medium text-stone-900">Beds</h2>
         <p className="text-stone-500 text-sm mt-1">
@@ -54,7 +54,7 @@ export function BedsPanel({ tripId, beds }: { tripId: string; beds: Bed[] }) {
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2 text-sm">{error}</div>
+        <div role="alert" className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2 text-sm">{error}</div>
       )}
 
       {beds.length === 0 && (
@@ -62,7 +62,7 @@ export function BedsPanel({ tripId, beds }: { tripId: string; beds: Bed[] }) {
           type="button"
           disabled={isPending}
           onClick={() => run(() => seedDefaultTripBeds(tripId))}
-          className="px-3 py-2 rounded-lg border border-stone-300 hover:bg-stone-100 text-stone-700 text-sm font-medium disabled:opacity-50"
+          className="inline-flex items-center justify-center px-3 min-h-[44px] rounded-lg border border-stone-300 hover:bg-stone-100 active:bg-stone-200 text-stone-700 text-sm font-medium disabled:opacity-50"
         >
           Start with a default bedroom layout
         </button>
@@ -73,39 +73,40 @@ export function BedsPanel({ tripId, beds }: { tripId: string; beds: Bed[] }) {
           value={label}
           onChange={(e) => setLabel(e.target.value)}
           placeholder="Label (e.g. Queen)"
-          className="col-span-2 px-3 py-2 rounded-lg border border-stone-300 text-sm focus:outline-none focus:border-stone-900"
+          className="col-span-2 px-3 min-h-[44px] rounded-lg border border-stone-300 text-sm focus:outline-none focus:border-stone-900"
         />
         <input
           value={room}
           onChange={(e) => setRoom(e.target.value)}
           placeholder="Room"
-          className="px-3 py-2 rounded-lg border border-stone-300 text-sm focus:outline-none focus:border-stone-900"
+          className="px-3 min-h-[44px] rounded-lg border border-stone-300 text-sm focus:outline-none focus:border-stone-900"
         />
         <input
           type="number"
+          inputMode="numeric"
           min="1"
           max="20"
           value={count}
           onChange={(e) => setCount(e.target.value)}
           title="How many"
-          className="px-3 py-2 rounded-lg border border-stone-300 text-sm focus:outline-none focus:border-stone-900"
+          className="px-3 min-h-[44px] rounded-lg border border-stone-300 text-sm focus:outline-none focus:border-stone-900"
         />
         <select
           value={type}
           onChange={(e) => setType(e.target.value as "SINGLE" | "DOUBLE")}
-          className="px-3 py-2 rounded-lg border border-stone-300 text-sm bg-white focus:outline-none focus:border-stone-900"
+          className="px-3 min-h-[44px] rounded-lg border border-stone-300 text-sm bg-white focus:outline-none focus:border-stone-900"
         >
           <option value="DOUBLE">Double (2)</option>
           <option value="SINGLE">Single (1)</option>
         </select>
-        <label className="flex items-center gap-2 text-xs text-stone-600">
-          <input type="checkbox" checked={womenOnly} onChange={(e) => setWomenOnly(e.target.checked)} className="accent-stone-900" />
+        <label className="flex items-center gap-2 min-h-[44px] text-xs text-stone-600 cursor-pointer">
+          <input type="checkbox" checked={womenOnly} onChange={(e) => setWomenOnly(e.target.checked)} className="accent-stone-900 w-4 h-4" />
           Women only
         </label>
         <button
           type="submit"
           disabled={isPending || !label.trim()}
-          className="col-span-2 sm:col-span-1 px-4 py-2 rounded-lg bg-stone-900 hover:bg-stone-800 text-white text-sm font-medium disabled:opacity-50"
+          className="col-span-2 sm:col-span-1 inline-flex items-center justify-center px-4 min-h-[44px] rounded-lg bg-stone-900 hover:bg-stone-800 active:bg-stone-700 text-white text-sm font-medium disabled:opacity-50"
         >
           Add bed
         </button>
@@ -114,7 +115,7 @@ export function BedsPanel({ tripId, beds }: { tripId: string; beds: Bed[] }) {
       {beds.length > 0 && (
         <ul className="space-y-2">
           {beds.map((bed) => (
-            <li key={bed.id} className="flex items-center justify-between gap-3 border border-stone-100 rounded-lg px-3 py-2">
+            <li key={bed.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 border border-stone-100 rounded-lg px-3 py-2.5">
               <div className="min-w-0">
                 <p className="text-sm font-medium text-stone-900 truncate">
                   {bed.label}
@@ -134,7 +135,7 @@ export function BedsPanel({ tripId, beds }: { tripId: string; beds: Bed[] }) {
                 onClick={() => {
                   if (confirm(`Delete "${bed.label}"? Anyone in it will be unassigned.`)) run(() => deleteTripBed(bed.id));
                 }}
-                className="px-2.5 py-1 rounded-md border border-red-200 text-red-700 hover:bg-red-50 text-xs font-medium disabled:opacity-50"
+                className="inline-flex items-center justify-center shrink-0 px-3 min-h-[32px] rounded-md border border-red-200 text-red-700 hover:bg-red-50 active:bg-red-100 text-xs font-medium disabled:opacity-50"
               >
                 Delete
               </button>

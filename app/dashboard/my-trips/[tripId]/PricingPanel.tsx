@@ -53,7 +53,7 @@ export function PricingPanel({ tripId, pricing }: { tripId: string; pricing: Pri
   const share = total / COST_SHARE_DIVISOR;
 
   return (
-    <div className="bg-white rounded-xl border border-stone-200 p-6 space-y-5">
+    <div className="bg-white rounded-xl border border-stone-200 p-5 sm:p-6 space-y-5">
       <div>
         <h2 className="font-serif text-xl font-medium text-stone-900">Pricing</h2>
         <p className="text-stone-500 text-sm mt-1">
@@ -63,7 +63,7 @@ export function PricingPanel({ tripId, pricing }: { tripId: string; pricing: Pri
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2 text-sm">
+        <div role="alert" className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2 text-sm">
           {error}
         </div>
       )}
@@ -80,7 +80,7 @@ export function PricingPanel({ tripId, pricing }: { tripId: string; pricing: Pri
             type="button"
             disabled={isPending}
             onClick={() => run(() => unlockMyTrip(tripId))}
-            className="mt-3 px-3 py-1.5 rounded-lg border border-stone-300 bg-white hover:bg-stone-100 text-stone-700 text-xs font-medium disabled:opacity-50"
+            className="inline-flex items-center justify-center mt-3 px-3 min-h-[44px] rounded-lg border border-stone-300 bg-white hover:bg-stone-100 active:bg-stone-200 text-stone-700 text-xs font-medium disabled:opacity-50"
           >
             Unlock trip to edit prices
           </button>
@@ -91,8 +91,8 @@ export function PricingPanel({ tripId, pricing }: { tripId: string; pricing: Pri
             const locked = isLineLocked(kind);
             return (
               <div key={kind} className="flex items-center gap-3">
-                <span className="w-20 text-sm text-stone-700">{label}</span>
-                <div className="flex-1 flex items-center gap-1">
+                <span className="w-16 sm:w-20 shrink-0 text-sm text-stone-700">{label}</span>
+                <div className="flex-1 min-w-0 flex items-center gap-1">
                   <span className="text-stone-400 text-sm">$</span>
                   <input
                     type="number"
@@ -106,7 +106,8 @@ export function PricingPanel({ tripId, pricing }: { tripId: string; pricing: Pri
                       const next = raw === "" ? null : Number(raw);
                       if (next !== amount(kind)) run(() => updateMyTripPrice(tripId, kind, next));
                     }}
-                    className="w-32 px-3 py-2 rounded-lg border border-stone-300 bg-white focus:outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900 text-sm disabled:bg-stone-100 disabled:text-stone-500"
+                    inputMode="decimal"
+                    className="w-full min-w-0 sm:w-32 px-3 min-h-[44px] rounded-lg border border-stone-300 bg-white focus:outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900 text-sm disabled:bg-stone-100 disabled:text-stone-500"
                     placeholder="0.00"
                   />
                 </div>
@@ -116,7 +117,7 @@ export function PricingPanel({ tripId, pricing }: { tripId: string; pricing: Pri
                   onClick={() =>
                     run(() => (locked ? unlockMyTripPrice(tripId, kind) : lockMyTripPrice(tripId, kind)))
                   }
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium disabled:opacity-50 ${
+                  className={`inline-flex items-center justify-center shrink-0 px-3 min-h-[44px] rounded-lg text-xs font-medium disabled:opacity-50 ${
                     locked
                       ? "border border-stone-300 hover:bg-stone-100 text-stone-700"
                       : "bg-stone-900 hover:bg-stone-800 text-white"
@@ -128,7 +129,7 @@ export function PricingPanel({ tripId, pricing }: { tripId: string; pricing: Pri
             );
           })}
 
-          <div className="border-t border-stone-100 pt-3 flex items-center justify-between text-sm">
+          <div className="border-t border-stone-100 pt-3 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 text-sm">
             <span className="text-stone-500">Per-person share</span>
             <span className="font-medium text-stone-900">
               ${share.toFixed(2)}{" "}

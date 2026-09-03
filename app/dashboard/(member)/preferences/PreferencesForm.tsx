@@ -6,7 +6,7 @@ import { updatePreferences } from "@/app/actions/guestForm";
 import type { GuestForm } from "@prisma/client";
 
 const inputCls =
-  "w-full px-3 py-2 rounded-lg border border-stone-300 bg-white text-sm focus:outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900";
+  "w-full px-3 py-2 min-h-[44px] rounded-lg border border-stone-300 bg-white text-sm focus:outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900";
 
 function Section({ title, intro, children }: { title: string; intro?: string; children: React.ReactNode }) {
   return (
@@ -335,7 +335,7 @@ export function PreferencesForm({ existing }: { existing: GuestForm | null }) {
         </Field>
       </Section>
 
-      <div className="border-t border-stone-200 mt-10 pt-6 flex items-center justify-between">
+      <div className="border-t border-stone-200 mt-10 pt-6 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3">
         <p className="text-xs text-stone-500">All fields required. Use &ldquo;N/A&rdquo; if a question doesn&apos;t apply.</p>
         <button
           type="submit"
