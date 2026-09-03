@@ -36,18 +36,18 @@ export default async function Home() {
   if (session?.user) redirect("/dashboard");
 
   return (
-    <div className="min-h-screen bg-stone-50">
+    <div className="min-h-dvh bg-stone-50">
       {/* Header */}
-      <header className="border-b border-stone-200 bg-white/80 backdrop-blur sticky top-0 z-10">
-        <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
-          <span className="font-serif text-xl font-medium text-stone-900">The Trip Handler</span>
-          <div className="flex items-center gap-3">
-            <Link href="/login" className="text-sm font-medium text-stone-700 hover:text-stone-900">
+      <header className="border-b border-stone-200 bg-white/80 backdrop-blur sticky top-0 z-10 pt-safe">
+        <div className="max-w-5xl mx-auto gutter h-14 md:h-16 flex items-center justify-between gap-3">
+          <span className="font-serif text-lg md:text-xl font-medium text-stone-900 truncate">The Trip Handler</span>
+          <div className="flex items-center gap-1 sm:gap-3 shrink-0">
+            <Link href="/login" className="inline-flex items-center min-h-[44px] px-2 text-sm font-medium text-stone-700 hover:text-stone-900">
               Sign in
             </Link>
             <Link
               href="/signup"
-              className="text-sm font-medium px-4 py-2 bg-stone-900 hover:bg-stone-800 text-white rounded-lg transition-colors"
+              className="inline-flex items-center justify-center text-sm font-medium px-3 sm:px-4 min-h-[40px] bg-stone-900 hover:bg-stone-800 active:bg-stone-700 text-white rounded-lg transition-colors whitespace-nowrap"
             >
               Create account
             </Link>
@@ -56,28 +56,28 @@ export default async function Home() {
       </header>
 
       {/* Hero */}
-      <section className="max-w-3xl mx-auto px-4 pt-20 pb-16 text-center">
+      <section className="max-w-3xl mx-auto gutter pt-14 pb-12 md:pt-20 md:pb-16 text-center">
         <p className="text-xs uppercase tracking-[0.25em] text-stone-500 mb-4">
           Group trips, minus the chaos
         </p>
-        <h1 className="font-serif text-4xl md:text-6xl font-medium text-stone-900 leading-[1.05]">
+        <h1 className="font-serif text-[2.15rem] sm:text-5xl md:text-6xl font-medium text-stone-900 leading-[1.08] text-balance">
           Plan the whole trip in one place.
         </h1>
-        <p className="text-stone-600 text-lg mt-6 max-w-xl mx-auto leading-relaxed">
+        <p className="text-stone-600 text-base sm:text-lg mt-5 md:mt-6 max-w-xl mx-auto leading-relaxed text-pretty">
           The Trip Handler is for the friend who accidentally became the adult in charge of making
           the plan. Invite people, approve who comes, and sort lodging, meals, the itinerary, and
           per-person payments — without 400 group texts.
         </p>
-        <div className="flex items-center justify-center gap-3 mt-8">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center sm:justify-center gap-3 mt-8">
           <Link
             href="/signup"
-            className="px-5 py-3 bg-stone-900 hover:bg-stone-800 text-white rounded-lg font-medium text-sm transition-colors"
+            className="inline-flex items-center justify-center px-5 min-h-[48px] bg-stone-900 hover:bg-stone-800 active:bg-stone-700 text-white rounded-lg font-medium text-sm transition-colors"
           >
             Start a trip →
           </Link>
           <Link
             href="/login"
-            className="px-5 py-3 bg-white hover:bg-stone-50 text-stone-900 border border-stone-300 rounded-lg font-medium text-sm transition-colors"
+            className="inline-flex items-center justify-center px-5 min-h-[48px] bg-white hover:bg-stone-50 active:bg-stone-100 text-stone-900 border border-stone-300 rounded-lg font-medium text-sm transition-colors"
           >
             Sign in
           </Link>
@@ -86,11 +86,11 @@ export default async function Home() {
 
       {/* How it works */}
       <section className="border-t border-stone-200 bg-white">
-        <div className="max-w-5xl mx-auto px-4 py-16">
-          <h2 className="font-serif text-2xl md:text-3xl font-medium text-stone-900 text-center mb-12">
+        <div className="max-w-5xl mx-auto gutter py-12 md:py-16">
+          <h2 className="font-serif text-2xl md:text-3xl font-medium text-stone-900 text-center mb-8 md:mb-12">
             How it works
           </h2>
-          <ol className="grid gap-8 md:grid-cols-4">
+          <ol className="grid gap-8 sm:grid-cols-2 md:grid-cols-4">
             {STEPS.map((step, i) => (
               <li key={step.title}>
                 <div className="flex items-center justify-center w-9 h-9 rounded-full bg-stone-900 text-white text-sm font-medium mb-4">
@@ -105,13 +105,13 @@ export default async function Home() {
       </section>
 
       {/* Features */}
-      <section className="max-w-5xl mx-auto px-4 py-16">
-        <h2 className="font-serif text-2xl md:text-3xl font-medium text-stone-900 text-center mb-12">
+      <section className="max-w-5xl mx-auto gutter py-12 md:py-16">
+        <h2 className="font-serif text-2xl md:text-3xl font-medium text-stone-900 text-center mb-8 md:mb-12">
           Everything a trip needs
         </h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {FEATURES.map((f) => (
-            <div key={f.title} className="bg-white rounded-xl border border-stone-200 p-6">
+            <div key={f.title} className="bg-white rounded-xl border border-stone-200 p-5 sm:p-6">
               <h3 className="font-medium text-stone-900 mb-1.5">{f.title}</h3>
               <p className="text-sm text-stone-600 leading-relaxed">{f.body}</p>
             </div>
@@ -121,7 +121,7 @@ export default async function Home() {
 
       {/* Closing CTA */}
       <section className="border-t border-stone-200 bg-white">
-        <div className="max-w-3xl mx-auto px-4 py-16 text-center">
+        <div className="max-w-3xl mx-auto gutter py-12 md:py-16 text-center">
           <h2 className="font-serif text-2xl md:text-3xl font-medium text-stone-900">
             Ready to make the plan?
           </h2>
@@ -130,15 +130,15 @@ export default async function Home() {
           </p>
           <Link
             href="/signup"
-            className="inline-block mt-6 px-5 py-3 bg-stone-900 hover:bg-stone-800 text-white rounded-lg font-medium text-sm transition-colors"
+            className="inline-flex items-center justify-center mt-6 px-5 min-h-[48px] bg-stone-900 hover:bg-stone-800 active:bg-stone-700 text-white rounded-lg font-medium text-sm transition-colors"
           >
             Create your account →
           </Link>
         </div>
       </section>
 
-      <footer className="border-t border-stone-200">
-        <div className="max-w-5xl mx-auto px-4 py-8 text-center text-xs text-stone-500">
+      <footer className="border-t border-stone-200 pb-safe">
+        <div className="max-w-5xl mx-auto gutter py-8 text-center text-xs text-stone-500">
           The Trip Handler
         </div>
       </footer>

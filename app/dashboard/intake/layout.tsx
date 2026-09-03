@@ -24,14 +24,14 @@ export default async function IntakeLayout({ children }: { children: React.React
   }
 
   return (
-    <div className="min-h-screen bg-stone-50">
-      <header className="border-b border-stone-200 bg-white">
-        <div className="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between">
-          <Link href="/dashboard" className="font-serif text-lg font-medium text-stone-900">
+    <div className="min-h-dvh bg-stone-50">
+      <header className="border-b border-stone-200 bg-white pt-safe">
+        <div className="max-w-3xl mx-auto gutter h-14 flex items-center justify-between gap-3">
+          <Link href="/dashboard" className="inline-flex items-center min-h-[44px] font-serif text-base sm:text-lg font-medium text-stone-900 truncate">
             The Trip Handler
           </Link>
           {isApproved ? (
-            <Link href="/dashboard" className="text-sm text-stone-600 hover:text-stone-900">
+            <Link href="/dashboard" className="inline-flex items-center min-h-[44px] px-1 text-sm text-stone-600 hover:text-stone-900 shrink-0 whitespace-nowrap">
               ← Back to dashboard
             </Link>
           ) : (
@@ -39,7 +39,7 @@ export default async function IntakeLayout({ children }: { children: React.React
           )}
         </div>
       </header>
-      <main className="max-w-3xl mx-auto px-4 py-8">{children}</main>
+      <main className="max-w-3xl mx-auto gutter py-6 md:py-10">{children}</main>
     </div>
   );
 }

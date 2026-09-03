@@ -18,16 +18,16 @@ export default async function StartPage() {
       : null;
 
   return (
-    <div className="min-h-screen bg-stone-50">
-      <header className="border-b border-stone-200 bg-white">
-        <div className="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between">
-          <span className="font-serif text-lg font-medium text-stone-900">The Trip Handler</span>
+    <div className="min-h-dvh bg-stone-50">
+      <header className="border-b border-stone-200 bg-white pt-safe">
+        <div className="max-w-3xl mx-auto gutter h-14 flex items-center justify-between gap-3">
+          <span className="font-serif text-base sm:text-lg font-medium text-stone-900 truncate">The Trip Handler</span>
           <SignOutLink />
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto px-4 py-12">
-        <div className="mb-10">
+      <main className="max-w-2xl mx-auto gutter py-8 md:py-12">
+        <div className="mb-8 md:mb-10">
           <p className="text-xs uppercase tracking-[0.2em] text-stone-500 mb-2">
             {firstName ? `Welcome, ${firstName}` : "Welcome"}
           </p>
@@ -44,12 +44,12 @@ export default async function StartPage() {
           {/* Create a trip */}
           <Link
             href="/dashboard/my-trips"
-            className="group flex items-start gap-4 bg-white rounded-xl border border-stone-200 p-6 hover:border-stone-900 transition-colors"
+            className="group flex items-start gap-3 sm:gap-4 bg-white rounded-xl border border-stone-200 p-5 sm:p-6 hover:border-stone-900 active:border-stone-900 transition-colors"
           >
             <span className="text-2xl" aria-hidden>
               ✦
             </span>
-            <div>
+            <div className="min-w-0">
               <h2 className="font-medium text-stone-900">Create a trip</h2>
               <p className="text-sm text-stone-500 mt-1">
                 You&apos;re the one making the plan. Name a trip, get a shareable link and code, and
@@ -64,12 +64,12 @@ export default async function StartPage() {
           {/* Walkthrough */}
           <Link
             href="/dashboard/walkthrough"
-            className="group flex items-start gap-4 bg-white rounded-xl border border-stone-200 p-6 hover:border-stone-900 transition-colors"
+            className="group flex items-start gap-3 sm:gap-4 bg-white rounded-xl border border-stone-200 p-5 sm:p-6 hover:border-stone-900 active:border-stone-900 transition-colors"
           >
             <span className="text-2xl" aria-hidden>
               ☞
             </span>
-            <div>
+            <div className="min-w-0">
               <h2 className="font-medium text-stone-900">Take the walkthrough</h2>
               <p className="text-sm text-stone-500 mt-1">
                 New here? A quick tour of everything the app handles — intake, approvals, lodging,
@@ -82,8 +82,8 @@ export default async function StartPage() {
           </Link>
 
           {/* Find a trip by code */}
-          <div className="bg-white rounded-xl border border-stone-200 p-6">
-            <div className="flex items-start gap-4">
+          <div className="bg-white rounded-xl border border-stone-200 p-5 sm:p-6">
+            <div className="flex items-start gap-3 sm:gap-4">
               <span className="text-2xl" aria-hidden>
                 ⌕
               </span>

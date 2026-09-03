@@ -86,7 +86,7 @@ export default async function SleepingPage() {
         outgoingRequests={outgoingRequests}
       />
 
-      <div className="bg-white border border-stone-200 rounded-xl p-5 flex items-center justify-between">
+      <div className="bg-white border border-stone-200 rounded-xl p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <p className="text-sm text-stone-600">Done picking? You can sign out.</p>
         <SignOutButton />
       </div>

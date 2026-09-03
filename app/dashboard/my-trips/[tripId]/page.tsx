@@ -77,14 +77,19 @@ export default async function ManageTripPage({
   return (
     <div className="space-y-6">
       <div>
-        <Link href="/dashboard/my-trips" className="text-xs text-stone-500 hover:text-stone-800">
+        <Link
+          href="/dashboard/my-trips"
+          className="inline-flex items-center min-h-[44px] -ml-1 px-1 text-sm text-stone-500 hover:text-stone-800"
+        >
           ← My trips
         </Link>
-        <h1 className="font-serif text-3xl font-medium text-stone-900 mt-2">{trip.name}</h1>
+        <h1 className="font-serif text-2xl sm:text-3xl font-medium text-stone-900 break-words">
+          {trip.name}
+        </h1>
         <p className="text-stone-500 text-sm mt-1">Edit the details people see on your invite page.</p>
         <Link
           href={`/dashboard/my-trips/${trip.id}/meals`}
-          className="inline-block mt-2 text-sm font-medium text-stone-900 underline underline-offset-2"
+          className="inline-flex items-center min-h-[44px] mt-1 text-sm font-medium text-stone-900 underline underline-offset-2"
         >
           Manage meal poll →
         </Link>

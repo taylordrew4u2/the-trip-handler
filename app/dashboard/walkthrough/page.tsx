@@ -59,19 +59,19 @@ export default function WalkthroughPage() {
   const isLast = index === STEPS.length - 1;
 
   return (
-    <div className="min-h-screen bg-stone-50 flex flex-col">
-      <header className="border-b border-stone-200 bg-white">
-        <div className="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between">
-          <span className="font-serif text-lg font-medium text-stone-900">The Trip Handler</span>
-          <Link href="/dashboard/start" className="text-xs text-stone-500 hover:text-stone-900">
+    <div className="min-h-dvh bg-stone-50 flex flex-col">
+      <header className="border-b border-stone-200 bg-white pt-safe">
+        <div className="max-w-3xl mx-auto gutter h-14 flex items-center justify-between">
+          <span className="font-serif text-base sm:text-lg font-medium text-stone-900 truncate">The Trip Handler</span>
+          <Link href="/dashboard/start" className="inline-flex items-center min-h-[44px] px-1 text-sm text-stone-500 hover:text-stone-900 shrink-0">
             Skip
           </Link>
         </div>
       </header>
 
-      <main className="flex-1 flex items-center justify-center px-4 py-10">
+      <main className="flex-1 flex items-center justify-center gutter py-8 md:py-10 pb-safe">
         <div className="w-full max-w-lg">
-          <div className="bg-white rounded-2xl border border-stone-200 p-8 md:p-10 min-h-[20rem] flex flex-col">
+          <div className="bg-white rounded-2xl border border-stone-200 p-6 sm:p-8 md:p-10 min-h-[17rem] sm:min-h-[20rem] flex flex-col">
             <p className="text-xs uppercase tracking-[0.2em] text-stone-500 mb-3">{step.tag}</p>
             <h1 className="font-serif text-2xl md:text-3xl font-medium text-stone-900 leading-tight">
               {step.title}
@@ -92,12 +92,12 @@ export default function WalkthroughPage() {
           </div>
 
           {/* Controls */}
-          <div className="flex items-center justify-between mt-5">
+          <div className="flex flex-wrap items-center justify-between gap-2 mt-5">
             <button
               type="button"
               onClick={() => setIndex((i) => Math.max(0, i - 1))}
               disabled={isFirst}
-              className="px-4 py-2 rounded-lg text-sm font-medium text-stone-600 hover:text-stone-900 disabled:opacity-0 disabled:pointer-events-none"
+              className="inline-flex items-center justify-center px-4 min-h-[44px] rounded-lg text-sm font-medium text-stone-600 hover:text-stone-900 disabled:opacity-0 disabled:pointer-events-none"
             >
               ← Back
             </button>
@@ -107,16 +107,16 @@ export default function WalkthroughPage() {
             </span>
 
             {isLast ? (
-              <div className="flex gap-2">
+              <div className="flex gap-2 ml-auto">
                 <Link
                   href="/dashboard/start"
-                  className="px-4 py-2 rounded-lg border border-stone-300 hover:bg-stone-100 text-stone-700 text-sm font-medium"
+                  className="inline-flex items-center justify-center px-3 sm:px-4 min-h-[44px] rounded-lg border border-stone-300 hover:bg-stone-100 active:bg-stone-200 text-stone-700 text-sm font-medium whitespace-nowrap"
                 >
                   Find a trip
                 </Link>
                 <Link
                   href="/dashboard/my-trips"
-                  className="px-4 py-2 rounded-lg bg-stone-900 hover:bg-stone-800 text-white text-sm font-medium"
+                  className="inline-flex items-center justify-center px-3 sm:px-4 min-h-[44px] rounded-lg bg-stone-900 hover:bg-stone-800 active:bg-stone-700 text-white text-sm font-medium whitespace-nowrap"
                 >
                   Create a trip →
                 </Link>
@@ -125,7 +125,7 @@ export default function WalkthroughPage() {
               <button
                 type="button"
                 onClick={() => setIndex((i) => Math.min(STEPS.length - 1, i + 1))}
-                className="px-4 py-2 rounded-lg bg-stone-900 hover:bg-stone-800 text-white text-sm font-medium"
+                className="inline-flex items-center justify-center px-4 min-h-[44px] rounded-lg bg-stone-900 hover:bg-stone-800 text-white text-sm font-medium"
               >
                 Next →
               </button>

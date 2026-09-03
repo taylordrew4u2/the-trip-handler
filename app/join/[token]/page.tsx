@@ -22,7 +22,7 @@ export default async function JoinPage({ params }: { params: Promise<{ token: st
 
   if (!trip || !trip.isApplicationOpen) {
     return (
-      <div className="min-h-screen bg-stone-50 flex items-center justify-center p-4">
+      <div className="min-h-dvh bg-stone-50 flex items-center justify-center gutter py-10">
         <div className="w-full max-w-md text-center">
           <h1 className="font-serif text-3xl font-medium text-stone-900 mb-3">
             This invite isn&apos;t active.
@@ -30,7 +30,7 @@ export default async function JoinPage({ params }: { params: Promise<{ token: st
           <p className="text-stone-600 mb-6 text-sm">
             The link may be wrong, or the trip has stopped accepting applications.
           </p>
-          <Link href="/login" className="text-stone-900 font-medium underline underline-offset-2">
+          <Link href="/login" className="inline-flex items-center min-h-[44px] text-stone-900 font-medium underline underline-offset-2">
             Sign in
           </Link>
         </div>
@@ -43,11 +43,13 @@ export default async function JoinPage({ params }: { params: Promise<{ token: st
   const loggedIn = Boolean(userId) && userId !== "admin";
 
   return (
-    <div className="min-h-screen bg-stone-50 flex items-center justify-center p-4 py-10">
+    <div className="min-h-dvh bg-stone-50 flex items-center justify-center gutter py-10">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <p className="text-xs uppercase tracking-[0.2em] text-stone-500 mb-2">You&apos;re invited to</p>
-          <h1 className="font-serif text-4xl font-medium text-stone-900 leading-tight">{trip.name}</h1>
+          <h1 className="font-serif text-3xl sm:text-4xl font-medium text-stone-900 leading-tight break-words">
+            {trip.name}
+          </h1>
           <p className="text-sm text-stone-500 mt-3">
             {[trip.destination, dateLabel(trip.startDate, trip.endDate)].filter(Boolean).join(" · ")}
           </p>
@@ -57,7 +59,7 @@ export default async function JoinPage({ params }: { params: Promise<{ token: st
         </div>
 
         {loggedIn ? (
-          <div className="bg-white rounded-xl border border-stone-200 p-7">
+          <div className="bg-white rounded-xl border border-stone-200 p-6 sm:p-7">
             <ApplyButton token={token} ownTrip={trip.ownerId === userId} />
           </div>
         ) : (

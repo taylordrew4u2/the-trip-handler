@@ -21,7 +21,7 @@ export function ExpensesClient({ expenses }: { expenses: Expense[] }) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between bg-white rounded-xl border border-stone-200 p-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white rounded-xl border border-stone-200 p-4">
         <div className="text-sm text-stone-600">
           {approved.length} approved · {pending.length} pending
         </div>

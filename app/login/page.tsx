@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen bg-stone-50 flex items-center justify-center p-4">
+    <div className="min-h-dvh bg-stone-50 flex items-center justify-center gutter py-10">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <Link href="/" className="inline-block">

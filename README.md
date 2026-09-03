@@ -78,13 +78,54 @@ Approval, rejection, cancellation, form-unlocked, bed-bump, and trip-locked emai
 
 ---
 
+## Designed for phones and desktops
+
+Most of this app gets used on a phone — someone claims a bed from the couch, votes
+on dinner from a queue, checks the itinerary from a car. The desktop layout is
+where an organizer sits down to approve applicants and set pricing. Both are
+first-class, and every screen is built to work at 320px and at 1536px.
+
+**Navigation adapts to the space it has.** The member area has thirteen
+destinations. On a wide screen they sit inline as a single row of tabs. Below
+that, the header collapses to the name of the page you're on plus one control
+that opens a grouped menu — *Trip*, *The group*, *You* — so the whole app is one
+tap away instead of hidden behind a sideways scroll. The menu closes on
+navigation (including the back button), closes on `Escape`, dims the page behind
+it, and locks background scrolling while open.
+
+**Touch targets are sized by pointer, not by width.** An iPad is 768px wide and
+still operated with a thumb, so a breakpoint is the wrong thing to key off.
+`app/globals.css` applies the 44px minimum from Apple's HIG and WCAG 2.5.5 under
+`@media (pointer: coarse)`, which leaves the compact look intact on machines with
+a mouse.
+
+**Forms behave like native ones.** Inputs carry `autocomplete`, `inputmode`, and
+`enterkeyhint` so password managers fill them and the on-screen keyboard shows
+the right layout and return key. Every control is at least 16px on touch devices,
+which is what stops iOS Safari from zooming the page in when a field is focused.
+
+**Layout details that matter on a small screen.** Rows that pair a label with
+controls stack rather than squeeze; long trip names, emails, and join codes wrap
+instead of pushing the page sideways; the viewport is declared `viewport-fit=cover`
+with matching `theme-color` so an installed home-screen app paints to the edges;
+and `*-safe` utilities keep content clear of the notch and home indicator.
+Motion respects `prefers-reduced-motion`, and a visible focus ring is restored
+globally for keyboard users.
+
+**Verified, not assumed.** Both journeys — organizer and member — were driven
+through a real browser at 320, 390, 768, 1024, 1280, and 1536px against a seeded
+database, asserting on every page that nothing overflows horizontally, that no
+control falls below the touch minimum, and that the mobile menu opens and closes.
+
+---
+
 ## Tech stack
 
 | Layer | Choice |
 |---|---|
 | Language | TypeScript (strict) |
 | Framework | Next.js 16 — App Router, React 19 server + client components, server actions |
-| Styling | Tailwind CSS v4 · Fraunces (serif) + Inter (sans) |
+| Styling | Tailwind CSS v4 — mobile-first, responsive to 320px · Fraunces (serif) + Inter (sans) |
 | Database | PostgreSQL via Vercel Postgres |
 | ORM | Prisma v5 — versioned migration history committed under `prisma/migrations` |
 | Auth | NextAuth.js v4 — credentials provider, JWT sessions, bcrypt (cost 10) |
@@ -200,6 +241,13 @@ stateDiagram-v2
 
 **Ownership checks on every owner action.** Trip-management mutations resolve the trip from its ID and assert `trip.ownerId === session.user.id` before touching any data. A member cannot act on a trip they don't own by crafting the request directly.
 
+**Touch sizing keyed to pointer type, not viewport width.** The obvious
+implementation — grow controls below the `sm` breakpoint — gets tablets wrong:
+a 768px iPad is a touch device that would fall through to the compact desktop
+sizes. Keying the 44px floor off `@media (pointer: coarse)` describes the actual
+constraint (how precisely the user can point) rather than a proxy for it, and
+correctly covers touch laptops and large tablets too.
+
 **Amount derived server-side at Stripe checkout.** The server action reads the locked per-person cost from the database; the client never passes an amount. The signed Stripe webhook is the only thing that advances a user to `CONFIRMED_PAID`.
 
 ---
@@ -245,6 +293,9 @@ NEXT_PUBLIC_APP_URL
 
 ## End-to-end walkthrough
 
+Worth doing once with your browser narrowed to a phone width — the whole flow is
+built to work there.
+
 1. `/signup` — create an account. You land on the home screen (`/dashboard/start`).
 2. `/dashboard/my-trips` — name your trip, get a private invite link and short join code.
 3. Open the invite link in a second browser session, apply, and fill in the guest form.
@@ -289,6 +340,9 @@ See [`SECURITY.md`](./SECURITY.md) for the vulnerability reporting process.
 - Implemented the approval-gated UI (read-only mode for `PENDING` users) as a complement to — not a replacement for — server-side authorization.
 - Integrated Stripe Checkout end-to-end: server action creates the session, signed webhook records payment, status update gates the rest of the app.
 - Integrated Vercel Blob for file uploads and Resend for transactional emails covering all key status transitions.
+- Made the whole app responsive from 320px up, including a nav that collapses
+  from thirteen inline tabs to a grouped menu sheet, pointer-based touch target
+  sizing, and native mobile keyboard and autofill hints on every form.
 - Built `MealsPlanner` — a phase-aware React component handling suggestions, voting bars, helper sign-ups, and grocery list generation — and `ItineraryView` with per-item threaded comment sections.
 
 ---

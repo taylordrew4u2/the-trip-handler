@@ -33,33 +33,33 @@ export function ContributionsPanel({ tripId, items }: { tripId: string; items: I
   }
 
   return (
-    <div className="bg-white rounded-xl border border-stone-200 p-6 space-y-4">
+    <div className="bg-white rounded-xl border border-stone-200 p-5 sm:p-6 space-y-4">
       <div>
         <h2 className="font-serif text-xl font-medium text-stone-900">Contributions</h2>
         <p className="text-stone-500 text-sm mt-1">Items for people to bring. Participants claim them on the trip dashboard.</p>
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2 text-sm">{error}</div>
+        <div role="alert" className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2 text-sm">{error}</div>
       )}
 
-      <form onSubmit={add} className="flex gap-2">
+      <form onSubmit={add} className="grid grid-cols-1 sm:grid-cols-[1fr_8rem_auto] gap-2">
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Item to bring"
-          className="flex-1 px-3 py-2 rounded-lg border border-stone-300 text-sm focus:outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900"
+          className="min-w-0 px-3 min-h-[44px] rounded-lg border border-stone-300 text-sm focus:outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900"
         />
         <input
           value={category}
           onChange={(e) => setCategory(e.target.value)}
           placeholder="Category"
-          className="w-32 px-3 py-2 rounded-lg border border-stone-300 text-sm focus:outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900"
+          className="min-w-0 px-3 min-h-[44px] rounded-lg border border-stone-300 text-sm focus:outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900"
         />
         <button
           type="submit"
           disabled={isPending || !title.trim()}
-          className="px-4 py-2 rounded-lg bg-stone-900 hover:bg-stone-800 text-white text-sm font-medium disabled:opacity-50"
+          className="inline-flex items-center justify-center px-4 min-h-[44px] rounded-lg bg-stone-900 hover:bg-stone-800 active:bg-stone-700 text-white text-sm font-medium disabled:opacity-50"
         >
           Add
         </button>
@@ -70,7 +70,7 @@ export function ContributionsPanel({ tripId, items }: { tripId: string; items: I
       ) : (
         <ul className="space-y-2">
           {items.map((item) => (
-            <li key={item.id} className="flex items-center justify-between gap-3 border border-stone-100 rounded-lg px-3 py-2">
+            <li key={item.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 border border-stone-100 rounded-lg px-3 py-2.5">
               <div className="min-w-0">
                 <p className="text-sm font-medium text-stone-900 truncate">
                   {item.title}
@@ -86,7 +86,7 @@ export function ContributionsPanel({ tripId, items }: { tripId: string; items: I
                 onClick={() => {
                   if (confirm(`Delete "${item.title}"?`)) run(() => deleteTripContribution(item.id));
                 }}
-                className="px-2.5 py-1 rounded-md border border-red-200 text-red-700 hover:bg-red-50 text-xs font-medium disabled:opacity-50"
+                className="inline-flex items-center justify-center shrink-0 px-3 min-h-[32px] rounded-md border border-red-200 text-red-700 hover:bg-red-50 active:bg-red-100 text-xs font-medium disabled:opacity-50"
               >
                 Delete
               </button>

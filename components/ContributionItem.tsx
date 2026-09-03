@@ -30,7 +30,7 @@ export function ContributionItem({ item, currentUserId }: ContributionItemProps)
 
   return (
     <div className="bg-white rounded-xl border border-stone-200 p-4">
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <h3 className="font-medium text-stone-900">{item.title}</h3>
@@ -56,10 +56,10 @@ export function ContributionItem({ item, currentUserId }: ContributionItemProps)
             </div>
           )}
         </div>
-        <form action={handleToggle}>
+        <form action={handleToggle} className="shrink-0">
           <button
             type="submit"
-            className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${
+            className={`inline-flex items-center justify-center w-full sm:w-auto px-4 min-h-[32px] rounded-md text-sm font-medium transition-colors whitespace-nowrap ${
               isSignedUp
                 ? "border border-red-300 text-red-700 hover:bg-red-50"
                 : "bg-stone-900 text-white hover:bg-stone-800"

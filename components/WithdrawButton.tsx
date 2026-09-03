@@ -42,7 +42,7 @@ export function WithdrawButton({ canWithdraw }: { canWithdraw: boolean }) {
         onClick={handleClick}
         disabled={busy}
         type="button"
-        className="text-sm px-3 py-1.5 border border-red-300 text-red-700 rounded-md hover:bg-red-50 disabled:opacity-50"
+        className="inline-flex items-center justify-center text-sm px-3 min-h-[32px] border border-red-300 text-red-700 rounded-md hover:bg-red-50 disabled:opacity-50"
       >
         {busy ? "Withdrawing…" : "Pull out of the trip"}
       </button>
