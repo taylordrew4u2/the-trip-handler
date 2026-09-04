@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
+import { isReactionEmoji } from "@/lib/reactions";
 
 const APPROVED = new Set(["APPROVED", "PENDING_PAYMENT", "CONFIRMED_PAID"]);
 
@@ -48,7 +49,7 @@ export async function deleteComment(commentId: string) {
   return { success: true };
 }
 
-export const REACTION_EMOJIS = ["👍", "❤️", "😂", "🔥", "💯", "🎭"] as const;
+
 
 export async function toggleReaction(commentId: string, emoji: string) {
   const session = await getServerSession(authOptions);
@@ -59,7 +60,7 @@ export async function toggleReaction(commentId: string, emoji: string) {
   if (!APPROVED.has(user.status ?? "")) {
     return { error: "Only approved members can react." };
   }
-  if (!REACTION_EMOJIS.includes(emoji as (typeof REACTION_EMOJIS)[number])) {
+  if (!isReactionEmoji(emoji)) {
     return { error: "Unsupported reaction." };
   }
 

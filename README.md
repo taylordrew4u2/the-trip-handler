@@ -252,6 +252,12 @@ stateDiagram-v2
 
 **Ownership checks on every owner action.** Trip-management mutations resolve the trip from its ID and assert `trip.ownerId === session.user.id` before touching any data. A member cannot act on a trip they don't own by crafting the request directly.
 
+**A green build is not a working app.** The responsive suite proved its worth
+on layout, then missed a real outage: server actions fail at call time, so a
+page can render perfectly while its buttons are broken. Coverage now includes
+invoking actions and asserting the write, because the failure mode that matters
+is the one every other check is blind to.
+
 **Responsive behaviour asserted in CI rather than eyeballed.** Layout
 regressions are easy to ship and easy to miss: a change looks fine on the
 window you happen to have open. Encoding "nothing overflows, nothing is too
@@ -371,6 +377,19 @@ What they assert:
 Each of those assertions exists because that exact thing broke at least once
 during development. The back-button test, for instance, guards a menu that
 closed on link clicks but stayed open over the previous page when you went back.
+
+### Functional end-to-end tests — same command
+
+Layout tests have a specific blind spot, and this project hit it. A `"use
+server"` module may only export async functions; Next rejects such a module when
+an **action is invoked**, not at build or render time. So a bad export left the
+board page returning 200 with every layout assertion passing, while posting and
+reacting failed with a 500. `next build` exited 0 the whole time.
+
+`tests/e2e/flows.spec.ts` therefore invokes real actions and asserts the write
+landed: a member posts to the board and sees it appear, adds and removes a
+reaction, and no request 5xxs while doing it. These mutate data, so they run on
+one viewport rather than all five, and each undoes what it does.
 
 **A named limitation:** the suite runs on Chromium only, to keep CI to a single
 browser download. What is under test is this app's layout and media queries

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { ApprovalRequired } from "@/components/ApprovalRequired";
 import { isApproved } from "@/lib/approval";
 import { BoardClient } from "./BoardClient";
+import { pickComposerCopy } from "./composerCopy";
 import { PageNote } from "@/components/PageNote";
 
 export const dynamic = "force-dynamic";
@@ -19,6 +20,7 @@ export default async function BoardPage() {
     take: 200,
     include: {
       user: { select: { id: true, name: true, username: true, avatarUrl: true } },
+      reactions: { select: { emoji: true, userId: true } },
     },
   });
 
@@ -31,7 +33,7 @@ export default async function BoardPage() {
           Updates, questions, schedule chaos, anything.
         </p>
       </div>
-      <BoardClient comments={comments} currentUserId={userId} />
+      <BoardClient comments={comments} currentUserId={userId} {...pickComposerCopy()} />
     </div>
   );
 }
