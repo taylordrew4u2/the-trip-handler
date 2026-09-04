@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { notifyAdmin, sendFormUnlockedEmail } from "@/lib/resend";
+import { isAuthzError, requireApprovedMember } from "@/lib/authz";
 
 const STRING_ARRAY_FIELDS = new Set([
   "bringingItems",
@@ -247,14 +248,10 @@ const PREFERENCES_REQUIRED = [
 ];
 
 export async function updatePreferences(formData: FormData) {
-  const session = await getServerSession(authOptions);
-  const sessionUser = session?.user as { id?: string; status?: string; role?: string } | undefined;
-  if (!sessionUser?.id || sessionUser.id === "admin" || sessionUser.role === "ADMIN") {
-    return { error: "Sign in as a participant first." };
-  }
-  if (!["APPROVED", "PENDING_PAYMENT", "CONFIRMED_PAID"].includes(sessionUser.status ?? "")) {
-    return { error: "You need to be approved first." };
-  }
+  // Approval is read from the database, not the JWT — see lib/authz.ts.
+  const auth = await requireApprovedMember();
+  if (isAuthzError(auth)) return { error: auth.error };
+  const sessionUser = { id: auth.id };
 
   const data: Record<string, string | string[] | boolean | null | Date> = {};
 

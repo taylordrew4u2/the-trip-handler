@@ -78,3 +78,34 @@ test.describe("board", () => {
     expect(failures, "server action or client error while posting").toEqual([]);
   });
 });
+
+test.describe("sleeping", () => {
+  test.beforeEach(async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== ONLY_PROJECT, `mutating flows run once, on ${ONLY_PROJECT}`);
+    await signIn(page, "member");
+    await page.goto("/dashboard/sleeping");
+  });
+
+  test("a member can claim a bed and leave it again", async ({ page }) => {
+    // Claiming runs inside a serializable transaction that re-counts the
+    // occupants; the mocked unit tests cover the branches, this covers the
+    // fact that the transaction actually commits against real Postgres.
+    const failures: string[] = [];
+    page.on("response", (r) => {
+      if (r.status() >= 500) failures.push(`${r.status()} ${new URL(r.url()).pathname}`);
+    });
+
+    const claim = page.getByRole("button", { name: /claim/i }).first();
+    await expect(claim).toBeVisible();
+    await claim.click();
+
+    const leave = page.getByRole("button", { name: /leave|give up/i }).first();
+    await expect(leave).toBeVisible();
+
+    // Put the seed data back the way it was so the test is repeatable.
+    await leave.click();
+    await expect(page.getByRole("button", { name: /claim/i }).first()).toBeVisible();
+
+    expect(failures, "server action errored while claiming a bed").toEqual([]);
+  });
+});

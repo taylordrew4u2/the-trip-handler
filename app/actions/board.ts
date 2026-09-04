@@ -5,20 +5,18 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { isReactionEmoji } from "@/lib/reactions";
+import { isAuthzError, requireApprovedMember } from "@/lib/authz";
 
-const APPROVED = new Set(["APPROVED", "PENDING_PAYMENT", "CONFIRMED_PAID"]);
 
 const MAX_LEN = 2000;
 
 export async function postComment(body: string) {
-  const session = await getServerSession(authOptions);
-  const user = session?.user as { id?: string; status?: string; role?: string } | undefined;
-  if (!user?.id || user.id === "admin" || user.role === "ADMIN") {
-    return { error: "Sign in as a participant to post." };
-  }
-  if (!APPROVED.has(user.status ?? "")) {
-    return { error: "Only approved members can post." };
-  }
+  // Status comes from the database, never from the session: the JWT is a
+  // snapshot from sign-in and would still say APPROVED for someone since
+  // removed from the trip. See lib/authz.ts.
+  const auth = await requireApprovedMember();
+  if (isAuthzError(auth)) return { error: auth.error };
+  const user = { id: auth.id };
 
   const trimmed = body.trim();
   if (!trimmed) return { error: "Say something." };
@@ -52,14 +50,12 @@ export async function deleteComment(commentId: string) {
 
 
 export async function toggleReaction(commentId: string, emoji: string) {
-  const session = await getServerSession(authOptions);
-  const user = session?.user as { id?: string; status?: string; role?: string } | undefined;
-  if (!user?.id || user.id === "admin" || user.role === "ADMIN") {
-    return { error: "Sign in as a participant to react." };
-  }
-  if (!APPROVED.has(user.status ?? "")) {
-    return { error: "Only approved members can react." };
-  }
+  // Status comes from the database, never from the session: the JWT is a
+  // snapshot from sign-in and would still say APPROVED for someone since
+  // removed from the trip. See lib/authz.ts.
+  const auth = await requireApprovedMember();
+  if (isAuthzError(auth)) return { error: auth.error };
+  const user = { id: auth.id };
   if (!isReactionEmoji(emoji)) {
     return { error: "Unsupported reaction." };
   }

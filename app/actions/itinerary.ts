@@ -4,8 +4,7 @@ import { prisma } from "@/lib/db";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
-
-const APPROVED_STATUSES = new Set(["APPROVED", "PENDING_PAYMENT", "CONFIRMED_PAID"]);
+import { isAuthzError, requireApprovedActor } from "@/lib/authz";
 
 async function requireAdmin() {
   const session = await getServerSession(authOptions);
@@ -13,14 +12,11 @@ async function requireAdmin() {
 }
 
 async function requireApprovedUser(): Promise<{ id: string; isAdmin: boolean } | { error: string }> {
-  const session = await getServerSession(authOptions);
-  const u = session?.user as { id?: string; status?: string; role?: string } | undefined;
-  if (!u?.id) return { error: "Sign in first." };
-  const isAdmin = u.role === "ADMIN";
-  if (!isAdmin && !APPROVED_STATUSES.has(u.status ?? "")) {
-    return { error: "You need to be approved first." };
-  }
-  return { id: u.id, isAdmin };
+  // Delegates to the shared guard so approval is read from the database, not
+  // from the sign-in-time JWT. See lib/authz.ts.
+  const actor = await requireApprovedActor();
+  if (isAuthzError(actor)) return { error: actor.error };
+  return { id: actor.id, isAdmin: actor.isAdmin };
 }
 
 function revalidateItinerary() {
