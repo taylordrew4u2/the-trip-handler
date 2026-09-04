@@ -54,6 +54,13 @@ export async function seedDefaultHouseLayout(tripId: string) {
  * Safe to call on every page load — only seeds when zero beds exist.
  */
 export async function ensureSleepingSetup() {
+  // Called while rendering the sleeping page, but exported from a "use server"
+  // module — so it is a callable endpoint, and an unauthenticated caller could
+  // otherwise seed the default bed layout. Restrict it to signed-in
+  // participants, which is exactly who the page renders for.
+  const auth = await requireApprovedSelf();
+  if ("error" in auth) return;
+
   const { getActiveTrip } = await import("@/lib/trip");
   const trip = await getActiveTrip();
   if (!trip) return;

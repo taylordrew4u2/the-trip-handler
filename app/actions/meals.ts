@@ -70,6 +70,18 @@ async function requireApprovedMember(tripId: string): Promise<{ id: string } | {
 export async function ensureMealPlanSetup(tripId: string) {
   if (!tripId) return;
 
+  // This is invoked while rendering the meals pages, but it is exported from a
+  // "use server" module, which makes it a callable endpoint like any other
+  // action. Without this check any caller could seed slots into a trip id of
+  // their choosing, so the caller must actually belong to the trip: its owner
+  // (the owner-side page) or an approved member (the participant page).
+  const userId = await sessionUserId();
+  if (!userId) return;
+  if (!(await ownsTrip(tripId, userId))) {
+    const member = await requireApprovedMember(tripId);
+    if ("error" in member) return;
+  }
+
   const slotCount = await prisma.mealSlot.count({ where: { tripId } });
   if (slotCount === 0) {
     await prisma.mealSlot.createMany({

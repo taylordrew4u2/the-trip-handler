@@ -136,7 +136,7 @@ all of them.
 | Database | PostgreSQL via Vercel Postgres |
 | ORM | Prisma v5 — versioned migration history committed under `prisma/migrations` |
 | Auth | NextAuth.js v4 — credentials provider, JWT sessions, bcrypt (cost 10) |
-| Payments | Stripe Checkout + signed webhook |
+| Payments | Stripe Checkout (server-created session, redirect to its URL — no browser SDK) + signed webhook |
 | File storage | Vercel Blob — avatars, lodging photos, expense receipts |
 | Email | Resend |
 | Validation | Zod |
@@ -300,12 +300,10 @@ NEXTAUTH_SECRET
 NEXTAUTH_URL
 ADMIN_EMAIL
 STRIPE_SECRET_KEY
-STRIPE_PUBLISHABLE_KEY
 STRIPE_WEBHOOK_SECRET
 RESEND_API_KEY
 EMAIL_FROM
 BLOB_READ_WRITE_TOKEN
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
 NEXT_PUBLIC_APP_URL
 ```
 
@@ -384,7 +382,8 @@ bug would not be caught here, so Safari stays a manual check.
 ## Security
 
 - Secrets are not committed; `.env.example` documents required variable names only.
-- All server actions call `getServerSession(authOptions)` before any mutation. User and trip IDs come from the session, never from client-supplied arguments.
+- **Every one of the 81 exported server actions authenticates before mutating.** The single exception is `signupAction`, which is the public account-creation entry point. User and trip IDs come from the session, never from client-supplied arguments.
+- Anything exported from a `"use server"` module is a callable endpoint, including helpers only ever invoked during page render. The two idempotent setup helpers (`ensureMealPlanSetup`, `ensureSleepingSetup`) therefore carry the same membership checks as the rest — being "internal" is not a boundary.
 - Authorization is layered: page (server component returns gated content) → action (`requireApprovedUser` / ownership check) → resource (users can only edit their own comments).
 - Trip-scoped data is filtered by `tripId` on the server; members cannot read or write to trips they aren't on.
 - Stripe Checkout amount is derived server-side from locked pricing. The webhook validates its signature before trusting the payload.
