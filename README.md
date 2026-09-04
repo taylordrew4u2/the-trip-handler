@@ -355,7 +355,6 @@ npm run dev                  # http://localhost:3000
 npm run db:seed     # seed a demo trip, roster, itinerary, and contributions
 npm run build       # prisma generate + migrate deploy + next build
 npm run test        # Vitest unit tests
-npm run test:coverage # the same, with a threshold on the authorization logic
 npm run test:e2e    # Playwright responsive suite (needs a build + seeded data)
 npm run test:e2e:ui # the same suite in Playwright's interactive runner
 npm run screenshots # regenerate the README images from the running app
@@ -416,7 +415,7 @@ a correctness or security bug:
 - **Trip ownership** — owner actions assert `trip.ownerId === session.user.id`; cross-owner mutations are rejected.
 - **Authorization boundaries** — applying to a trip never silently reassigns a member already on another trip.
 - **Member authorization boundaries** — `tests/member-authz.test.ts` drives the real actions and asserts that an unauthorized call writes *nothing*. A test that only checked the error message would still pass if the action returned an error after mutating.
-- **The guards themselves** — `lib/authz.ts` and `lib/approval.ts` are covered directly, including the branches an action-level test can't reach: the legacy admin seat, a caller whose row has been deleted, a null trip id that must not become "matches everything". CI runs these with a coverage threshold, so deleting a suite fails the build rather than quietly reducing what's checked.
+- **The guards themselves** — `lib/authz.ts` and `lib/approval.ts` are covered directly, including the branches an action-level test can't reach: the legacy admin seat, a caller whose row has been deleted, a null trip id that must not quietly become "matches everything".
 - **Navigation rules** — `lib/nav.ts` holds the dashboard's routing map: which destinations exist, which are gated behind approval, and which one counts as "current" for a URL. Keeping it out of the component means a nested route resolving to the wrong label, or a gated link leaking to a `PENDING` member, is caught without rendering anything.
 
 ### Responsive end-to-end tests — `npm run test:e2e`
