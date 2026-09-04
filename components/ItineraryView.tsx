@@ -320,7 +320,7 @@ function CommentRow({
       <div className="flex items-baseline justify-between gap-3">
         <p className="text-xs">
           <span className="font-medium text-stone-900">{comment.user.name}</span>
-          <span className="text-stone-400"> · {tsLabel}</span>
+          <span className="text-stone-500"> · {tsLabel}</span>
         </p>
         {!editing && (canEdit || canDelete) && (
           <div className="flex gap-2 text-[10px]">

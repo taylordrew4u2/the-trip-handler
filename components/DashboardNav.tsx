@@ -131,7 +131,7 @@ export function DashboardNav({ status }: { status: string | null }) {
             <div className="px-4 py-3 space-y-5">
               {groups.map((group) => (
                 <div key={group.heading}>
-                  <p className="text-[11px] uppercase tracking-[0.18em] text-stone-400 px-1 mb-1">
+                  <p className="text-[11px] uppercase tracking-[0.18em] text-stone-500 px-1 mb-1">
                     {group.heading}
                   </p>
                   <ul>

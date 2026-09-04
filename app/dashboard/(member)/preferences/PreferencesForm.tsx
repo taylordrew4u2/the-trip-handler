@@ -4,6 +4,13 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { updatePreferences } from "@/app/actions/guestForm";
 import type { GuestForm } from "@prisma/client";
+import {
+  FieldHintProvider,
+  FieldIdProvider,
+  useFieldHintId,
+  useFieldId,
+  useId,
+} from "@/components/forms/field";
 
 const inputCls =
   "w-full px-3 py-2 min-h-[44px] rounded-lg border border-stone-300 bg-white text-sm focus:outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900";
@@ -19,20 +26,33 @@ function Section({ title, intro, children }: { title: string; intro?: string; ch
 }
 
 function Field({ label, hint, children, required }: { label: string; hint?: string; children: React.ReactNode; required?: boolean }) {
+  // The id is minted here and read by the control below through context, so
+  // the label/input pair can never drift apart. See components/forms/field.tsx.
+  const id = useId();
+  const hintId = hint ? `${id}-hint` : undefined;
   return (
-    <div>
-      <label className="block text-sm font-medium text-stone-800">
-        {label} {required && <span className="text-red-600">*</span>}
-      </label>
-      {hint && <p className="text-xs text-stone-500 mt-0.5">{hint}</p>}
-      <div className="mt-1.5">{children}</div>
-    </div>
+    <FieldIdProvider id={id}>
+      <div>
+        <label htmlFor={id} className="block text-sm font-medium text-stone-800">
+          {label}{" "}
+          {/* The asterisk is decoration; `required` on the input is what a
+              screen reader announces. Reading "star" mid-label helps nobody. */}
+          {required && <span aria-hidden="true" className="text-red-600">*</span>}
+        </label>
+        {hint && <p id={hintId} className="text-xs text-stone-500 mt-0.5">{hint}</p>}
+        <div className="mt-1.5">
+          <FieldHintProvider id={hintId}>{children}</FieldHintProvider>
+        </div>
+      </div>
+    </FieldIdProvider>
   );
 }
 
 function TextInput(props: { name: string; defaultValue?: string | null; placeholder?: string; type?: string; required?: boolean }) {
   return (
     <input
+      id={useFieldId()}
+      aria-describedby={useFieldHintId()}
       name={props.name}
       type={props.type ?? "text"}
       defaultValue={props.defaultValue ?? ""}
@@ -46,6 +66,8 @@ function TextInput(props: { name: string; defaultValue?: string | null; placehol
 function TextArea(props: { name: string; defaultValue?: string | null; placeholder?: string; rows?: number; required?: boolean }) {
   return (
     <textarea
+      id={useFieldId()}
+      aria-describedby={useFieldHintId()}
       name={props.name}
       defaultValue={props.defaultValue ?? ""}
       placeholder={props.placeholder}

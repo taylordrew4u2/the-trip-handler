@@ -123,12 +123,12 @@ export function PaymentClient({ trip, user, payment }: PaymentClientProps) {
               <div className="text-right">
                 <p
                   className={`font-medium tabular-nums ${
-                    row.total == null ? "text-stone-400 italic" : "text-stone-900"
+                    row.total == null ? "text-stone-500 italic" : "text-stone-900"
                   }`}
                 >
                   {row.total == null ? "TBD" : `$${row.total.toFixed(2)}`}
                   {row.total != null && (
-                    <span className="text-xs text-stone-400"> total</span>
+                    <span className="text-xs text-stone-500"> total</span>
                   )}
                 </p>
                 {row.total != null && (

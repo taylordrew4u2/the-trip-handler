@@ -4,6 +4,13 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { submitGuestForm, requestFormEditAccess } from "@/app/actions/guestForm";
 import type { GuestForm } from "@prisma/client";
+import {
+  FieldHintProvider,
+  FieldIdProvider,
+  useFieldHintId,
+  useFieldId,
+  useId,
+} from "@/components/forms/field";
 
 type Existing = GuestForm | null;
 
@@ -18,14 +25,25 @@ function Section({ title, intro, children }: { title: string; intro?: string; ch
 }
 
 function Field({ label, hint, children, required }: { label: string; hint?: string; children: React.ReactNode; required?: boolean }) {
+  // The id is minted here and read by the control below through context, so
+  // the label/input pair can never drift apart. See components/forms/field.tsx.
+  const id = useId();
+  const hintId = hint ? `${id}-hint` : undefined;
   return (
-    <div>
-      <label className="block text-sm font-medium text-stone-800">
-        {label} {required && <span className="text-red-600">*</span>}
-      </label>
-      {hint && <p className="text-xs text-stone-500 mt-0.5">{hint}</p>}
-      <div className="mt-1.5">{children}</div>
-    </div>
+    <FieldIdProvider id={id}>
+      <div>
+        <label htmlFor={id} className="block text-sm font-medium text-stone-800">
+          {label}{" "}
+          {/* The asterisk is decoration; `required` on the input is what a
+              screen reader announces. Reading "star" mid-label helps nobody. */}
+          {required && <span aria-hidden="true" className="text-red-600">*</span>}
+        </label>
+        {hint && <p id={hintId} className="text-xs text-stone-500 mt-0.5">{hint}</p>}
+        <div className="mt-1.5">
+          <FieldHintProvider id={hintId}>{children}</FieldHintProvider>
+        </div>
+      </div>
+    </FieldIdProvider>
   );
 }
 
@@ -35,13 +53,51 @@ const inputCls =
 function TextInput({ name, defaultValue, placeholder, type = "text", required }: {
   name: string; defaultValue?: string | null; placeholder?: string; type?: string; required?: boolean;
 }) {
-  return <input name={name} type={type} defaultValue={defaultValue ?? ""} placeholder={placeholder} required={required} className={inputCls} />;
+  return (
+    <input
+      id={useFieldId()}
+      aria-describedby={useFieldHintId()}
+      name={name}
+      type={type}
+      defaultValue={defaultValue ?? ""}
+      placeholder={placeholder}
+      required={required}
+      className={inputCls}
+    />
+  );
 }
 
 function TextArea({ name, defaultValue, placeholder, rows = 3, required }: {
   name: string; defaultValue?: string | null; placeholder?: string; rows?: number; required?: boolean;
 }) {
-  return <textarea name={name} defaultValue={defaultValue ?? ""} placeholder={placeholder} rows={rows} required={required} className={`${inputCls} resize-none`} />;
+  return (
+    <textarea
+      id={useFieldId()}
+      aria-describedby={useFieldHintId()}
+      name={name}
+      defaultValue={defaultValue ?? ""}
+      placeholder={placeholder}
+      rows={rows}
+      required={required}
+      className={`${inputCls} resize-none`}
+    />
+  );
+}
+
+/** A field the member can see but not change — their sign-in email. */
+function ReadOnlyInput({ type, value }: { type: string; value: string }) {
+  return (
+    <input
+      id={useFieldId()}
+      aria-describedby={useFieldHintId()}
+      type={type}
+      value={value}
+      readOnly
+      disabled
+      // stone-500 on a stone-100 ground is 4.4:1 — just under AA. stone-600 clears it.
+      className={`${inputCls} bg-stone-100 text-stone-600 cursor-not-allowed`}
+    />
+  );
 }
 
 function RadioGroup({ name, options, defaultValue, required }: {
@@ -185,7 +241,9 @@ export function IntakeForm({ defaultEmail, defaultName, defaultPhone, existing, 
         <Field label="Full name" required><TextInput name="fullName" defaultValue={e?.fullName ?? defaultName} required /></Field>
         <Field label="Stage / display name (or N/A)" required><TextInput name="stageName" defaultValue={e?.stageName} required placeholder="N/A if you don't use one" /></Field>
         <Field label="Phone number" required><TextInput name="phoneNumber" type="tel" defaultValue={e?.phoneNumber ?? defaultPhone} required /></Field>
-        <Field label="Email"><input type="email" value={defaultEmail} disabled className={`${inputCls} bg-stone-100 text-stone-500 cursor-not-allowed`} /></Field>
+        <Field label="Email">
+          <ReadOnlyInput type="email" value={defaultEmail} />
+        </Field>
         <Field label="Pronouns" required><TextInput name="pronouns" defaultValue={e?.pronouns} required placeholder="e.g. she/her, they/them, N/A" /></Field>
         <Field label="Age confirmation" required>
           <label className="flex items-center gap-2.5 text-sm text-stone-800 cursor-pointer">

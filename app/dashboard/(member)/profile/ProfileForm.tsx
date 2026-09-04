@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { updateProfile } from "@/app/actions/profile";
 import { SLEEP_TAGS } from "@/lib/sleep";
+import { Field, Input, Select, Textarea } from "@/components/forms/field";
 
 const inputCls =
   "w-full px-3 py-2.5 rounded-lg border border-stone-300 bg-white text-sm focus:outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900";
@@ -91,53 +92,59 @@ export function ProfileForm({
         </div>
       )}
 
-      <div>
-        <label className="block text-xs font-medium text-stone-700 mb-1.5 tracking-wide">NAME *</label>
-        <input name="name" required defaultValue={defaults.name} className={inputCls} />
-      </div>
+      <Field label="NAME" required>
+        <Input name="name" required defaultValue={defaults.name} className={inputCls} />
+      </Field>
 
-      <div>
-        <label className="block text-xs font-medium text-stone-700 mb-1.5 tracking-wide">USERNAME</label>
-        <input name="username" defaultValue={defaults.username} className={inputCls} placeholder="Letters, numbers, underscores" />
-        <p className="text-xs text-stone-500 mt-1">Shown on the roster as @username when set.</p>
-      </div>
+      <Field label="USERNAME" hint="Shown on the roster as @username when set.">
+        <Input
+          name="username"
+          defaultValue={defaults.username}
+          className={inputCls}
+          placeholder="Letters, numbers, underscores"
+        />
+      </Field>
 
-      <div>
-        <label className="block text-xs font-medium text-stone-700 mb-1.5 tracking-wide">EMAIL</label>
-        <input value={email} disabled className={`${inputCls} bg-stone-100 text-stone-500 cursor-not-allowed`} />
-        <p className="text-xs text-stone-500 mt-1">Email is your sign-in. Contact admin if you need it changed.</p>
-      </div>
+      <Field label="EMAIL" hint="Email is your sign-in. Contact admin if you need it changed.">
+        <Input
+          value={email}
+          disabled
+          readOnly
+          className={`${inputCls} bg-stone-100 text-stone-600 cursor-not-allowed`}
+        />
+      </Field>
 
-      <div>
-        <label className="block text-xs font-medium text-stone-700 mb-1.5 tracking-wide">PHONE</label>
-        <input name="phone" type="tel" defaultValue={defaults.phone} className={inputCls} placeholder="Optional" />
-      </div>
+      <Field label="PHONE">
+        <Input name="phone" type="tel" defaultValue={defaults.phone} className={inputCls} placeholder="Optional" />
+      </Field>
 
-      <div>
-        <label className="block text-xs font-medium text-stone-700 mb-1.5 tracking-wide">GENDER</label>
-        <select name="gender" defaultValue={defaults.gender} className={inputCls}>
+      <Field
+        label="GENDER"
+        hint={
+          <>
+            Female members can request a single bed even if it&apos;s already taken (current occupant
+            gets bumped and emailed). Used only for that.
+          </>
+        }
+      >
+        <Select name="gender" defaultValue={defaults.gender} className={inputCls}>
           <option value="">Prefer not to say</option>
           <option value="female">Female</option>
           <option value="male">Male</option>
           <option value="non-binary">Non-binary</option>
           <option value="other">Other</option>
-        </select>
-        <p className="text-xs text-stone-500 mt-1">
-          Female members can request a single bed even if it&apos;s already taken (current occupant
-          gets bumped and emailed). Used only for that.
-        </p>
-      </div>
+        </Select>
+      </Field>
 
-      <div>
-        <label className="block text-xs font-medium text-stone-700 mb-1.5 tracking-wide">BIO</label>
-        <textarea
+      <Field label="BIO">
+        <Textarea
           name="bio"
           rows={4}
           defaultValue={defaults.bio}
           className={`${inputCls} resize-none`}
           placeholder="Style, one-liner, anything you want on the roster."
         />
-      </div>
+      </Field>
 
       <div className="border-t border-stone-200 pt-5">
         <p className="text-xs font-medium text-stone-700 mb-1.5 tracking-wide">SLEEP STYLE</p>
@@ -167,16 +174,15 @@ export function ProfileForm({
         </div>
       </div>
 
-      <div>
-        <label className="block text-xs font-medium text-stone-700 mb-1.5 tracking-wide">SLEEP NOTE</label>
-        <textarea
+      <Field label="SLEEP NOTE">
+        <Textarea
           name="sleepNote"
           rows={2}
           defaultValue={defaults.sleepNote}
           className={`${inputCls} resize-none`}
           placeholder="Anything else helpful — wake-up time, meds, allergies to feathers, etc."
         />
-      </div>
+      </Field>
 
       <div className="pt-2">
         <button

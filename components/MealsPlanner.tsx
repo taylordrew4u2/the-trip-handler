@@ -493,7 +493,7 @@ function MealSlotCard({
                     </span>
                     <button
                       onClick={() => run("del-" + s.id, () => deleteSuggestion(s.id))}
-                      className="text-xs text-stone-400 hover:text-red-700"
+                      className="text-xs text-stone-500 hover:text-red-700"
                     >
                       Delete
                     </button>
@@ -720,7 +720,7 @@ function PollBody({
                       e.preventDefault();
                       run("del-" + s.id, () => deleteSuggestion(s.id));
                     }}
-                    className="text-[10px] text-stone-400 hover:text-red-700"
+                    className="text-[10px] text-stone-500 hover:text-red-700"
                   >
                     Remove
                   </button>
@@ -904,9 +904,9 @@ function FinalSlotPanel({
           <p className="text-xs uppercase tracking-wide text-stone-500">Groceries</p>
           <ul className="mt-1 space-y-0.5 text-sm">
             {slot.groceries.map((g) => (
-              <li key={g.id} className={g.bought ? "text-stone-400 line-through" : "text-stone-700"}>
+              <li key={g.id} className={g.bought ? "text-stone-500 line-through" : "text-stone-700"}>
                 · {g.name}
-                {g.quantity && <span className="text-stone-400"> ({g.quantity})</span>}
+                {g.quantity && <span className="text-stone-500"> ({g.quantity})</span>}
               </li>
             ))}
           </ul>
@@ -984,15 +984,15 @@ function GroceryList({
                   ) : (
                     <span className="w-4">{item.bought ? "✓" : "·"}</span>
                   )}
-                  <span className={item.bought ? "text-stone-400 line-through" : "text-stone-800"}>
+                  <span className={item.bought ? "text-stone-500 line-through" : "text-stone-800"}>
                     {item.name}
-                    {item.quantity && <span className="text-stone-400"> ({item.quantity})</span>}
+                    {item.quantity && <span className="text-stone-500"> ({item.quantity})</span>}
                   </span>
-                  <span className="text-xs text-stone-400">— {slot.dayName} {slot.mealType}</span>
+                  <span className="text-xs text-stone-500">— {slot.dayName} {slot.mealType}</span>
                   {isAdmin && (
                     <button
                       onClick={() => run("del-" + item.id, () => deleteGroceryItem(item.id))}
-                      className="ml-auto text-xs text-stone-400 hover:text-red-700"
+                      className="ml-auto text-xs text-stone-500 hover:text-red-700"
                     >
                       Remove
                     </button>

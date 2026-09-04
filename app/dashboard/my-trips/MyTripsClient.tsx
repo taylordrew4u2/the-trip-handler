@@ -180,7 +180,7 @@ export function MyTripsClient({ trips }: { trips: TripData[] }) {
       </form>
 
       {trips.length === 0 ? (
-        <p className="text-stone-400 text-sm">
+        <p className="text-stone-500 text-sm">
           You haven&apos;t created any trips yet. Name one above to get an invite link and join code.
         </p>
       ) : (
@@ -220,7 +220,7 @@ export function MyTripsClient({ trips }: { trips: TripData[] }) {
                   {trip.inviteToken ? (
                     <InviteLink token={trip.inviteToken} />
                   ) : (
-                    <p className="text-xs text-stone-400">No invite link on this trip.</p>
+                    <p className="text-xs text-stone-500">No invite link on this trip.</p>
                   )}
                 </div>
                 <div>
@@ -232,7 +232,7 @@ export function MyTripsClient({ trips }: { trips: TripData[] }) {
                     onGenerate={() => run(() => generateMyTripJoinCode(trip.id))}
                     pending={isPending}
                   />
-                  <p className="text-[11px] text-stone-400 mt-1.5">
+                  <p className="text-[11px] text-stone-500 mt-1.5">
                     Members can enter this on their home screen to find and apply to the trip.
                   </p>
                 </div>
@@ -243,7 +243,7 @@ export function MyTripsClient({ trips }: { trips: TripData[] }) {
                   Applicants
                 </p>
                 {trip.applicants.length === 0 ? (
-                  <p className="text-stone-400 text-sm">No one has applied yet.</p>
+                  <p className="text-stone-500 text-sm">No one has applied yet.</p>
                 ) : (
                   <ul className="space-y-2">
                     {trip.applicants.map((a) => (

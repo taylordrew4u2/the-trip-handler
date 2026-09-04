@@ -93,7 +93,7 @@ export function PricingPanel({ tripId, pricing }: { tripId: string; pricing: Pri
               <div key={kind} className="flex items-center gap-3">
                 <span className="w-16 sm:w-20 shrink-0 text-sm text-stone-700">{label}</span>
                 <div className="flex-1 min-w-0 flex items-center gap-1">
-                  <span className="text-stone-400 text-sm">$</span>
+                  <span className="text-stone-500 text-sm">$</span>
                   <input
                     type="number"
                     min="0"
@@ -133,7 +133,7 @@ export function PricingPanel({ tripId, pricing }: { tripId: string; pricing: Pri
             <span className="text-stone-500">Per-person share</span>
             <span className="font-medium text-stone-900">
               ${share.toFixed(2)}{" "}
-              <span className="text-stone-400 font-normal">+ ${SECURITY_DEPOSIT_USD} deposit</span>
+              <span className="text-stone-500 font-normal">+ ${SECURITY_DEPOSIT_USD} deposit</span>
             </span>
           </div>
         </div>
