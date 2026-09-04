@@ -44,13 +44,17 @@ export function ContributionsPanel({ tripId, items }: { tripId: string; items: I
       )}
 
       <form onSubmit={add} className="grid grid-cols-1 sm:grid-cols-[1fr_8rem_auto] gap-2">
+        {/* Compact add-row: placeholders are the visible labels, so the
+            accessible name is supplied explicitly. */}
         <input
+          aria-label="Item to bring"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Item to bring"
           className="min-w-0 px-3 min-h-[44px] rounded-lg border border-stone-300 text-sm focus:outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900"
         />
         <input
+          aria-label="Category"
           value={category}
           onChange={(e) => setCategory(e.target.value)}
           placeholder="Category"
@@ -66,7 +70,7 @@ export function ContributionsPanel({ tripId, items }: { tripId: string; items: I
       </form>
 
       {items.length === 0 ? (
-        <p className="text-stone-400 text-sm">No contribution items yet.</p>
+        <p className="text-stone-500 text-sm">No contribution items yet.</p>
       ) : (
         <ul className="space-y-2">
           {items.map((item) => (
@@ -74,7 +78,7 @@ export function ContributionsPanel({ tripId, items }: { tripId: string; items: I
               <div className="min-w-0">
                 <p className="text-sm font-medium text-stone-900 truncate">
                   {item.title}
-                  {item.category && <span className="ml-2 text-xs text-stone-400">{item.category}</span>}
+                  {item.category && <span className="ml-2 text-xs text-stone-500">{item.category}</span>}
                 </p>
                 <p className="text-xs text-stone-500 truncate">
                   {item.claimedBy.length > 0 ? `Claimed by ${item.claimedBy.join(", ")}` : "Unclaimed"}

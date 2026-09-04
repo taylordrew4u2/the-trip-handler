@@ -95,7 +95,7 @@ export function BoardClient({
           className="w-full px-3 py-2 rounded-lg border border-stone-300 text-base resize-none focus:outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900 placeholder:text-stone-400"
         />
         <div className="flex items-center justify-between gap-3 mt-2">
-          <p className={`text-xs ${remaining < 100 ? "text-amber-700" : "text-stone-400"}`}>
+          <p className={`text-xs ${remaining < 100 ? "text-amber-700" : "text-stone-500"}`}>
             {remaining} characters left
           </p>
           <button
@@ -133,13 +133,13 @@ export function BoardClient({
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">
                       <div className="text-sm">
                         <span className="font-medium text-stone-900">{c.user.name}</span>
-                        {c.user.username && <span className="text-stone-400"> · @{c.user.username}</span>}
-                        <span className="text-stone-400"> · {timeAgo(c.createdAt)}</span>
+                        {c.user.username && <span className="text-stone-500"> · @{c.user.username}</span>}
+                        <span className="text-stone-500"> · {timeAgo(c.createdAt)}</span>
                       </div>
                       {isMine && (
                         <button
                           onClick={() => handleDelete(c.id)}
-                          className="text-xs text-stone-400 hover:text-red-700"
+                          className="text-xs text-stone-500 hover:text-red-700"
                           title="Delete"
                         >
                           Delete

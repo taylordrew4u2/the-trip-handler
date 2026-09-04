@@ -4,8 +4,7 @@ import { prisma } from "@/lib/db";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
-
-const APPROVED = new Set(["APPROVED", "PENDING_PAYMENT", "CONFIRMED_PAID"]);
+import { isAuthzError, requireApprovedActor, requireApprovedMember } from "@/lib/authz";
 
 async function getSessionUser() {
   const session = await getServerSession(authOptions);
@@ -13,12 +12,11 @@ async function getSessionUser() {
 }
 
 export async function addContribution(formData: FormData) {
-  const u = await getSessionUser();
-  if (!u?.id) return { error: "Sign in first." };
-  const isAdmin = u.role === "ADMIN";
-  if (!isAdmin && !APPROVED.has(u.status ?? "")) {
-    return { error: "You need to be approved first." };
-  }
+  // Approval is read from the database, not the JWT — see lib/authz.ts.
+  const actor = await requireApprovedActor();
+  if (isAuthzError(actor)) return { error: actor.error };
+  const u = { id: actor.id };
+  const isAdmin = actor.isAdmin;
 
   const tripId = formData.get("tripId") as string;
   const title = formData.get("title") as string;
@@ -50,16 +48,17 @@ export async function addContribution(formData: FormData) {
 }
 
 export async function signUpForContribution(_userId: string, contributionId: string, notes?: string) {
-  const u = await getSessionUser();
-  if (!u?.id) return { error: "Sign in first." };
-  if (!APPROVED.has(u.status ?? "")) return { error: "You need to be approved first." };
+  const auth = await requireApprovedMember();
+  if (isAuthzError(auth)) return { error: auth.error };
+  const u = { id: auth.id };
 
-  // Verify the contribution belongs to the user's trip.
-  const [contribution, me] = await Promise.all([
-    prisma.contribution.findUnique({ where: { id: contributionId }, select: { tripId: true } }),
-    prisma.user.findUnique({ where: { id: u.id }, select: { tripId: true } }),
-  ]);
-  if (!contribution || contribution.tripId !== me?.tripId) return { error: "Wrong trip." };
+  // Verify the contribution belongs to the caller's trip. The guard already
+  // read that trip, so this is a comparison rather than a second query.
+  const contribution = await prisma.contribution.findUnique({
+    where: { id: contributionId },
+    select: { tripId: true },
+  });
+  if (!contribution || contribution.tripId !== auth.tripId) return { error: "That isn't on your trip." };
 
   try {
     await prisma.userContribution.create({

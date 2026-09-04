@@ -102,7 +102,7 @@ export default function WalkthroughPage() {
               ← Back
             </button>
 
-            <span className="text-xs text-stone-400 tabular-nums">
+            <span className="text-xs text-stone-500 tabular-nums">
               {index + 1} / {STEPS.length}
             </span>
 

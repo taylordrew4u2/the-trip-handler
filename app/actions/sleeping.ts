@@ -5,6 +5,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { sendBedBumpEmail } from "@/lib/resend";
+import { isAuthzError, requireApprovedMember, requireApprovedMemberOf } from "@/lib/authz";
 
 async function requireAdmin() {
   const session = await getServerSession(authOptions);
@@ -58,7 +59,7 @@ export async function ensureSleepingSetup() {
   // module — so it is a callable endpoint, and an unauthenticated caller could
   // otherwise seed the default bed layout. Restrict it to signed-in
   // participants, which is exactly who the page renders for.
-  const auth = await requireApprovedSelf();
+  const auth = await requireApprovedMember();
   if ("error" in auth) return;
 
   const { getActiveTrip } = await import("@/lib/trip");
@@ -162,29 +163,18 @@ export async function adminUnassignBed(userId: string) {
 }
 
 export async function claimBedSlot(bedId: string) {
-  const session = await getServerSession(authOptions);
-  const sessionUser = session?.user as { id?: string; role?: string; status?: string } | undefined;
-  if (!sessionUser?.id || sessionUser.id === "admin" || sessionUser.role === "ADMIN") {
-    return { error: "Sign in as a participant first." };
-  }
-  if (!["APPROVED", "PENDING_PAYMENT", "CONFIRMED_PAID"].includes(sessionUser.status ?? "")) {
-    return { error: "You need to be approved first." };
-  }
-
-  const bed = await prisma.bed.findUnique({
-    where: { id: bedId },
-    include: { assignments: true },
-  });
+  const bed = await prisma.bed.findUnique({ where: { id: bedId } });
   if (!bed) return { error: "Bed not found." };
 
-  const capacity = bed.type === "DOUBLE" ? 2 : 1;
-  if (bed.assignments.length >= capacity) {
-    return { error: "That bed is already full." };
-  }
+  // Authorize against *this bed's* trip, not merely "is approved somewhere":
+  // the bedId comes from the caller, and an approved member of another trip
+  // would otherwise be able to claim a bed on this one.
+  const auth = await requireApprovedMemberOf(bed.tripId);
+  if (isAuthzError(auth)) return { error: auth.error };
 
   if (bed.womenOnly) {
     const me = await prisma.user.findUnique({
-      where: { id: sessionUser.id },
+      where: { id: auth.id },
       select: { gender: true },
     });
     if (me?.gender !== "female") {
@@ -192,16 +182,30 @@ export async function claimBedSlot(bedId: string) {
     }
   }
 
-  // Move user from any prior bed first.
-  await prisma.bedAssignment.deleteMany({ where: { userId: sessionUser.id } });
+  const capacity = bed.type === "DOUBLE" ? 2 : 1;
 
   try {
-    await prisma.bedAssignment.create({
-      data: { bedId, userId: sessionUser.id },
-    });
+    // Counting the occupants and then inserting is a race: two members tapping
+    // the same last slot can both read "one free" and both insert, putting
+    // three people in a double. Doing the count and the insert inside one
+    // serializable transaction makes the loser fail rather than overfill.
+    await prisma.$transaction(
+      async (tx) => {
+        const taken = await tx.bedAssignment.count({ where: { bedId } });
+        if (taken >= capacity) throw new BedFullError();
+        // Leaving any previous bed is part of the same transaction, so a
+        // failure here can never strand someone with no bed at all.
+        await tx.bedAssignment.deleteMany({ where: { userId: auth.id } });
+        await tx.bedAssignment.create({ data: { bedId, userId: auth.id } });
+      },
+      { isolationLevel: "Serializable" },
+    );
   } catch (err) {
+    if (err instanceof BedFullError) return { error: "That bed is already full." };
     const code = (err as { code?: string })?.code;
-    if (code === "P2002") return { error: "You're already in a bed." };
+    // P2002 unique violation, P2034 serialization failure — both mean someone
+    // else got there first, which reads the same way to the person tapping.
+    if (code === "P2002" || code === "P2034") return { error: "That bed is already full." };
     throw err;
   }
 
@@ -209,6 +213,9 @@ export async function claimBedSlot(bedId: string) {
   revalidatePath("/dashboard/sleeping");
   return { success: true };
 }
+
+/** Thrown inside the claim transaction to roll it back with a clear reason. */
+class BedFullError extends Error {}
 
 export async function leaveBedSlot() {
   const session = await getServerSession(authOptions);
@@ -227,26 +234,21 @@ export async function leaveBedSlot() {
  * server-side by reading user.gender from the DB.
  */
 export async function bumpFromSingle(bedId: string) {
-  const session = await getServerSession(authOptions);
-  const sessionUser = session?.user as { id?: string; role?: string; status?: string } | undefined;
-  if (!sessionUser?.id || sessionUser.id === "admin" || sessionUser.role === "ADMIN") {
-    return { error: "Sign in as a participant first." };
-  }
-  if (!["APPROVED", "PENDING_PAYMENT", "CONFIRMED_PAID"].includes(sessionUser.status ?? "")) {
-    return { error: "You need to be approved first." };
-  }
-
-  const me = await prisma.user.findUnique({ where: { id: sessionUser.id } });
-  if (!me) return { error: "Account not found." };
-  if (me.gender !== "female") {
-    return { error: "Bumping a single is only available to members whose profile is set to female." };
-  }
-
   const bed = await prisma.bed.findUnique({
     where: { id: bedId },
     include: { assignments: { include: { user: true } } },
   });
   if (!bed) return { error: "Bed not found." };
+
+  const auth = await requireApprovedMemberOf(bed.tripId);
+  if (isAuthzError(auth)) return { error: auth.error };
+
+  const me = await prisma.user.findUnique({ where: { id: auth.id } });
+  if (!me) return { error: "Account not found." };
+  if (me.gender !== "female") {
+    return { error: "Bumping a single is only available to members whose profile is set to female." };
+  }
+
   if (bed.type !== "SINGLE") return { error: "You can only bump from single beds." };
   if (bed.assignments.length === 0) {
     return { error: "Bed is empty — just claim it normally." };
@@ -273,27 +275,15 @@ export async function bumpFromSingle(bedId: string) {
   return { success: true };
 }
 
-const APPROVED_STATUSES = ["APPROVED", "PENDING_PAYMENT", "CONFIRMED_PAID"];
 
-async function requireApprovedSelf() {
-  const session = await getServerSession(authOptions);
-  const u = session?.user as { id?: string; role?: string; status?: string } | undefined;
-  if (!u?.id || u.id === "admin" || u.role === "ADMIN") {
-    return { error: "Sign in as a participant first." } as const;
-  }
-  if (!APPROVED_STATUSES.includes(u.status ?? "")) {
-    return { error: "You need to be approved first." } as const;
-  }
-  return { id: u.id } as const;
-}
 
 /**
  * Request to share a double bed that already has one occupant.
  * The occupant must accept before the requester is added.
  */
 export async function requestBedmate(bedId: string, toUserId: string) {
-  const auth = await requireApprovedSelf();
-  if ("error" in auth) return auth;
+  const auth = await requireApprovedMember();
+  if (isAuthzError(auth)) return { error: auth.error };
   if (auth.id === toUserId) return { error: "You can't request yourself." };
 
   const bed = await prisma.bed.findUnique({
@@ -301,8 +291,9 @@ export async function requestBedmate(bedId: string, toUserId: string) {
     include: { assignments: true },
   });
   if (!bed) return { error: "Bed not found." };
-  const me = await prisma.user.findUnique({ where: { id: auth.id }, select: { tripId: true } });
-  if (me?.tripId !== bed.tripId) return { error: "Wrong trip." };
+  // requireApprovedMember already read the caller's trip, so this is a
+  // comparison rather than a second query.
+  if (auth.tripId !== bed.tripId) return { error: "That isn't on your trip." };
   if (bed.type !== "DOUBLE") return { error: "Only double beds can be shared." };
   if (bed.assignments.length === 0) {
     return { error: "Bed is empty — just claim it normally." };
@@ -344,8 +335,8 @@ export async function requestBedmate(bedId: string, toUserId: string) {
 }
 
 export async function respondToBedmateRequest(requestId: string, accept: boolean) {
-  const auth = await requireApprovedSelf();
-  if ("error" in auth) return auth;
+  const auth = await requireApprovedMember();
+  if (isAuthzError(auth)) return { error: auth.error };
 
   const req = await prisma.bedmateRequest.findUnique({
     where: { id: requestId },
@@ -398,8 +389,8 @@ export async function respondToBedmateRequest(requestId: string, accept: boolean
 }
 
 export async function cancelBedmateRequest(requestId: string) {
-  const auth = await requireApprovedSelf();
-  if ("error" in auth) return auth;
+  const auth = await requireApprovedMember();
+  if (isAuthzError(auth)) return { error: auth.error };
 
   const req = await prisma.bedmateRequest.findUnique({ where: { id: requestId } });
   if (!req) return { error: "Request not found." };

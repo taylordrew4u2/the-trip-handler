@@ -1,8 +1,6 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { ApprovalRequired } from "@/components/ApprovalRequired";
-import { isApproved } from "@/lib/approval";
+import { isAuthzError, requireApprovedMember } from "@/lib/authz";
 import { BoardClient } from "./BoardClient";
 import { pickComposerCopy } from "./composerCopy";
 import { PageNote } from "@/components/PageNote";
@@ -10,12 +8,16 @@ import { PageNote } from "@/components/PageNote";
 export const dynamic = "force-dynamic";
 
 export default async function BoardPage() {
-  const session = await getServerSession(authOptions);
-  const sessionUser = session?.user as { id?: string; status?: string } | undefined;
-  if (!isApproved(sessionUser?.status)) return <ApprovalRequired what="The comment board" />;
-  const userId = sessionUser?.id ?? "";
+  // The same guard the write path uses, so approval is read from the database
+  // rather than from a sign-in-time JWT.
+  const member = await requireApprovedMember();
+  if (isAuthzError(member)) return <ApprovalRequired what="The comment board" />;
+  const userId = member.id;
 
   const comments = await prisma.comment.findMany({
+    // Scoped to this member's trip. Without the filter, every approved member
+    // of every trip saw one shared stream.
+    where: { tripId: member.tripId },
     orderBy: { createdAt: "desc" },
     take: 200,
     include: {

@@ -13,17 +13,31 @@
 
 ## Screenshots
 
-| Member dashboard | Owner trip management |
-|---|---|
-| ![Member dashboard showing trip stats, dark hero header, and action cards](docs/screenshots/dashboard.svg) | ![Owner view with applicant approval queue and invite link](docs/screenshots/my-trips.svg) |
+Captured from the running app against the seeded demo trip by
+[`scripts/screenshots.ts`](scripts/screenshots.ts) — `npm run screenshots`. They
+are real renders rather than mockups, and regenerating them after a UI change
+puts the difference in the diff.
 
-| Meal poll with phase-aware voting | Sleeping arrangements with bed-claim and bedmate requests |
+| Member dashboard | Meal poll, mid-vote |
 |---|---|
-| ![Meal poll voting phase with vote bars and dietary tags](docs/screenshots/meals.svg) | ![Bed grid with room sections, occupant cards, and incoming bedmate request](docs/screenshots/sleeping.svg) |
+| ![Member dashboard: dark hero with the trip name, dates and roster counts, an action-required card, and the trip description](docs/screenshots/dashboard.png) | ![Meal poll in its voting phase: two ideas per slot with vote bars, dietary tags and cooking-role chips](docs/screenshots/meals.png) |
 
-| Itinerary with per-item comment threads |
-|---|
-| ![Day-by-day itinerary with pinned items and threaded comments](docs/screenshots/itinerary.svg) |
+| Sleeping arrangements | Group board |
+|---|---|
+| ![Beds grouped by room, each showing type, capacity, a women-only badge and a claim button](docs/screenshots/sleeping.png) | ![Board posts from four members with emoji reaction counts and a composer](docs/screenshots/board.png) |
+
+| Itinerary | Owner trip management |
+|---|---|
+| ![Day-by-day itinerary with times, locations and per-item comment threads](docs/screenshots/itinerary.png) | ![Owner view listing trips with the invite link, join code and applicant queue](docs/screenshots/my-trips.png) |
+
+### The same app on a phone
+
+Not a shrunk desktop layout — the navigation collapses from thirteen inline tabs
+into a grouped sheet, and every control is sized for a thumb.
+
+| Dashboard | Sleeping | Navigation sheet |
+|---|---|---|
+| ![The dashboard at 390px, cards stacked full-width](docs/screenshots/dashboard-mobile.png) | ![The bed list at 390px with full-width claim buttons](docs/screenshots/sleeping-mobile.png) | ![The open navigation sheet, links grouped under Trip, The group, and You](docs/screenshots/nav-mobile.png) |
 
 ---
 
@@ -126,6 +140,37 @@ all of them.
 
 ---
 
+## Accessible, and checked on every commit
+
+`tests/e2e/a11y.spec.ts` runs axe-core over every page a member or an organizer
+visits — plus the navigation sheet, which only exists after an interaction and
+so is invisible to a page-load scan — and fails the build on any violation at
+WCAG 2.1 A/AA. Twenty-two checks.
+
+It found two real classes of defect on its first run.
+
+**Unlabelled form controls.** Every form had the same shape: a styled `<label>`,
+a sibling `<input>`, and nothing tying them together. It looks correct and reads
+correctly with eyes; a screen reader announces the field as unnamed, and tapping
+the label doesn't focus it. Hand-writing an `id` per field works right up until
+someone forgets one, so [`components/forms/field.tsx`](components/forms/field.tsx)
+mints one with `useId()` and publishes it on a context the control picks up —
+neither side names the id, so the pair can't drift apart. The compact "add a
+bed" rows, where the placeholder is deliberately the visible label, carry
+explicit `aria-label`s instead.
+
+**Contrast below 4.5:1.** The muted grey used across the app was 2.6:1 on its
+light backgrounds. Raised where it was too low — and deliberately *not* changed
+on the dark hero, where the same substitution would have taken a passing 6.7:1
+down to 3.7:1.
+
+What this does not claim: axe covers the mechanical half of accessibility —
+names, roles, contrast, landmarks, heading order. It cannot tell you whether a
+flow makes sense to someone who can't see it. That half is a manual review, and
+the spec says so rather than implying the box is ticked.
+
+---
+
 ## Tech stack
 
 | Layer | Choice |
@@ -139,8 +184,8 @@ all of them.
 | Payments | Stripe Checkout (server-created session, redirect to its URL — no browser SDK) + signed webhook |
 | File storage | Vercel Blob — avatars, lodging photos, expense receipts |
 | Email | Resend |
-| Validation | Zod |
-| Testing | Vitest (unit) · Playwright (responsive end-to-end, five viewports) |
+| Validation | Zod (account creation) |
+| Testing | Vitest (unit) · Playwright (responsive, functional, and accessibility end-to-end) |
 | Hosting | Vercel |
 
 ---
@@ -165,7 +210,7 @@ flowchart TD
     UI -->|form submit| Actions
     UI -->|navigation| Pages
     Pages --> Actions
-    Actions -->|"validated (Zod)"| DB
+    Actions -->|"authorized, then written"| DB
     API --> DB
     Actions -->|create session| Stripe
     Stripe -->|"signed webhook"| API
@@ -190,7 +235,20 @@ stateDiagram-v2
     PENDING_PAYMENT --> CANCELLED : member withdraws
 ```
 
-`lib/approval.ts` centralizes the `requireApprovedUser()` predicate. All server actions call it before executing gated mutations — the client-side affordances (hidden nav items, read-only components) are hints, not the security boundary.
+`lib/authz.ts` holds the whole member-side boundary — one place to read, one
+place to change. Two rules it enforces, both of which this codebase got wrong
+before they were consolidated:
+
+- **Approval is read from the database, never from the session.** The NextAuth
+  session is a JWT, so it is a snapshot from sign-in: a member removed from a
+  trip kept a token still saying `APPROVED`. The token decides which nav links
+  to render; it never decides a write.
+- **Membership of *this* trip is checked, not membership in general.** Every
+  action takes ids from the caller, so "is this caller approved?" is not enough
+  — `user.tripId === thisTripId` is the check that matters.
+
+The client-side affordances (hidden nav items, read-only components) are hints,
+not the security boundary.
 
 ---
 
@@ -225,12 +283,19 @@ stateDiagram-v2
 │       └── intake/          # Guest form flow
 ├── components/              # DashboardNav · ItineraryView · MealsPlanner
 │                            # RosterCard · ApprovalRequired · StatusBadge
-├── lib/                     # auth · db · approval · meals · pricing
-│                            # sleep · trip · stripe · blob · resend
+├── components/forms/        # Field — label/control id wiring, done once
+├── lib/                     # authz (the member-side boundary) · auth · db
+│                            # approval · meals · pricing · reactions · sleep
+│                            # trip · stripe · blob · resend
 │                            # nav (dashboard routing map, unit-tested)
+├── docs/
+│   ├── ARCHITECTURE.md      # Data model, authorization, concurrency, trade-offs
+│   └── screenshots/         # Generated by scripts/screenshots.ts
+├── scripts/
+│   └── screenshots.ts       # Captures the README images from the running app
 ├── tests/
-│   ├── *.test.ts            # Vitest unit tests (pricing, approval, nav, …)
-│   └── e2e/                 # Playwright responsive suite, five viewports
+│   ├── *.test.ts            # Vitest unit tests (pricing, authz, nav, …)
+│   └── e2e/                 # Playwright: responsive · functional · accessibility
 ├── prisma/
 │   ├── schema.prisma        # Full data model
 │   ├── migrations/          # Versioned migration history
@@ -242,11 +307,11 @@ stateDiagram-v2
 
 ## Key technical decisions
 
-**Next.js App Router + server actions over a separate REST API.** Every mutation has session context and Postgres access. Co-locating the auth check, Zod validation, and database write in one server action removes an entire layer of API surface area and makes the security posture auditable in a single pass: "does every server action call `getServerSession`?"
+**Next.js App Router + server actions over a separate REST API.** Every mutation has session context and Postgres access. Co-locating the authorization check and the database write in one server action removes an entire layer of API surface area and makes the security posture auditable in a single pass: "does every server action authorize before it writes?"
 
 **Prisma with committed migration history.** `prisma/migrations` is version-controlled and Vercel runs `prisma migrate deploy` on each build. CI applies migrations to a real Postgres database and fails on any drift between `schema.prisma` and the committed migrations — the two can never silently diverge.
 
-**Single status enum over scattered boolean flags.** `PENDING / APPROVED / PENDING_PAYMENT / CONFIRMED_PAID / CANCELLED` in one column. `lib/approval.ts` is the single place to ask "can this user do X?" — easier to audit and harder to accidentally bypass than checking three booleans in different places.
+**Single status enum over scattered boolean flags.** `PENDING / APPROVED / PENDING_PAYMENT / CONFIRMED_PAID / CANCELLED` in one column. `lib/authz.ts` is the single place to ask "can this user do X?" — easier to audit and harder to accidentally bypass than checking three booleans in different places.
 
 **Server-side authorization first, UI affordances second.** Read-only mode for `PENDING` users hides the comment form client-side, but the `createItineraryComment` server action also rejects the call from any unapproved user. The visual hint and the security boundary are independent layers.
 
@@ -292,6 +357,7 @@ npm run build       # prisma generate + migrate deploy + next build
 npm run test        # Vitest unit tests
 npm run test:e2e    # Playwright responsive suite (needs a build + seeded data)
 npm run test:e2e:ui # the same suite in Playwright's interactive runner
+npm run screenshots # regenerate the README images from the running app
 npm run lint        # ESLint 9
 npm run db:studio   # Prisma Studio
 ```
@@ -328,22 +394,28 @@ built to work there.
 6. Owner locks the three-line pricing. Member sees payment due on their dashboard.
 7. Member completes Stripe Checkout from `/dashboard/payment`. The webhook marks them `CONFIRMED_PAID`.
 
+Setting up and verifying that last step — the CLI forwarder, the two different
+signing secrets, and how to prove the write landed rather than trusting a 200 —
+is written up in [`docs/stripe-webhook.md`](docs/stripe-webhook.md).
+
 ---
 
 ## Testing
 
-Two suites, split by what they can actually prove. Both run in CI on every pull
-request.
+Four suites, split by what each can actually prove. All of them run in CI on
+every pull request.
 
 ### Unit tests — `npm test`
 
-**Vitest**, no browser, ~2s. These cover the logic where a mistake is a
-correctness or security bug:
+**Vitest**, no browser, ~1s, 85 tests. These cover the logic where a mistake is
+a correctness or security bug:
 
 - **Pricing logic** — per-person cost calculation across housing, transport, and meals lines, including the deposit.
 - **Approval guards** — `requireApprovedUser()` rejects `PENDING` and `CANCELLED` users for gated actions.
 - **Trip ownership** — owner actions assert `trip.ownerId === session.user.id`; cross-owner mutations are rejected.
 - **Authorization boundaries** — applying to a trip never silently reassigns a member already on another trip.
+- **Member authorization boundaries** — `tests/member-authz.test.ts` drives the real actions and asserts that an unauthorized call writes *nothing*. A test that only checked the error message would still pass if the action returned an error after mutating.
+- **The guards themselves** — `lib/authz.ts` and `lib/approval.ts` are covered directly, including the branches an action-level test can't reach: the legacy admin seat, a caller whose row has been deleted, a null trip id that must not quietly become "matches everything".
 - **Navigation rules** — `lib/nav.ts` holds the dashboard's routing map: which destinations exist, which are gated behind approval, and which one counts as "current" for a URL. Keeping it out of the component means a nested route resolving to the wrong label, or a gated link leaking to a `PENDING` member, is caught without rendering anything.
 
 ### Responsive end-to-end tests — `npm run test:e2e`
@@ -391,6 +463,14 @@ landed: a member posts to the board and sees it appear, adds and removes a
 reaction, and no request 5xxs while doing it. These mutate data, so they run on
 one viewport rather than all five, and each undoes what it does.
 
+### Accessibility tests — same command
+
+`tests/e2e/a11y.spec.ts` runs axe-core against every page behind and in front of
+auth, at WCAG 2.1 A/AA, and fails on any violation. It is layout-independent, so
+it runs on one project rather than five. See
+[Accessible, and checked on every commit](#accessible-and-checked-on-every-commit)
+for what it found and what it does not cover.
+
 **A named limitation:** the suite runs on Chromium only, to keep CI to a single
 browser download. What is under test is this app's layout and media queries
 rather than rendering-engine differences — but it does mean a Safari-specific
@@ -402,14 +482,18 @@ bug would not be caught here, so Safari stays a manual check.
 
 - Secrets are not committed; `.env.example` documents required variable names only.
 - **Every one of the 81 exported server actions authenticates before mutating.** The single exception is `signupAction`, which is the public account-creation entry point. User and trip IDs come from the session, never from client-supplied arguments.
-- Anything exported from a `"use server"` module is a callable endpoint, including helpers only ever invoked during page render. The two idempotent setup helpers (`ensureMealPlanSetup`, `ensureSleepingSetup`) therefore carry the same membership checks as the rest — being "internal" is not a boundary.
-- Authorization is layered: page (server component returns gated content) → action (`requireApprovedUser` / ownership check) → resource (users can only edit their own comments).
-- Trip-scoped data is filtered by `tripId` on the server; members cannot read or write to trips they aren't on.
-- Stripe Checkout amount is derived server-side from locked pricing. The webhook validates its signature before trusting the payload.
+- **Approval is read from the database on every request, not from the session token.** The session is a JWT and therefore a snapshot from sign-in; a member removed from a trip used to keep acting on it until their token expired. `lib/authz.ts` re-reads the row, so a revoked approval takes effect on the next request. The token's status is used only to decide which links to render.
+- **Trip-scoped data is filtered by `tripId` on the server, and the filter is the caller's own trip.** Every action takes ids from the caller, so checking "is this caller approved?" is not sufficient — the check is `user.tripId === thisTripId`. Auditing this turned up two live gaps, both fixed: an approved member of one trip could claim beds on another, and the group board had no trip column at all, putting every trip's posts in one shared stream. Both now carry regression tests that fail against the old code.
+- Anything exported from a `"use server"` module is a callable endpoint, including helpers only ever invoked during page render. The idempotent setup helpers (`ensureMealPlanSetup`, `ensureSleepingSetup`) therefore carry the same membership checks as the rest — being "internal" is not a boundary.
+- Authorization is layered: page (server component returns gated content) → action (`lib/authz.ts` guard or ownership check) → resource (users can only edit their own comments). Each layer is independent; the UI hint is not the boundary.
+- Claiming a bed counts occupants and inserts inside one serializable transaction, so two members racing for the last slot cannot both win. The unique constraint alone does not cover it — it stops one person being in two beds, not two people overfilling one.
+- Stripe Checkout amount is derived server-side from locked pricing; the action takes no amount argument. The webhook validates its signature before trusting the payload, and it is the only thing that can advance a user to `CONFIRMED_PAID` — the `success_url` redirect is cosmetic.
 - Passwords are hashed with bcrypt (cost factor 10).
 - File uploads authenticate the session and validate content type and size before forwarding to Vercel Blob.
 
-See [`SECURITY.md`](./SECURITY.md) for the vulnerability reporting process.
+See [`SECURITY.md`](./SECURITY.md) for the vulnerability reporting process, and
+[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for how the authorization model
+fits together.
 
 ---
 
@@ -429,6 +513,8 @@ See [`SECURITY.md`](./SECURITY.md) for the vulnerability reporting process.
   real browser at five viewports against seeded data, asserting no horizontal
   overflow, touch-target minimums, and collapsed-menu behaviour — wired into CI
   so a layout regression fails the build instead of reaching a phone.
+- Consolidated the member-side authorization boundary into `lib/authz.ts` after an audit found two live cross-trip gaps — beds claimable across trips, and a group board with no trip column — and made every guard read approval from the database rather than the sign-in-time JWT.
+- Added an axe-core suite covering every page at WCAG 2.1 AA, and fixed what it found: unlabelled controls across four forms, and contrast below 4.5:1 on the app's muted text.
 - Built `MealsPlanner` — a phase-aware React component handling suggestions, voting bars, helper sign-ups, and grocery list generation — and `ItineraryView` with per-item threaded comment sections.
 
 ---

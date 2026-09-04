@@ -1,19 +1,18 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { ApprovalRequired } from "@/components/ApprovalRequired";
-import { isApproved } from "@/lib/approval";
+import { isAuthzError, requireApprovedMember } from "@/lib/authz";
 import { PreferencesForm } from "./PreferencesForm";
 import { PageNote } from "@/components/PageNote";
 
 export const dynamic = "force-dynamic";
 
 export default async function PreferencesPage() {
-  const session = await getServerSession(authOptions);
-  const sessionUser = session?.user as { id?: string; status?: string } | undefined;
-  if (!isApproved(sessionUser?.status)) return <ApprovalRequired what="Preferences" />;
-  const userId = sessionUser?.id ?? "";
+  // Approval is read from the database, not the sign-in-time JWT, so a
+  // member removed from the trip loses access on their next request.
+  const member = await requireApprovedMember();
+  if (isAuthzError(member)) return <ApprovalRequired what="Preferences" />;
+  const userId = member.id;
   if (!userId) redirect("/login");
 
   const existing = await prisma.guestForm.findUnique({ where: { userId } });

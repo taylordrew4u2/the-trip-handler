@@ -485,7 +485,7 @@ function MealSlotCard({
                 >
                   <span>
                     <span className="font-medium text-stone-900">{s.mealName}</span>
-                    <span className="text-stone-500"> · {s.submittedBy.name}</span>
+                    <span className="text-stone-600"> · {s.submittedBy.name}</span>
                   </span>
                   <span className="flex items-center gap-2">
                     <span className="text-xs px-2 py-0.5 rounded bg-stone-100 text-stone-700 tabular-nums">
@@ -493,7 +493,7 @@ function MealSlotCard({
                     </span>
                     <button
                       onClick={() => run("del-" + s.id, () => deleteSuggestion(s.id))}
-                      className="text-xs text-stone-400 hover:text-red-700"
+                      className="text-xs text-stone-500 hover:text-red-700"
                     >
                       Delete
                     </button>
@@ -533,7 +533,7 @@ function MealSlotCard({
                     >
                       <span>
                         <span className="font-medium text-stone-900">{s.mealName}</span>
-                        <span className="text-stone-500 text-xs"> · {s.submittedBy.name}</span>
+                        <span className="text-stone-600 text-xs"> · {s.submittedBy.name}</span>
                         {isWinner && !isConfirmed && (
                           <span className="ml-2 text-xs px-2 py-0.5 rounded bg-stone-100 text-stone-700">
                             Recommended
@@ -694,7 +694,7 @@ function PollBody({
               />
               <span className="flex-1 text-sm relative z-10">
                 <span className="font-medium text-stone-900">{s.mealName}</span>
-                <span className="text-stone-500"> · {s.submittedBy.name}</span>
+                <span className="text-stone-600"> · {s.submittedBy.name}</span>
                 {s.note && <span className="block text-xs text-stone-600 mt-0.5">{s.note}</span>}
                 <span className="flex flex-wrap gap-1 mt-1">
                   {s.helpOffered.map((h) => (
@@ -720,7 +720,7 @@ function PollBody({
                       e.preventDefault();
                       run("del-" + s.id, () => deleteSuggestion(s.id));
                     }}
-                    className="text-[10px] text-stone-400 hover:text-red-700"
+                    className="text-[10px] text-stone-600 hover:text-red-700"
                   >
                     Remove
                   </button>
@@ -904,9 +904,9 @@ function FinalSlotPanel({
           <p className="text-xs uppercase tracking-wide text-stone-500">Groceries</p>
           <ul className="mt-1 space-y-0.5 text-sm">
             {slot.groceries.map((g) => (
-              <li key={g.id} className={g.bought ? "text-stone-400 line-through" : "text-stone-700"}>
+              <li key={g.id} className={g.bought ? "text-stone-500 line-through" : "text-stone-700"}>
                 · {g.name}
-                {g.quantity && <span className="text-stone-400"> ({g.quantity})</span>}
+                {g.quantity && <span className="text-stone-500"> ({g.quantity})</span>}
               </li>
             ))}
           </ul>
@@ -984,15 +984,15 @@ function GroceryList({
                   ) : (
                     <span className="w-4">{item.bought ? "✓" : "·"}</span>
                   )}
-                  <span className={item.bought ? "text-stone-400 line-through" : "text-stone-800"}>
+                  <span className={item.bought ? "text-stone-500 line-through" : "text-stone-800"}>
                     {item.name}
-                    {item.quantity && <span className="text-stone-400"> ({item.quantity})</span>}
+                    {item.quantity && <span className="text-stone-500"> ({item.quantity})</span>}
                   </span>
-                  <span className="text-xs text-stone-400">— {slot.dayName} {slot.mealType}</span>
+                  <span className="text-xs text-stone-500">— {slot.dayName} {slot.mealType}</span>
                   {isAdmin && (
                     <button
                       onClick={() => run("del-" + item.id, () => deleteGroceryItem(item.id))}
-                      className="ml-auto text-xs text-stone-400 hover:text-red-700"
+                      className="ml-auto text-xs text-stone-500 hover:text-red-700"
                     >
                       Remove
                     </button>

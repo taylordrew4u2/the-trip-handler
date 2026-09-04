@@ -69,19 +69,24 @@ export function BedsPanel({ tripId, beds }: { tripId: string; beds: Bed[] }) {
       )}
 
       <form onSubmit={add} className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        {/* This row is a compact "add" form: the placeholder is the visible
+            label, so each control carries an aria-label for screen readers. */}
         <input
+          aria-label="Bed label"
           value={label}
           onChange={(e) => setLabel(e.target.value)}
           placeholder="Label (e.g. Queen)"
           className="col-span-2 px-3 min-h-[44px] rounded-lg border border-stone-300 text-sm focus:outline-none focus:border-stone-900"
         />
         <input
+          aria-label="Room"
           value={room}
           onChange={(e) => setRoom(e.target.value)}
           placeholder="Room"
           className="px-3 min-h-[44px] rounded-lg border border-stone-300 text-sm focus:outline-none focus:border-stone-900"
         />
         <input
+          aria-label="How many beds"
           type="number"
           inputMode="numeric"
           min="1"
@@ -92,6 +97,7 @@ export function BedsPanel({ tripId, beds }: { tripId: string; beds: Bed[] }) {
           className="px-3 min-h-[44px] rounded-lg border border-stone-300 text-sm focus:outline-none focus:border-stone-900"
         />
         <select
+          aria-label="Bed type"
           value={type}
           onChange={(e) => setType(e.target.value as "SINGLE" | "DOUBLE")}
           className="px-3 min-h-[44px] rounded-lg border border-stone-300 text-sm bg-white focus:outline-none focus:border-stone-900"
@@ -119,8 +125,8 @@ export function BedsPanel({ tripId, beds }: { tripId: string; beds: Bed[] }) {
               <div className="min-w-0">
                 <p className="text-sm font-medium text-stone-900 truncate">
                   {bed.label}
-                  {bed.room && <span className="ml-2 text-xs text-stone-400">{bed.room}</span>}
-                  <span className="ml-2 text-xs text-stone-400">
+                  {bed.room && <span className="ml-2 text-xs text-stone-500">{bed.room}</span>}
+                  <span className="ml-2 text-xs text-stone-500">
                     {bed.type === "SINGLE" ? "single" : "double"}
                     {bed.womenOnly ? " · women only" : ""}
                   </span>

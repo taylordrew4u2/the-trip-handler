@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { updateMyTrip } from "@/app/actions/trips";
+import { Field, Input, Textarea } from "@/components/forms/field";
 
 type Fields = {
   name: string;
@@ -46,76 +47,68 @@ export function TripEditForm({ tripId, initial }: { tripId: string; initial: Fie
         </div>
       )}
 
-      <div>
-        <label className="block text-xs font-medium text-stone-700 mb-1.5 tracking-wide">TRIP NAME *</label>
-        <input
+      <Field label="TRIP NAME" required>
+        <Input
           className={inputClass}
           value={fields.name}
           onChange={(e) => set("name", e.target.value)}
           required
         />
-      </div>
+      </Field>
 
-      <div>
-        <label className="block text-xs font-medium text-stone-700 mb-1.5 tracking-wide">DESTINATION</label>
-        <input
+      <Field label="DESTINATION">
+        <Input
           className={inputClass}
           value={fields.destination}
           onChange={(e) => set("destination", e.target.value)}
           placeholder="Where are you going?"
         />
-      </div>
+      </Field>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div>
-          <label className="block text-xs font-medium text-stone-700 mb-1.5 tracking-wide">START DATE</label>
-          <input type="date" className={inputClass} value={fields.startDate} onChange={(e) => set("startDate", e.target.value)} />
-        </div>
-        <div>
-          <label className="block text-xs font-medium text-stone-700 mb-1.5 tracking-wide">END DATE</label>
-          <input type="date" className={inputClass} value={fields.endDate} onChange={(e) => set("endDate", e.target.value)} />
-        </div>
+        <Field label="START DATE">
+          <Input type="date" className={inputClass} value={fields.startDate} onChange={(e) => set("startDate", e.target.value)} />
+        </Field>
+        <Field label="END DATE">
+          <Input type="date" className={inputClass} value={fields.endDate} onChange={(e) => set("endDate", e.target.value)} />
+        </Field>
       </div>
 
-      <div>
-        <label className="block text-xs font-medium text-stone-700 mb-1.5 tracking-wide">DESCRIPTION</label>
-        <textarea
+      <Field label="DESCRIPTION">
+        <Textarea
           className={`${inputClass} min-h-[80px]`}
           value={fields.description}
           onChange={(e) => set("description", e.target.value)}
           placeholder="What's the trip about? Shown on the invite page."
         />
-      </div>
+      </Field>
 
-      <div>
-        <label className="block text-xs font-medium text-stone-700 mb-1.5 tracking-wide">ITINERARY NOTES</label>
-        <textarea
+      <Field label="ITINERARY NOTES">
+        <Textarea
           className={`${inputClass} min-h-[80px]`}
           value={fields.itinerary}
           onChange={(e) => set("itinerary", e.target.value)}
           placeholder="Rough plan, day by day."
         />
-      </div>
+      </Field>
 
-      <div>
-        <label className="block text-xs font-medium text-stone-700 mb-1.5 tracking-wide">LODGING NOTES</label>
-        <textarea
+      <Field label="LODGING NOTES">
+        <Textarea
           className={`${inputClass} min-h-[60px]`}
           value={fields.lodging}
           onChange={(e) => set("lodging", e.target.value)}
           placeholder="Where everyone's staying."
         />
-      </div>
+      </Field>
 
-      <div>
-        <label className="block text-xs font-medium text-stone-700 mb-1.5 tracking-wide">MEALS NOTES</label>
-        <textarea
+      <Field label="MEALS NOTES">
+        <Textarea
           className={`${inputClass} min-h-[60px]`}
           value={fields.meals}
           onChange={(e) => set("meals", e.target.value)}
           placeholder="Food plan, who's cooking, etc."
         />
-      </div>
+      </Field>
 
       <div className="flex items-center gap-3">
         <button

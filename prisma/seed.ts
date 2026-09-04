@@ -115,6 +115,9 @@ async function main() {
   await prisma.contribution.deleteMany({ where: { tripId: trip.id } });
   await prisma.expense.deleteMany({ where: { tripId: trip.id } });
   await prisma.bed.deleteMany({ where: { tripId: trip.id } });
+  await prisma.comment.deleteMany({ where: { tripId: trip.id } });
+  await prisma.mealSuggestion.deleteMany({ where: { mealSlot: { tripId: trip.id } } });
+  await prisma.mealVote.deleteMany({ where: { mealSlot: { tripId: trip.id } } });
 
   // Itinerary: three days with a few items each.
   const itinerary: {
@@ -194,15 +197,137 @@ async function main() {
     ],
   });
 
-  // A few beds for the sleeping page.
-  await prisma.bed.createMany({
-    data: [
-      { tripId: trip.id, label: "Queen", room: "Loft", type: "DOUBLE" },
-      { tripId: trip.id, label: "Bunk — top", room: "Bunk room", type: "SINGLE" },
-      { tripId: trip.id, label: "Bunk — bottom", room: "Bunk room", type: "SINGLE" },
-      { tripId: trip.id, label: "Pull-out", room: "Living room", type: "DOUBLE", womenOnly: true },
-    ],
+  // Beds, with two of them already claimed. An empty grid doesn't show what
+  // the page is for; a partly-full one does.
+  const beds = await Promise.all(
+    [
+      { label: "Queen", room: "Loft", type: "DOUBLE" as const },
+      { label: "Bunk — top", room: "Bunk room", type: "SINGLE" as const },
+      { label: "Bunk — bottom", room: "Bunk room", type: "SINGLE" as const },
+      { label: "Pull-out", room: "Living room", type: "DOUBLE" as const, womenOnly: true },
+    ].map((bed) => prisma.bed.create({ data: { tripId: trip.id, ...bed } })),
+  );
+  await prisma.bedAssignment.deleteMany({
+    where: { userId: { in: [jordan.id, morgan.id] } },
   });
+  await prisma.bedAssignment.create({ data: { bedId: beds[0].id, userId: jordan.id } });
+  await prisma.bedAssignment.create({ data: { bedId: beds[1].id, userId: morgan.id } });
+
+  // A board with real traffic on it, including reactions.
+  const boardPosts: { author: string; body: string; reactions: [string, string][] }[] = [
+    {
+      author: organizer.id,
+      body: "Cabin is confirmed! Check-in is 3pm Friday. Anyone who can get there early to grab firewood, shout.",
+      reactions: [[alex.id, "🔥"], [jordan.id, "👍"], [morgan.id, "👍"]],
+    },
+    {
+      author: jordan.id,
+      body: "Taking the van, leaving the city around noon Friday. Three seats free — first come.",
+      reactions: [[alex.id, "👍"], [morgan.id, "❤️"]],
+    },
+    {
+      author: morgan.id,
+      body: "Trail near the cabin is a 4 mile loop with a lake at the halfway point. Saturday morning, whoever's up.",
+      reactions: [[organizer.id, "💯"], [alex.id, "❤️"]],
+    },
+    {
+      author: alex.id,
+      body: "Reminder that I am bringing an unreasonable quantity of snacks and I will not be taking questions.",
+      reactions: [[jordan.id, "😂"], [morgan.id, "😂"], [organizer.id, "😂"]],
+    },
+  ];
+  // Backdated so the timestamps read like a conversation rather than a bulk import.
+  let minutesAgo = 60 * 26;
+  for (const post of boardPosts) {
+    const createdAt = new Date(Date.now() - minutesAgo * 60_000);
+    minutesAgo -= 60 * 6;
+    const comment = await prisma.comment.create({
+      data: { tripId: trip.id, userId: post.author, body: post.body, createdAt },
+    });
+    for (const [userId, emoji] of post.reactions) {
+      await prisma.reaction.create({ data: { commentId: comment.id, userId, emoji } });
+    }
+  }
+
+  // The meal poll, mid-vote: ideas on the board and votes already cast, which
+  // is the state that actually shows what the page does.
+  await prisma.mealPlanPhase.upsert({
+    where: { tripId: trip.id },
+    update: { currentPhase: "voting_open", votingOpenedAt: new Date() },
+    create: {
+      tripId: trip.id,
+      currentPhase: "voting_open",
+      suggestionsOpenedAt: new Date(),
+      votingOpenedAt: new Date(),
+    },
+  });
+
+  const mealIdeas: {
+    dayName: string;
+    mealType: string;
+    ideas: { name: string; by: string; tags: string[]; help: string[]; votes: string[] }[];
+  }[] = [
+    {
+      dayName: "Friday",
+      mealType: "Dinner",
+      ideas: [
+        { name: "Chili + cornbread", by: organizer.id, tags: ["vegetarian-option"], help: ["cook"], votes: [alex.id, jordan.id] },
+        { name: "Sheet-pan fajitas", by: morgan.id, tags: ["gluten-free"], help: ["prep", "clean"], votes: [morgan.id] },
+      ],
+    },
+    {
+      dayName: "Saturday",
+      mealType: "Breakfast",
+      ideas: [
+        { name: "Big pancake situation", by: alex.id, tags: [], help: ["cook", "shop"], votes: [alex.id, morgan.id, organizer.id] },
+        { name: "Breakfast burritos", by: jordan.id, tags: ["gluten-free"], help: ["cook"], votes: [jordan.id] },
+      ],
+    },
+    {
+      dayName: "Saturday",
+      mealType: "Dinner",
+      ideas: [
+        { name: "Pasta night", by: jordan.id, tags: ["vegetarian-option"], help: ["cook", "clean"], votes: [jordan.id, organizer.id] },
+        { name: "Grill whatever's left", by: organizer.id, tags: [], help: ["cook"], votes: [alex.id] },
+      ],
+    },
+  ];
+
+  for (const { dayName, mealType, ideas } of mealIdeas) {
+    // The meal pages create slots on first view; seeding them here means the
+    // demo is populated before anyone opens the page.
+    const slot = await prisma.mealSlot.upsert({
+      where: { tripId_dayName_mealType: { tripId: trip.id, dayName, mealType } },
+      update: {},
+      create: {
+        tripId: trip.id,
+        dayName,
+        mealType,
+        orderIndex: mealIdeas.findIndex((m) => m.dayName === dayName && m.mealType === mealType),
+      },
+    });
+
+    for (const idea of ideas) {
+      const suggestion = await prisma.mealSuggestion.create({
+        data: {
+          mealSlotId: slot.id,
+          mealName: idea.name,
+          submittedByUserId: idea.by,
+          dietaryTags: idea.tags,
+          helpOffered: idea.help,
+        },
+      });
+      for (const voter of idea.votes) {
+        // One vote per member per slot, so a later idea silently wins a
+        // duplicate rather than blowing up the seed.
+        await prisma.mealVote.upsert({
+          where: { userId_mealSlotId: { userId: voter, mealSlotId: slot.id } },
+          update: { suggestionId: suggestion.id, isDontCare: false },
+          create: { userId: voter, mealSlotId: slot.id, suggestionId: suggestion.id },
+        });
+      }
+    }
+  }
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
   console.log("Demo data ready.");

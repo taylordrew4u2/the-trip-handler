@@ -1,8 +1,6 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { ApprovalRequired } from "@/components/ApprovalRequired";
-import { isApproved } from "@/lib/approval";
+import { isAuthzError, requireApprovedMember } from "@/lib/authz";
 import { ensureMealPlanSetup, votingCompletionSummary } from "@/app/actions/meals";
 import { MealsPlanner } from "@/components/MealsPlanner";
 import { SignOutButton } from "@/components/SignOutButton";
@@ -12,10 +10,11 @@ import { getUserTrip } from "@/lib/trip";
 export const dynamic = "force-dynamic";
 
 export default async function MealsPage() {
-  const session = await getServerSession(authOptions);
-  const sessionUser = session?.user as { id?: string; status?: string } | undefined;
-  if (!isApproved(sessionUser?.status)) return <ApprovalRequired what="Meal planning" />;
-  const userId = sessionUser?.id ?? "";
+  // Approval is read from the database, not the sign-in-time JWT, so a
+  // member removed from the trip loses access on their next request.
+  const member = await requireApprovedMember();
+  if (isAuthzError(member)) return <ApprovalRequired what="Meal planning" />;
+  const userId = member.id;
 
   const trip = await getUserTrip(userId);
   if (trip) await ensureMealPlanSetup(trip.id);

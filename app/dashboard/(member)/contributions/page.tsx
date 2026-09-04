@@ -1,18 +1,17 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { ContributionItem } from "@/components/ContributionItem";
 import { AddContributionForm } from "@/components/AddContributionForm";
 import { ApprovalRequired } from "@/components/ApprovalRequired";
-import { isApproved } from "@/lib/approval";
+import { isAuthzError, requireApprovedMember } from "@/lib/authz";
 import { PageNote } from "@/components/PageNote";
 import { getUserTrip } from "@/lib/trip";
 
 export default async function ContributionsPage() {
-  const session = await getServerSession(authOptions);
-  const sessionUser = session?.user as { id?: string; status?: string } | undefined;
-  if (!isApproved(sessionUser?.status)) return <ApprovalRequired what="Contributions" />;
-  const userId = sessionUser?.id ?? "";
+  // Approval is read from the database, not the sign-in-time JWT, so a
+  // member removed from the trip loses access on their next request.
+  const member = await requireApprovedMember();
+  if (isAuthzError(member)) return <ApprovalRequired what="Contributions" />;
+  const userId = member.id;
 
   const trip = await getUserTrip(userId);
   const contributions = trip

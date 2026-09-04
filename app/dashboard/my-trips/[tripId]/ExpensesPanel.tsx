@@ -52,7 +52,7 @@ export function ExpensesPanel({
       )}
 
       {expenses.length === 0 ? (
-        <p className="text-stone-400 text-sm">No expenses submitted yet.</p>
+        <p className="text-stone-500 text-sm">No expenses submitted yet.</p>
       ) : (
         <ul className="space-y-2">
           {expenses.map((e) => (
