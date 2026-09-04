@@ -1,6 +1,9 @@
 import { prisma } from "@/lib/db";
+import type { PageNoteKey } from "@/lib/pageNotes";
 
-export async function PageNote({ pageKey }: { pageKey: string }) {
+// Keyed to the registry in lib/pageNotes.ts rather than a bare string: a page
+// note is looked up by exact key, so a typo would silently render nothing.
+export async function PageNote({ pageKey }: { pageKey: PageNoteKey }) {
   const note = await prisma.pageNote.findUnique({ where: { pageKey } });
   if (!note?.body?.trim()) return null;
   return (

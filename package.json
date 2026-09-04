@@ -19,7 +19,6 @@
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
-    "@stripe/stripe-js": "^9.4.0",
     "@types/bcryptjs": "^2.4.6",
     "@vercel/blob": "^2.3.3",
     "bcryptjs": "^3.0.3",
