@@ -67,7 +67,10 @@ jobs:
         run: npm run lint
 
       - name: Test
-        run: npm test
+        # With coverage, which carries a threshold on the authorization and
+        # routing logic — so deleting a suite fails the build rather than
+        # quietly reducing what is checked.
+        run: npm run test:coverage
 
       - name: Build
         # Run `next build` directly to catch build-time breakage before it

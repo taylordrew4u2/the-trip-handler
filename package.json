@@ -16,7 +16,8 @@
     "db:seed": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' prisma/seed.ts",
     "db:remove-orphaned-trips": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' prisma/remove-orphaned-trips.ts",
     "db:studio": "prisma studio",
-    "screenshots": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' scripts/screenshots.ts"
+    "screenshots": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' scripts/screenshots.ts",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
@@ -39,6 +40,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitest/coverage-v8": "^4.1.11",
     "eslint": "^9",
     "eslint-config-next": "16.3.4",
     "tailwindcss": "^4",

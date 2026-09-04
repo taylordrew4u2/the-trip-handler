@@ -136,8 +136,22 @@ wrong before they were consolidated:
   `requestBedmate`, three functions away, did check — which is what makes it
   an oversight rather than a design decision.
 
+The board had a third variant of the same mistake, on a read path: `Comment`
+carried no `tripId` at all and the query had no filter, so every approved member
+of every trip saw one shared stream. Adding the column took a three-step
+migration — nullable, backfill from each author's trip, then required — because
+the table already had rows.
+
 `tests/member-authz.test.ts` drives the real actions and asserts nothing is
 written. Against the pre-fix code those tests return `{ success: true }`.
+
+### Reads are gated the same way
+
+Page-level gates used to call `isApproved(session.user.status)` — the same stale
+snapshot, one layer up. `lib/approval.ts#getUserStatus` now reads the row, so a
+revoked approval closes the page on the next request rather than at token
+expiry. One query per gated render, which is the right trade for a correct
+answer.
 
 ### Actions are public endpoints
 
