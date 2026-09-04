@@ -485,7 +485,7 @@ function MealSlotCard({
                 >
                   <span>
                     <span className="font-medium text-stone-900">{s.mealName}</span>
-                    <span className="text-stone-500"> · {s.submittedBy.name}</span>
+                    <span className="text-stone-600"> · {s.submittedBy.name}</span>
                   </span>
                   <span className="flex items-center gap-2">
                     <span className="text-xs px-2 py-0.5 rounded bg-stone-100 text-stone-700 tabular-nums">
@@ -533,7 +533,7 @@ function MealSlotCard({
                     >
                       <span>
                         <span className="font-medium text-stone-900">{s.mealName}</span>
-                        <span className="text-stone-500 text-xs"> · {s.submittedBy.name}</span>
+                        <span className="text-stone-600 text-xs"> · {s.submittedBy.name}</span>
                         {isWinner && !isConfirmed && (
                           <span className="ml-2 text-xs px-2 py-0.5 rounded bg-stone-100 text-stone-700">
                             Recommended
@@ -694,7 +694,7 @@ function PollBody({
               />
               <span className="flex-1 text-sm relative z-10">
                 <span className="font-medium text-stone-900">{s.mealName}</span>
-                <span className="text-stone-500"> · {s.submittedBy.name}</span>
+                <span className="text-stone-600"> · {s.submittedBy.name}</span>
                 {s.note && <span className="block text-xs text-stone-600 mt-0.5">{s.note}</span>}
                 <span className="flex flex-wrap gap-1 mt-1">
                   {s.helpOffered.map((h) => (
@@ -720,7 +720,7 @@ function PollBody({
                       e.preventDefault();
                       run("del-" + s.id, () => deleteSuggestion(s.id));
                     }}
-                    className="text-[10px] text-stone-500 hover:text-red-700"
+                    className="text-[10px] text-stone-600 hover:text-red-700"
                   >
                     Remove
                   </button>

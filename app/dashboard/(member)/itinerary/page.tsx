@@ -1,7 +1,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { isApproved } from "@/lib/approval";
+import { getUserStatus, isApproved } from "@/lib/approval";
 import { PageNote } from "@/components/PageNote";
 import { ItineraryView } from "@/components/ItineraryView";
 import { getUserTrip } from "@/lib/trip";
@@ -13,7 +13,9 @@ export default async function ItineraryPage() {
   const sessionUser = session?.user as { id?: string; status?: string; role?: string } | undefined;
   const userId = sessionUser?.id ?? "";
   const isAdmin = sessionUser?.role === "ADMIN";
-  const canComment = isAdmin || isApproved(sessionUser?.status);
+  // Read from the database rather than the sign-in-time JWT, so a revoked
+  // approval takes away the ability to comment on the next request.
+  const canComment = isAdmin || isApproved(await getUserStatus());
 
   const trip = userId ? await getUserTrip(userId) : null;
   const days = trip

@@ -26,6 +26,8 @@ vi.mock("@/lib/db", () => ({
   prisma: {
     user: { findUnique: vi.fn() },
     bed: { findUnique: vi.fn() },
+    comment: { findUnique: vi.fn(), create: vi.fn() },
+    reaction: { findUnique: vi.fn(), create: vi.fn(), delete: vi.fn() },
     bedAssignment: { deleteMany: vi.fn(), create: vi.fn(), count: vi.fn() },
     bedmateRequest: { findUnique: vi.fn(), upsert: vi.fn(), delete: vi.fn(), update: vi.fn() },
     $transaction: vi.fn(),
@@ -35,6 +37,7 @@ vi.mock("@/lib/db", () => ({
 import { getServerSession } from "next-auth";
 import { prisma } from "@/lib/db";
 import { claimBedSlot, bumpFromSingle, requestBedmate } from "@/app/actions/sleeping";
+import { postComment, toggleReaction } from "@/app/actions/board";
 
 const session = getServerSession as unknown as Mock;
 const p = prisma as unknown as {
@@ -42,6 +45,8 @@ const p = prisma as unknown as {
   bed: { findUnique: Mock };
   bedAssignment: { deleteMany: Mock; create: Mock; count: Mock };
   bedmateRequest: { findUnique: Mock; upsert: Mock };
+  comment: { findUnique: Mock; create: Mock };
+  reaction: { findUnique: Mock; create: Mock; delete: Mock };
   $transaction: Mock;
 };
 
@@ -178,5 +183,29 @@ describe("the capacity check happens inside the transaction", () => {
     const result = await claimBedSlot("bed-1");
 
     expect(result).toEqual({ error: "That bed is already full." });
+  });
+});
+
+describe("the board is scoped to a trip", () => {
+  it("stamps a new post with the author's trip", async () => {
+    p.user.findUnique.mockResolvedValue(dbUser());
+
+    const result = await postComment("hello");
+
+    expect(result).toEqual({ success: true });
+    expect(p.comment.create).toHaveBeenCalledWith({
+      data: { tripId: MY_TRIP, userId: "me", body: "hello" },
+    });
+  });
+
+  it("refuses a reaction on a post belonging to another trip", async () => {
+    p.user.findUnique.mockResolvedValue(dbUser());
+    p.comment.findUnique.mockResolvedValue({ tripId: OTHER_TRIP });
+
+    const result = await toggleReaction("comment-1", "👍");
+
+    expect(result).toEqual({ error: "That isn't on your trip." });
+    expect(p.reaction.create).not.toHaveBeenCalled();
+    expect(p.reaction.delete).not.toHaveBeenCalled();
   });
 });

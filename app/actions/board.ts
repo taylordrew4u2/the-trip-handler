@@ -23,7 +23,7 @@ export async function postComment(body: string) {
   if (trimmed.length > MAX_LEN) return { error: `Keep it under ${MAX_LEN} characters.` };
 
   await prisma.comment.create({
-    data: { userId: user.id, body: trimmed },
+    data: { tripId: auth.tripId, userId: user.id, body: trimmed },
   });
   revalidatePath("/dashboard/board");
   return { success: true };
@@ -58,6 +58,16 @@ export async function toggleReaction(commentId: string, emoji: string) {
   const user = { id: auth.id };
   if (!isReactionEmoji(emoji)) {
     return { error: "Unsupported reaction." };
+  }
+
+  // The commentId comes from the caller, so confirm the post is on their trip
+  // before reacting to it.
+  const comment = await prisma.comment.findUnique({
+    where: { id: commentId },
+    select: { tripId: true },
+  });
+  if (!comment || comment.tripId !== auth.tripId) {
+    return { error: "That isn't on your trip." };
   }
 
   const existing = await prisma.reaction.findUnique({
