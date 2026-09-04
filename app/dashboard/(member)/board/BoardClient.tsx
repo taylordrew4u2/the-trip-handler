@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { postComment, deleteComment } from "@/app/actions/board";
+import { postComment, deleteComment, toggleReaction } from "@/app/actions/board";
+import { REACTION_EMOJIS } from "@/lib/reactions";
 
 interface CommentRow {
   id: string;
@@ -14,22 +15,10 @@ interface CommentRow {
     username: string | null;
     avatarUrl: string | null;
   };
+  reactions: { emoji: string; userId: string }[];
 }
 
 const MAX_LEN = 2000;
-
-const PLACEHOLDERS = [
-  "what's on your mind?",
-  "drop a hot take",
-  "share a half-formed bit",
-  "spill",
-  "shower thought, go",
-  "say the thing you wouldn't tweet",
-  "ask the group for advice",
-  "loudly announce something",
-];
-
-const POST_LABELS = ["Send it", "Post it", "Drop it", "Yeet"];
 
 function timeAgo(d: Date): string {
   const ms = Date.now() - new Date(d).getTime();
@@ -43,14 +32,21 @@ function timeAgo(d: Date): string {
   return new Date(d).toLocaleDateString();
 }
 
-export function BoardClient({ comments, currentUserId }: { comments: CommentRow[]; currentUserId: string }) {
+export function BoardClient({
+  comments,
+  currentUserId,
+  placeholder,
+  postLabel,
+}: {
+  comments: CommentRow[];
+  currentUserId: string;
+  placeholder: string;
+  postLabel: string;
+}) {
   const router = useRouter();
   const [body, setBody] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
-
-  const [placeholder] = useState(() => PLACEHOLDERS[Math.floor(Math.random() * PLACEHOLDERS.length)]);
-  const [postLabel] = useState(() => POST_LABELS[Math.floor(Math.random() * POST_LABELS.length)]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -64,6 +60,13 @@ export function BoardClient({ comments, currentUserId }: { comments: CommentRow[
       return;
     }
     setBody("");
+    router.refresh();
+  }
+
+  async function handleReact(commentId: string, emoji: string) {
+    // Optimism isn't worth it here: the row is small and a refresh keeps the
+    // counts honest across everyone looking at the board.
+    await toggleReaction(commentId, emoji);
     router.refresh();
   }
 
@@ -144,6 +147,30 @@ export function BoardClient({ comments, currentUserId }: { comments: CommentRow[
                       )}
                     </div>
                     <p className="text-base text-stone-800 mt-1 whitespace-pre-wrap break-words leading-relaxed">{c.body}</p>
+                    <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                      {REACTION_EMOJIS.map((emoji) => {
+                        const forThis = c.reactions.filter((r) => r.emoji === emoji);
+                        const mine = forThis.some((r) => r.userId === currentUserId);
+                        const count = forThis.length;
+                        return (
+                          <button
+                            key={emoji}
+                            type="button"
+                            onClick={() => handleReact(c.id, emoji)}
+                            aria-pressed={mine}
+                            aria-label={`${mine ? "Remove" : "Add"} ${emoji} reaction`}
+                            className={`inline-flex items-center gap-1 px-2 min-h-[32px] rounded-full border text-sm transition-colors ${
+                              mine
+                                ? "border-stone-900 bg-stone-900 text-white"
+                                : "border-stone-200 bg-white text-stone-600 hover:border-stone-400"
+                            } ${count === 0 ? "opacity-45 hover:opacity-100" : ""}`}
+                          >
+                            <span aria-hidden>{emoji}</span>
+                            {count > 0 && <span className="tabular-nums text-xs">{count}</span>}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
               </div>
