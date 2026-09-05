@@ -1,14 +1,20 @@
 /**
- * Seed a rich, self-contained demo so a first-time visitor (or the "Try the
- * demo" button on the login page) lands in a fully-populated trip: an
- * organizer, an approved roster with bios, a 3-day itinerary, a shared
- * contributions board, logged expenses, beds, and trip pricing.
+ * Seed a rich, self-contained demo trip: an organizer, an approved roster with
+ * bios, a 3-day itinerary, a meal poll mid-vote, a board with traffic on it, a
+ * shared contributions board, logged expenses, beds (two already claimed), and
+ * trip pricing. Signing in as one of the accounts below lands you in a trip
+ * that looks used rather than empty.
  *
- * Idempotent — safe to re-run. Accounts/trip upsert by their unique keys, and
- * the trip's child records (itinerary, contributions, expenses, beds) are
- * cleared and rebuilt so re-seeding never duplicates rows.
+ * Idempotent — safe to re-run. Accounts and the trip upsert by their unique
+ * keys, and the trip's child records are cleared and rebuilt, so re-seeding
+ * never duplicates rows.
  *
  *   npm run db:seed
+ *
+ * This runs against whatever DATABASE_URL points at, and it is NOT part of the
+ * deploy: `npm run build` runs migrations only (scripts/db-deploy.sh). Seeding
+ * the deployed database is a deliberate, manual step — see
+ * docs/seeding-the-demo.md.
  */
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
@@ -76,6 +82,17 @@ async function main() {
       transportPrice: 60,
       mealsPrice: 90,
     },
+  });
+
+  // Put the organizer on their own trip. They have to be created before it
+  // (the trip needs an ownerId), so this can't be set at creation — and
+  // without it the demo's most interesting account is left owning a trip it
+  // isn't a member of, which means PENDING status and an "approval required"
+  // wall on the roster, board, meals and sleeping pages. Owning a trip and
+  // going on it are separate facts in this model; the organizer is doing both.
+  await prisma.user.update({
+    where: { id: organizer.id },
+    data: { tripId: trip.id, status: "APPROVED", gender: "female" },
   });
 
   // Approved roster (plus one pending applicant to show the review state).
