@@ -6,10 +6,11 @@ login screen with no way in except creating an account and starting from an
 empty trip, and none of the screenshots in the README correspond to anything
 they can reach.
 
-Seeding is **not** part of the deploy, and deliberately so: `npm run build`
-runs `scripts/db-deploy.sh`, which applies migrations and nothing else. A build
-step that writes demo rows would run on every deploy, against whatever database
-it is pointed at. So seeding the deployed database is a manual, one-time step.
+Seeding is **off by default** during a deploy, and deliberately so: a build
+step that writes rows unconditionally would run against whatever database it
+happened to be pointed at. It is opt-in instead — one environment variable —
+so a hosted demo can get its data without anyone passing round a production
+connection string.
 
 ---
 
@@ -46,8 +47,41 @@ never be given a role beyond `PARTICIPANT`.
 
 ## Seeding a deployed database
 
-You need the database's connection string — on Vercel, Project → Settings →
-Environment Variables → `DATABASE_URL` (or `vercel env pull`). Run this from a
+Two ways. The first needs nothing but a dashboard.
+
+### Option A — set `SEED_DEMO` and redeploy (recommended)
+
+Add an environment variable to the deployment and trigger a redeploy:
+
+```
+SEED_DEMO=true
+```
+
+`scripts/db-deploy.sh` runs on every build. With that variable set to exactly
+`true` it runs the seed after migrations; with it unset, or set to anything
+else, it skips and says so in the build log. A seed failure fails the build,
+because a deploy that quietly shipped an empty demo is worse than one that
+stops.
+
+Two consequences of it running on *every* deploy, both worth understanding
+before you leave it on:
+
+- The seed is idempotent, so repeats don't duplicate anything.
+- It rebuilds the demo trip's child records, so anything visitors created on
+  that trip — their board posts, their bed claims — is discarded each time you
+  deploy. For a public demo that is usually the point: it heals itself. On a
+  database with real trips in it, it is not what you want. The seed only ever
+  touches its own trip, but leaving the flag on is a standing instruction to
+  wipe that trip's contents regularly.
+
+Once the demo is seeded and you don't want it reset on every deploy, remove the
+variable. The data stays; only the rebuilding stops.
+
+### Option B — run it once, by hand
+
+Useful when you want to seed without a deploy, or want to watch it happen. You
+need the database's connection string — on Vercel, Project → Settings →
+Environment Variables → `DATABASE_URL` (or `vercel env pull`). Run it from a
 checkout of the commit that is deployed, so the seed matches the schema:
 
 ```bash
@@ -64,11 +98,12 @@ DATABASE_URL='postgresql://…' npm run db:seed
 `migrate status` first is worth the extra step: seeding against a database
 missing a migration fails partway through and leaves the trip half-built.
 
-Then check it from the outside, rather than trusting the command's output.
+### Verifying either way
+
+Check it from the outside, rather than trusting the command's output.
 **A 200 proves nothing here**: when the token doesn't resolve, the invite page
 still returns 200 and renders "This invite isn't active". Assert on content
-instead, and assert on something that is only present on success — the trip's
-name:
+instead, and on something only present on success — the trip's name:
 
 ```bash
 curl -s https://your-domain/join/demo-invite-token | grep -c 'Demo Cabin Weekend'   # want > 0
@@ -98,21 +133,28 @@ things to know:
 
 ## Related: `NEXTAUTH_URL`
 
-While you are in the environment variables, check `NEXTAUTH_URL`. It must be
-the origin the app is actually served from, with no trailing slash:
+**On Vercel you no longer need to set this, and setting it has no effect.**
 
-```
-NEXTAUTH_URL=https://the-trip-handler.vercel.app
-```
+NextAuth v4 trusts `NEXTAUTH_URL` unconditionally when it is present, with no
+check that it matches the host the request arrived on. That makes a stale value
+silently wrong rather than loudly broken — this project ran for a while with it
+pointing at an unrelated project's domain, and nothing complained. A fixed
+value is also wrong by construction on preview deployments, which each get
+their own hostname.
 
-If it points somewhere else, every URL NextAuth generates — sign-in, callback,
-error redirects — sends users to that other origin. You can read back what the
-deployed app thinks it is:
+So `lib/authOrigin.ts` drops the variable when running on Vercel and lets
+NextAuth derive the origin from the request's own `x-forwarded-host`, which is
+right for production and for every preview and cannot drift. You can delete
+`NEXTAUTH_URL` from the Vercel project; leaving it set does no harm either.
+
+Off Vercel — local development, CI, any other host — nothing changed:
+`NEXTAUTH_URL` is still required and still honoured, because there is no
+trusted host to fall back to.
+
+To read back what a deployment thinks it is:
 
 ```bash
 curl -s https://your-domain/api/auth/providers
 ```
 
-The `signinUrl` and `callbackUrl` in the response should both be on your
-domain. Changing the variable requires a **redeploy**; Vercel does not apply
-new environment variables to an existing deployment.
+`signinUrl` and `callbackUrl` should both be on the domain you requested.
