@@ -352,7 +352,7 @@ npm run dev                  # http://localhost:3000
 ```
 
 ```bash
-npm run db:seed     # seed a demo trip, roster, itinerary, and contributions
+npm run db:seed     # seed the demo trip — roster, itinerary, meal poll, board, beds
 npm run build       # prisma generate + migrate deploy + next build
 npm run test        # Vitest unit tests
 npm run test:e2e    # Playwright responsive suite (needs a build + seeded data)
@@ -361,6 +361,13 @@ npm run screenshots # regenerate the README images from the running app
 npm run lint        # ESLint 9
 npm run db:studio   # Prisma Studio
 ```
+
+Seeding is not part of the deploy — `npm run build` applies migrations and
+nothing else, so a build never writes demo rows into whatever database it is
+pointed at. Seeding a deployed database is therefore a deliberate manual step;
+[`docs/seeding-the-demo.md`](docs/seeding-the-demo.md) covers what the seed
+creates, how to run it against a deployed database safely, and how to verify it
+landed.
 
 ### Environment variables
 
