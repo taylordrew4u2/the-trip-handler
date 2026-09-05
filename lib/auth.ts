@@ -2,6 +2,11 @@ import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "./db";
 import bcrypt from "bcryptjs";
+import { resolveAuthOrigin } from "./authOrigin";
+
+// Must run before NextAuth reads the environment on the first request. See
+// lib/authOrigin.ts for why a hard-coded NEXTAUTH_URL is wrong on Vercel.
+resolveAuthOrigin(process.env);
 
 export const authOptions: NextAuthOptions = {
   providers: [

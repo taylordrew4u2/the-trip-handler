@@ -362,11 +362,13 @@ npm run lint        # ESLint 9
 npm run db:studio   # Prisma Studio
 ```
 
-Seeding is not part of the deploy — `npm run build` applies migrations and
-nothing else, so a build never writes demo rows into whatever database it is
-pointed at. Seeding a deployed database is therefore a deliberate manual step;
+Seeding during a deploy is off by default — a build step that wrote rows
+unconditionally would run against whatever database it happened to be pointed
+at. It is opt-in instead: set `SEED_DEMO=true` in the deployment's environment
+and `scripts/db-deploy.sh` seeds after migrating, so a hosted demo can get its
+data without anyone passing round a production connection string.
 [`docs/seeding-the-demo.md`](docs/seeding-the-demo.md) covers what the seed
-creates, how to run it against a deployed database safely, and how to verify it
+creates, both ways to run it, what re-seeding deletes, and how to verify it
 landed.
 
 ### Environment variables
@@ -376,7 +378,8 @@ Variable names (no values committed):
 ```
 DATABASE_URL
 NEXTAUTH_SECRET
-NEXTAUTH_URL
+NEXTAUTH_URL          # not needed on Vercel — see docs/seeding-the-demo.md
+SEED_DEMO             # optional; "true" seeds the demo trip on each deploy
 ADMIN_EMAIL
 STRIPE_SECRET_KEY
 STRIPE_WEBHOOK_SECRET
