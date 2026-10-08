@@ -39,7 +39,7 @@ export default async function Home() {
     <div className="min-h-dvh bg-[#f6f7fb] text-slate-900">
       <header className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/90 pt-safe backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 gutter">
-          <Link href="/" className="flex items-center gap-3 min-w-0" aria-label="The Trip Handler home">
+          <Link href="/" className="flex min-h-11 items-center gap-3 min-w-0" aria-label="The Trip Handler home">
             <span aria-hidden="true" className="grid size-9 shrink-0 place-items-center rounded-xl bg-indigo-600 text-lg font-bold text-white shadow-sm shadow-indigo-300">T</span>
             <span className="truncate text-base font-semibold tracking-tight sm:text-lg">The Trip Handler</span>
           </Link>
@@ -52,7 +52,7 @@ export default async function Home() {
 
       <main>
         <section className="relative overflow-hidden border-b border-slate-200/80">
-          <div aria-hidden="true" className="pointer-events-none absolute -right-32 top-12 size-[28rem] rounded-full bg-indigo-100/70 blur-3xl" />
+          <div aria-hidden="true" className="pointer-events-none absolute right-0 top-12 size-[28rem] rounded-full bg-indigo-100/70 blur-3xl" />
           <div className="relative mx-auto grid max-w-6xl gap-12 gutter py-16 sm:py-20 lg:grid-cols-[1.15fr_0.85fr] lg:items-center lg:gap-16 lg:py-28">
             <div>
               <h1 className="max-w-2xl font-serif text-[clamp(3rem,6vw,5.6rem)] font-medium leading-[1.05] tracking-[-0.045em] text-slate-950 text-balance">
@@ -65,7 +65,7 @@ export default async function Home() {
                 <Link href="/signup" className="inline-flex min-h-12 items-center justify-center rounded-xl bg-indigo-600 px-6 text-sm font-semibold text-white shadow-lg shadow-indigo-600/15 transition-all hover:-translate-y-0.5 hover:bg-indigo-700">Start a trip <span aria-hidden="true" className="ml-2">→</span></Link>
                 <Link href="/login" className="inline-flex min-h-12 items-center justify-center rounded-xl border border-slate-300 bg-white px-6 text-sm font-semibold text-slate-800 transition-colors hover:bg-slate-50">Sign in</Link>
               </div>
-              <p className="mt-6 text-sm text-slate-500">Private invites. One shared plan. Everyone in the loop.</p>
+              <p className="mt-6 text-sm text-slate-600">Private invites. One shared plan. Everyone in the loop.</p>
             </div>
             <div className="relative mx-auto w-full max-w-md lg:mx-0" aria-label="Features included in a trip">
               <div className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-[0_24px_80px_-24px_rgba(30,41,59,0.22)] sm:p-7">
@@ -144,7 +144,7 @@ export default async function Home() {
         </section>
       </main>
       <footer className="border-t border-slate-200 pb-safe">
-        <div className="mx-auto flex max-w-6xl flex-col justify-between gap-2 gutter py-8 text-xs text-slate-500 sm:flex-row">
+        <div className="mx-auto flex max-w-6xl flex-col justify-between gap-2 gutter py-8 text-xs text-slate-600 sm:flex-row">
           <span>The Trip Handler</span><span>Less planning. More trip.</span>
         </div>
       </footer>
