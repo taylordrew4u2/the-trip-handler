@@ -35,11 +35,11 @@ export default async function RosterPage() {
   ]);
 
   return (
-    <div className="space-y-6 max-w-3xl">
+    <div className="min-w-0 space-y-8 max-w-3xl">
       <PageNote pageKey="roster" />
       <div>
-        <h1 className="font-serif text-3xl font-medium text-stone-900">Who&apos;s coming</h1>
-        <p className="text-stone-500 text-sm mt-1">
+        <h1 className="font-serif text-3xl font-medium tracking-tight text-slate-950 sm:text-4xl">Who&apos;s coming</h1>
+        <p className="text-slate-600 text-sm mt-1">
           {totalApproved} approved · {totalPaid} confirmed &amp; paid
         </p>
       </div>

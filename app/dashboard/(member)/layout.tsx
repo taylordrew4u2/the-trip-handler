@@ -31,17 +31,17 @@ export default async function MemberLayout({ children }: { children: React.React
 
   if (sessionUser.status === "CANCELLED") {
     return (
-      <div className="min-h-dvh bg-stone-50 flex items-center justify-center gutter py-10">
-        <div className="bg-white rounded-xl border border-stone-200 p-6 sm:p-8 max-w-md text-center">
-          <p className="text-xs uppercase tracking-[0.2em] text-stone-500 mb-3">Cancelled</p>
-          <h2 className="font-serif text-2xl font-medium text-stone-900 mb-3">You&apos;re not on the trip</h2>
-          <p className="text-stone-600">
+      <div className="min-h-dvh bg-[#f6f7fb] flex items-center justify-center gutter py-10">
+        <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 max-w-md text-center">
+          <p className="text-xs uppercase tracking-[0.2em] text-slate-600 mb-3">Cancelled</p>
+          <h2 className="font-serif text-2xl font-medium text-slate-900 mb-3">You&apos;re not on the trip</h2>
+          <p className="text-slate-600">
             Either you withdrew or the application wasn&apos;t approved. You can look for another
             trip, or reach out to the organizer if you want to come back.
           </p>
           <a
             href="/dashboard/start"
-            className="inline-flex items-center justify-center mt-6 px-4 min-h-[44px] bg-stone-900 hover:bg-stone-800 text-white rounded-lg text-sm font-medium"
+            className="inline-flex items-center justify-center mt-6 px-4 min-h-[44px] bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium"
           >
             Find another trip →
           </a>
@@ -54,11 +54,12 @@ export default async function MemberLayout({ children }: { children: React.React
   const isPending = sessionUser.status === "PENDING";
 
   return (
-    <div className="min-h-dvh bg-stone-50">
+    <div className="min-h-dvh bg-[#f6f7fb]">
       <DashboardNav status={sessionUser.status ?? null} />
-      <main className="max-w-6xl mx-auto gutter py-6 md:py-10">
+      <div className="2xl:pl-60">
+      <main className="max-w-6xl mx-auto gutter py-8 md:py-10">
         {isPending && (
-          <div className="bg-amber-50 border border-amber-300 rounded-xl px-4 py-3 mb-6 text-sm text-amber-900 leading-relaxed">
+          <div className="bg-amber-50 border border-amber-300 rounded-2xl px-4 py-3 mb-6 text-sm text-amber-900 leading-relaxed">
             <strong>You&apos;re pending admin approval.</strong> You can browse the itinerary and
             lodging now, but the roster, contributions, payments, and other tools unlock once
             you&apos;re approved.
@@ -66,6 +67,7 @@ export default async function MemberLayout({ children }: { children: React.React
         )}
         {children}
       </main>
+      </div>
     </div>
   );
 }

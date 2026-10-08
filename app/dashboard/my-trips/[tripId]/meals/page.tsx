@@ -48,11 +48,11 @@ export default async function ManageTripMealsPage({
   return (
     <div className="space-y-6">
       <div>
-        <Link href={`/dashboard/my-trips/${tripId}`} className="text-xs text-stone-500 hover:text-stone-800">
+        <Link href={`/dashboard/my-trips/${tripId}`} className="inline-flex min-h-[44px] items-center text-sm font-medium text-slate-600 hover:text-indigo-700 break-words">
           ← {trip.name}
         </Link>
-        <h1 className="font-serif text-3xl font-medium text-stone-900 mt-2">Meal plan</h1>
-        <p className="text-stone-500 text-sm mt-1">
+        <h1 className="font-serif text-3xl sm:text-4xl font-medium tracking-tight text-slate-950 mt-2">Meal plan</h1>
+        <p className="text-slate-600 text-sm leading-6 mt-2">
           Move the poll through its phases, finalize meals, and manage the grocery list.
         </p>
       </div>

@@ -27,7 +27,7 @@ const ACCOUNTS = {
 };
 
 /**
- * 1536px is where the nav switches from the grouped sheet to the inline bar,
+ * 1536px is where the nav switches from the grouped sheet to the side rail,
  * so it is the width that shows the desktop layout as designed.
  */
 const DESKTOP = { width: 1536, height: 960 };

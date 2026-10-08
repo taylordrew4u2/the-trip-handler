@@ -37,7 +37,7 @@ export default async function ItineraryPage() {
     : [];
 
   if (!trip) {
-    return <p className="text-stone-500 text-sm">No trip found yet.</p>;
+    return <p className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-10 text-center text-slate-600 text-sm">No trip found yet.</p>;
   }
 
   const dateRange = [
@@ -53,8 +53,8 @@ export default async function ItineraryPage() {
     <div className="space-y-8 max-w-3xl">
       <PageNote pageKey="itinerary" />
       <header>
-        <h1 className="font-serif text-3xl font-medium text-stone-900">{trip.name}</h1>
-        <p className="text-stone-600 text-sm mt-1">
+        <h1 className="font-serif text-3xl font-medium tracking-tight text-slate-950 sm:text-4xl">{trip.name}</h1>
+        <p className="text-slate-600 text-sm mt-1">
           {[trip.destination, dateRange].filter(Boolean).join(" · ")}
         </p>
       </header>
@@ -73,9 +73,9 @@ export default async function ItineraryPage() {
       />
 
       {trip.description && (
-        <section className="bg-white rounded-xl border border-stone-200 p-5">
-          <h2 className="text-xs uppercase tracking-[0.15em] text-stone-500">About</h2>
-          <p className="text-stone-700 mt-2 whitespace-pre-wrap">{trip.description}</p>
+        <section className="bg-white rounded-2xl border border-slate-200 p-5">
+          <h2 className="text-xs uppercase tracking-[0.15em] text-slate-600">About</h2>
+          <p className="text-slate-700 mt-2 whitespace-pre-wrap">{trip.description}</p>
         </section>
       )}
     </div>

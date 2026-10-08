@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Brand } from "@/components/Brand";
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -40,8 +41,7 @@ export default async function Home() {
       <header className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/90 pt-safe backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 gutter">
           <Link href="/" className="flex min-h-11 items-center gap-3 min-w-0" aria-label="The Trip Handler home">
-            <span aria-hidden="true" className="grid size-9 shrink-0 place-items-center rounded-xl bg-indigo-600 text-lg font-bold text-white shadow-sm shadow-indigo-300">T</span>
-            <span className="truncate text-base font-semibold tracking-tight sm:text-lg">The Trip Handler</span>
+            <Brand compact />
           </Link>
           <nav aria-label="Account" className="flex shrink-0 items-center gap-2">
             <Link href="/login" className="inline-flex min-h-11 items-center rounded-xl px-3 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-950">Sign in</Link>

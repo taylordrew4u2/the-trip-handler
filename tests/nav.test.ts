@@ -21,12 +21,14 @@ describe("nav gating", () => {
     expect(labels).not.toContain("Sleeping");
     expect(labels).not.toContain("Contributions");
     expect(labels).not.toContain("Payment");
+    expect(labels).not.toContain("Expenses");
   });
 
   it("shows every destination once approved", () => {
     const approved = visibleNavItems("APPROVED");
     const all = NAV_GROUPS.flatMap((g) => g.items);
     expect(approved).toHaveLength(all.length);
+    expect(approved.map((i) => i.href)).toContain("/dashboard/expenses");
   });
 
   it("treats any non-pending status as approved", () => {

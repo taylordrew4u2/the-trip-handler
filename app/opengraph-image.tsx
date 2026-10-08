@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og";
+import { LogoMark } from "@/components/LogoMark";
 
 // Dynamic Open Graph / Twitter card image, generated at build time.
 // Renders the link preview when the app URL is shared anywhere.
@@ -17,19 +18,22 @@ export default function Image() {
           flexDirection: "column",
           justifyContent: "center",
           padding: "90px",
-          background: "#fafaf9",
-          color: "#1c1917",
+          background: "#f6f7fb",
+          color: "#0f172a",
         }}
       >
         <div
           style={{
             display: "flex",
-            fontSize: 30,
-            letterSpacing: 10,
-            textTransform: "uppercase",
-            color: "#78716c",
+            alignItems: "center",
+            gap: 18,
+            fontSize: 32,
+            fontWeight: 600,
+            letterSpacing: -0.5,
+            color: "#0f172a",
           }}
         >
+          <LogoMark size={64} />
           The Trip Handler
         </div>
         <div
@@ -42,9 +46,9 @@ export default function Image() {
             maxWidth: 940,
           }}
         >
-          Plan group trips without the 400 group texts.
+          Less planning. More trip.
         </div>
-        <div style={{ display: "flex", fontSize: 30, marginTop: 36, color: "#57534e" }}>
+        <div style={{ display: "flex", fontSize: 26, marginTop: 36, color: "#475569" }}>
           Invites · roster · lodging · meals · expenses · Stripe payments
         </div>
       </div>

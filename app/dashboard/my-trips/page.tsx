@@ -33,11 +33,16 @@ export default async function MyTripsPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="font-serif text-3xl font-medium text-stone-900">My trips</h1>
-        <p className="text-stone-500 text-sm mt-1">
-          Create a trip, share its invite link or join code, and approve who comes.
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="font-serif text-3xl sm:text-4xl font-medium tracking-tight text-slate-950">My trips</h1>
+          <p className="text-slate-600 text-sm leading-6 mt-2 max-w-xl">
+            Create a trip, share its invite link or join code, and approve who comes.
+          </p>
+        </div>
+        <span className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-indigo-100 bg-indigo-50 px-4 text-sm font-medium text-indigo-700">
+          <span className="font-semibold">{trips.length}</span> trip{trips.length === 1 ? "" : "s"} created
+        </span>
       </div>
       <MyTripsClient trips={data} />
     </div>

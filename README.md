@@ -32,8 +32,8 @@ puts the difference in the diff.
 
 ### The same app on a phone
 
-Not a shrunk desktop layout — the navigation collapses from thirteen inline tabs
-into a grouped sheet, and every control is sized for a thumb.
+The desktop side rail becomes a grouped sheet on a phone, with controls sized
+for a thumb.
 
 | Dashboard | Sleeping | Navigation sheet |
 |---|---|---|
@@ -99,13 +99,17 @@ on dinner from a queue, checks the itinerary from a car. The desktop layout is
 where an organizer sits down to approve applicants and set pricing. Both are
 first-class, and every screen is built to work at 320px and at 1536px.
 
-**Navigation adapts to the space it has.** The member area has thirteen
-destinations. On a wide screen they sit inline as a single row of tabs. Below
-that, the header collapses to the name of the page you're on plus one control
+**A shared visual identity.** Public pages, account forms, member tools, and
+organizer screens use the same indigo accents, slate text, and white cards.
+The route-and-check logo appears in headers, app icons, and shared-link previews.
+
+**Navigation adapts to the space it has.** Wide screens show a persistent side
+rail with destinations grouped under *Trip*, *The group*, and *You*. Below
+1536px, the header shows the name of the page you're on plus one control
 that opens a grouped menu — *Trip*, *The group*, *You* — so the whole app is one
 tap away instead of hidden behind a sideways scroll. The menu closes on
-navigation (including the back button), closes on `Escape`, dims the page behind
-it, and locks background scrolling while open.
+navigation (including the back button), closes on `Escape` or a tap outside,
+dims the page behind it, and locks background scrolling while open.
 
 **Touch targets are sized by pointer, not by width.** An iPad is 768px wide and
 still operated with a thumb, so a breakpoint is the wrong thing to key off.
@@ -442,7 +446,7 @@ device it broke on:
 | `phone-320` | 320px | The narrowest screen still in real use — layouts break here first. |
 | `phone-390` | 390px | The common modern phone. |
 | `tablet-768` | 768px | A touch device that is *not* phone-width — the case a width-only breakpoint gets wrong. |
-| `laptop-1280` | 1280px | Where the inline navigation does not fit and must collapse. |
+| `laptop-1280` | 1280px | A wide content area with the grouped navigation menu. |
 | `desktop-1536` | 1536px | The breakpoint boundary where it turns back on. |
 
 The phone and tablet projects use Playwright device descriptors rather than a
@@ -516,8 +520,8 @@ fits together.
 - Implemented the approval-gated UI (read-only mode for `PENDING` users) as a complement to — not a replacement for — server-side authorization.
 - Integrated Stripe Checkout end-to-end: server action creates the session, signed webhook records payment, status update gates the rest of the app.
 - Integrated Vercel Blob for file uploads and Resend for transactional emails covering all key status transitions.
-- Made the whole app responsive from 320px up, including a nav that collapses
-  from thirteen inline tabs to a grouped menu sheet, pointer-based touch target
+- Made the whole app responsive from 320px up, including a desktop side rail
+  that becomes a grouped menu sheet, pointer-based touch target
   sizing, and native mobile keyboard and autofill hints on every form.
 - Built a Playwright suite that proves it: both user journeys driven through a
   real browser at five viewports against seeded data, asserting no horizontal

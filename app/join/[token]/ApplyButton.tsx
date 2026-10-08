@@ -12,7 +12,7 @@ export function ApplyButton({ token, ownTrip }: { token: string; ownTrip: boolea
 
   if (ownTrip) {
     return (
-      <p className="text-sm text-stone-500 text-center">
+      <p className="text-sm text-slate-600 text-center">
         This is your own trip — share the invite link with the people you want to come.
       </p>
     );
@@ -21,13 +21,13 @@ export function ApplyButton({ token, ownTrip }: { token: string; ownTrip: boolea
   if (done) {
     return (
       <div className="text-center space-y-2">
-        <p className="text-sm font-medium text-stone-900">You&apos;ve applied.</p>
-        <p className="text-sm text-stone-500">
+        <p className="text-sm font-medium text-slate-950">You&apos;ve applied.</p>
+        <p className="text-sm text-slate-600">
           The organizer reviews applications and you&apos;ll hear back by email.
         </p>
         <button
           onClick={() => router.push("/dashboard")}
-          className="inline-flex items-center justify-center mt-2 px-5 min-h-[48px] bg-stone-900 hover:bg-stone-800 active:bg-stone-700 text-white rounded-lg text-sm font-medium"
+          className="inline-flex items-center justify-center mt-2 px-5 min-h-[48px] bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white rounded-xl text-sm font-medium"
         >
           Go to dashboard
         </button>
@@ -50,14 +50,14 @@ export function ApplyButton({ token, ownTrip }: { token: string; ownTrip: boolea
   return (
     <div className="space-y-3">
       {error && (
-        <div role="alert" className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2 text-sm">
+        <div role="alert" className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-3 py-2 text-sm">
           {error}
         </div>
       )}
       <button
         onClick={apply}
         disabled={loading}
-        className="inline-flex items-center justify-center w-full min-h-[48px] px-4 bg-stone-900 hover:bg-stone-800 active:bg-stone-700 text-white rounded-lg font-medium text-sm transition-colors disabled:opacity-50"
+        className="inline-flex items-center justify-center w-full min-h-[48px] px-4 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white rounded-xl font-medium text-sm transition-colors disabled:opacity-50"
       >
         {loading ? "Applying…" : "Apply to this trip"}
       </button>

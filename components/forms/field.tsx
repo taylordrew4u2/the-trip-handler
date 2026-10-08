@@ -65,14 +65,14 @@ export function Field({
   return (
     <FieldIdProvider id={id}>
       <div className={className}>
-        <label htmlFor={id} className="block text-xs font-medium text-stone-700 mb-1.5 tracking-wide">
+        <label htmlFor={id} className="block text-xs font-medium text-slate-700 mb-1.5 tracking-wide">
           {/* The asterisk is decoration; `required` on the control is what a
               screen reader announces. Reading "star" mid-label helps nobody. */}
           {label} {required && <span aria-hidden="true">*</span>}
         </label>
         <FieldHintProvider id={hintId}>{children}</FieldHintProvider>
         {hint && (
-          <p id={hintId} className="text-xs text-stone-500 mt-1">
+          <p id={hintId} className="text-xs text-slate-600 mt-1">
             {hint}
           </p>
         )}

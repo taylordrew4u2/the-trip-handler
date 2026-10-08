@@ -1,3 +1,4 @@
+import { Brand } from "@/components/Brand";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
@@ -24,14 +25,14 @@ export default async function IntakeLayout({ children }: { children: React.React
   }
 
   return (
-    <div className="min-h-dvh bg-stone-50">
-      <header className="border-b border-stone-200 bg-white pt-safe">
-        <div className="max-w-3xl mx-auto gutter h-14 flex items-center justify-between gap-3">
-          <Link href="/dashboard" className="inline-flex items-center min-h-[44px] font-serif text-base sm:text-lg font-medium text-stone-900 truncate">
-            The Trip Handler
+    <div className="min-h-dvh bg-[#f6f7fb]">
+      <header className="border-b border-slate-200 bg-white pt-safe">
+        <div className="max-w-5xl mx-auto gutter h-16 flex items-center justify-between gap-3">
+          <Link href="/dashboard" className="inline-flex items-center min-h-[44px] min-w-0">
+            <Brand compact />
           </Link>
           {isApproved ? (
-            <Link href="/dashboard" className="inline-flex items-center min-h-[44px] px-1 text-sm text-stone-600 hover:text-stone-900 shrink-0 whitespace-nowrap">
+            <Link href="/dashboard" className="inline-flex items-center min-h-[44px] px-1 text-sm text-slate-600 hover:text-slate-900 shrink-0 whitespace-nowrap">
               ← Back to dashboard
             </Link>
           ) : (
@@ -39,7 +40,7 @@ export default async function IntakeLayout({ children }: { children: React.React
           )}
         </div>
       </header>
-      <main className="max-w-3xl mx-auto gutter py-6 md:py-10">{children}</main>
+      <main className="max-w-5xl mx-auto gutter py-8 md:py-12">{children}</main>
     </div>
   );
 }

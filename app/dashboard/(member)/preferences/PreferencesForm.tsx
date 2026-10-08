@@ -13,13 +13,13 @@ import {
 } from "@/components/forms/field";
 
 const inputCls =
-  "w-full px-3 py-2 min-h-[44px] rounded-lg border border-stone-300 bg-white text-sm focus:outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900";
+  "w-full min-h-[44px] px-3 py-2.5 rounded-lg border border-slate-300 bg-white text-sm focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600/20";
 
 function Section({ title, intro, children }: { title: string; intro?: string; children: React.ReactNode }) {
   return (
-    <section className="border-t border-stone-200 pt-8 mt-8 first:border-t-0 first:pt-0 first:mt-0">
-      <h2 className="font-serif text-2xl font-medium text-stone-900">{title}</h2>
-      {intro && <p className="text-sm text-stone-600 mt-2 leading-relaxed">{intro}</p>}
+    <section className="min-w-0 border-t border-slate-200 pt-8 mt-8 first:border-t-0 first:pt-0 first:mt-0">
+      <h2 className="font-serif text-2xl font-semibold text-slate-900 break-words">{title}</h2>
+      {intro && <p className="text-sm text-slate-600 mt-2 leading-relaxed">{intro}</p>}
       <div className="mt-6 space-y-5">{children}</div>
     </section>
   );
@@ -33,13 +33,13 @@ function Field({ label, hint, children, required }: { label: string; hint?: stri
   return (
     <FieldIdProvider id={id}>
       <div>
-        <label htmlFor={id} className="block text-sm font-medium text-stone-800">
+        <label htmlFor={id} className="block text-sm font-medium text-slate-800">
           {label}{" "}
           {/* The asterisk is decoration; `required` on the input is what a
               screen reader announces. Reading "star" mid-label helps nobody. */}
           {required && <span aria-hidden="true" className="text-red-600">*</span>}
         </label>
-        {hint && <p id={hintId} className="text-xs text-stone-500 mt-0.5">{hint}</p>}
+        {hint && <p id={hintId} className="text-xs text-slate-600 mt-0.5">{hint}</p>}
         <div className="mt-1.5">
           <FieldHintProvider id={hintId}>{children}</FieldHintProvider>
         </div>
@@ -84,14 +84,14 @@ function RadioGroup({ name, options, defaultValue, required }: {
   return (
     <div className="space-y-1.5">
       {options.map((opt, i) => (
-        <label key={opt.value} className="flex items-center gap-2.5 text-sm text-stone-800 cursor-pointer">
+        <label key={opt.value} className="flex min-h-[44px] items-center gap-3 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-800 cursor-pointer hover:bg-indigo-50/50">
           <input
             type="radio"
             name={name}
             value={opt.value}
             defaultChecked={defaultValue === opt.value}
             required={required && i === 0}
-            className="h-4 w-4 accent-stone-900"
+            className="h-4 w-4 shrink-0 accent-indigo-600"
           />
           {opt.label}
         </label>
@@ -107,13 +107,13 @@ function CheckboxGroup({ name, options, defaultValue }: {
   return (
     <div className="space-y-1.5">
       {options.map((opt) => (
-        <label key={opt.value} className="flex items-start gap-2.5 text-sm text-stone-800 cursor-pointer">
+        <label key={opt.value} className="flex min-h-[44px] items-center gap-3 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-800 cursor-pointer hover:bg-indigo-50/50">
           <input
             type="checkbox"
             name={`${name}[]`}
             value={opt.value}
             defaultChecked={set.has(opt.value)}
-            className="h-4 w-4 mt-0.5 accent-stone-900"
+            className="h-4 w-4 shrink-0 accent-indigo-600"
           />
           <span>{opt.label}</span>
         </label>
@@ -158,7 +158,7 @@ export function PreferencesForm({ existing }: { existing: GuestForm | null }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white border border-stone-200 rounded-xl p-6 md:p-8">
+    <form onSubmit={handleSubmit} className="min-w-0 bg-white border border-slate-200 rounded-2xl p-5 shadow-sm sm:p-6 md:p-8">
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2 mb-6 text-sm">
           {error}
@@ -238,8 +238,8 @@ export function PreferencesForm({ existing }: { existing: GuestForm | null }) {
           <RadioGroup name="willingToDrive" defaultValue={e?.willingToDrive} options={YES_NO} required />
         </Field>
         <Field label="Acknowledgement" required>
-          <label className="flex items-start gap-2.5 text-sm text-stone-800 cursor-pointer">
-            <input type="checkbox" name="vanAck" defaultChecked={e?.vanAck} required className="h-4 w-4 mt-0.5 accent-stone-900" />
+          <label className="flex min-h-[44px] items-start gap-3 rounded-lg border border-slate-200 px-3 py-3 text-sm text-slate-800 cursor-pointer">
+            <input type="checkbox" name="vanAck" defaultChecked={e?.vanAck} required className="h-4 w-4 mt-0.5 accent-indigo-600" />
             I understand transportation is being coordinated by van and I need to be on time for pickup and departure.
           </label>
         </Field>
@@ -357,12 +357,12 @@ export function PreferencesForm({ existing }: { existing: GuestForm | null }) {
         </Field>
       </Section>
 
-      <div className="border-t border-stone-200 mt-10 pt-6 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3">
-        <p className="text-xs text-stone-500">All fields required. Use &ldquo;N/A&rdquo; if a question doesn&apos;t apply.</p>
+      <div className="border-t border-slate-200 mt-10 pt-6 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3">
+        <p className="text-xs text-slate-600">All fields required. Use &ldquo;N/A&rdquo; if a question doesn&apos;t apply.</p>
         <button
           type="submit"
           disabled={submitting}
-          className="px-5 py-2.5 bg-stone-900 hover:bg-stone-800 text-white rounded-lg font-medium text-sm transition-colors disabled:opacity-50"
+          className="min-w-[44px] min-h-[44px] px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium text-sm transition-colors disabled:opacity-50"
         >
           {submitting ? "Saving…" : existing?.preferencesSubmittedAt ? "Update preferences" : "Save preferences"}
         </button>

@@ -16,7 +16,7 @@ type Fields = {
 };
 
 const inputClass =
-  "w-full px-3 py-2.5 min-h-[44px] rounded-lg border border-stone-300 bg-white focus:outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900 text-sm";
+  "w-full min-w-0 px-3 py-2.5 min-h-[44px] rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-600 focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 text-sm";
 
 export function TripEditForm({ tripId, initial }: { tripId: string; initial: Fields }) {
   const [fields, setFields] = useState<Fields>(initial);
@@ -40,9 +40,10 @@ export function TripEditForm({ tripId, initial }: { tripId: string; initial: Fie
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-stone-200 p-5 sm:p-6 space-y-5">
+    <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm sm:p-6 space-y-5">
+      <h2 className="font-serif text-2xl font-medium tracking-tight text-slate-950 border-b border-slate-100 pb-4">Trip details</h2>
       {error && (
-        <div role="alert" className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2 text-sm">
+        <div role="alert" className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-3 py-2 text-sm">
           {error}
         </div>
       )}
@@ -65,7 +66,7 @@ export function TripEditForm({ tripId, initial }: { tripId: string; initial: Fie
         />
       </Field>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Field label="START DATE">
           <Input type="date" className={inputClass} value={fields.startDate} onChange={(e) => set("startDate", e.target.value)} />
         </Field>
@@ -110,11 +111,11 @@ export function TripEditForm({ tripId, initial }: { tripId: string; initial: Fie
         />
       </Field>
 
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3 border-t border-slate-100 pt-5">
         <button
           type="submit"
           disabled={isPending}
-          className="inline-flex items-center justify-center w-full sm:w-auto px-5 min-h-[44px] rounded-lg bg-stone-900 hover:bg-stone-800 active:bg-stone-700 text-white text-sm font-medium disabled:opacity-50"
+          className="inline-flex items-center justify-center w-full sm:w-auto px-5 min-h-[44px] rounded-xl bg-indigo-600 transition-colors hover:bg-indigo-700 active:bg-indigo-800 text-white text-sm font-medium disabled:opacity-50"
         >
           {isPending ? "Saving…" : "Save changes"}
         </button>

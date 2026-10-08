@@ -40,7 +40,7 @@ export default async function MealsPage() {
   ]);
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 space-y-6">
       <PageNote pageKey="meals" />
       <MealsPlanner
         currentUserId={userId}
@@ -51,8 +51,8 @@ export default async function MealsPage() {
         completion={completion}
       />
 
-      <div className="bg-white border border-stone-200 rounded-xl p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <p className="text-sm text-stone-600">Done for now? You can sign out.</p>
+      <div className="bg-white border border-slate-200 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <p className="text-sm text-slate-600">Done for now? You can sign out.</p>
         <SignOutButton />
       </div>
     </div>

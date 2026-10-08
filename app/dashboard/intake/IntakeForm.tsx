@@ -16,10 +16,10 @@ type Existing = GuestForm | null;
 
 function Section({ title, intro, children }: { title: string; intro?: string; children: React.ReactNode }) {
   return (
-    <section className="border-t border-stone-200 pt-8 mt-8 first:border-t-0 first:pt-0 first:mt-0">
-      <h2 className="font-serif text-2xl font-medium text-stone-900">{title}</h2>
-      {intro && <p className="text-sm text-stone-600 mt-2 leading-relaxed">{intro}</p>}
-      <div className="mt-6 space-y-5">{children}</div>
+    <section className="min-w-0 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+      <h2 className="font-serif text-2xl font-medium tracking-tight text-slate-950">{title}</h2>
+      {intro && <p className="text-sm text-slate-600 mt-2 leading-relaxed">{intro}</p>}
+      <div className="mt-6 grid gap-5">{children}</div>
     </section>
   );
 }
@@ -31,15 +31,15 @@ function Field({ label, hint, children, required }: { label: string; hint?: stri
   const hintId = hint ? `${id}-hint` : undefined;
   return (
     <FieldIdProvider id={id}>
-      <div>
-        <label htmlFor={id} className="block text-sm font-medium text-stone-800">
+      <div className="min-w-0">
+        <label htmlFor={id} className="block text-sm font-medium text-slate-800">
           {label}{" "}
           {/* The asterisk is decoration; `required` on the input is what a
               screen reader announces. Reading "star" mid-label helps nobody. */}
           {required && <span aria-hidden="true" className="text-red-600">*</span>}
         </label>
-        {hint && <p id={hintId} className="text-xs text-stone-500 mt-0.5">{hint}</p>}
-        <div className="mt-1.5">
+        {hint && <p id={hintId} className="text-xs text-slate-600 mt-0.5">{hint}</p>}
+        <div className="mt-2 min-w-0">
           <FieldHintProvider id={hintId}>{children}</FieldHintProvider>
         </div>
       </div>
@@ -48,7 +48,7 @@ function Field({ label, hint, children, required }: { label: string; hint?: stri
 }
 
 const inputCls =
-  "w-full px-3 py-2 min-h-[44px] rounded-lg border border-stone-300 bg-white text-sm focus:outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900";
+  "min-h-12 w-full min-w-0 rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-600 focus:border-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-600/15";
 
 function TextInput({ name, defaultValue, placeholder, type = "text", required }: {
   name: string; defaultValue?: string | null; placeholder?: string; type?: string; required?: boolean;
@@ -94,8 +94,8 @@ function ReadOnlyInput({ type, value }: { type: string; value: string }) {
       value={value}
       readOnly
       disabled
-      // stone-500 on a stone-100 ground is 4.4:1 — just under AA. stone-600 clears it.
-      className={`${inputCls} bg-stone-100 text-stone-600 cursor-not-allowed`}
+      // Keep the disabled email readable while distinguishing it from editable controls.
+      className={`${inputCls} bg-slate-100 text-slate-600 cursor-not-allowed`}
     />
   );
 }
@@ -104,16 +104,16 @@ function RadioGroup({ name, options, defaultValue, required }: {
   name: string; options: { value: string; label: string }[]; defaultValue?: string | null; required?: boolean;
 }) {
   return (
-    <div className="space-y-1.5">
+    <div className="flex flex-wrap gap-2">
       {options.map((opt, i) => (
-        <label key={opt.value} className="flex items-center gap-2.5 text-sm text-stone-800 cursor-pointer">
+        <label key={opt.value} className="flex min-h-11 cursor-pointer items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 transition-colors has-checked:border-indigo-200 has-checked:bg-indigo-50">
           <input
             type="radio"
             name={name}
             value={opt.value}
             defaultChecked={defaultValue === opt.value}
             required={required && i === 0}
-            className="h-4 w-4 accent-stone-900"
+            className="h-4 w-4 shrink-0 accent-indigo-600"
           />
           {opt.label}
         </label>
@@ -127,10 +127,10 @@ function CheckboxGroup({ name, options, defaultValue }: {
 }) {
   const set = new Set(defaultValue ?? []);
   return (
-    <div className="space-y-1.5">
+    <div className="grid gap-2">
       {options.map((opt) => (
-        <label key={opt.value} className="flex items-start gap-2.5 text-sm text-stone-800 cursor-pointer">
-          <input type="checkbox" name={`${name}[]`} value={opt.value} defaultChecked={set.has(opt.value)} className="h-4 w-4 mt-0.5 accent-stone-900" />
+        <label key={opt.value} className="flex min-h-11 cursor-pointer items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm leading-6 text-slate-800 transition-colors has-checked:border-indigo-200 has-checked:bg-indigo-50">
+          <input type="checkbox" name={`${name}[]`} value={opt.value} defaultChecked={set.has(opt.value)} className="mt-1 h-4 w-4 shrink-0 accent-indigo-600" />
           <span>{opt.label}</span>
         </label>
       ))}
@@ -196,22 +196,22 @@ export function IntakeForm({ defaultEmail, defaultName, defaultPhone, existing, 
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white border border-stone-200 rounded-xl p-6 md:p-8">
+    <form onSubmit={handleSubmit} className="min-w-0">
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2 mb-6 text-sm">
+        <div role="alert" className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {error}
         </div>
       )}
       {savedAt && !error && !locked && (
-        <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg px-3 py-2 mb-6 text-sm">
+        <div role="status" className="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
           Saved {savedAt}.
         </div>
       )}
       {locked && (
-        <div className="bg-stone-100 border border-stone-300 rounded-lg p-4 mb-6 flex items-start gap-3">
-          <div className="flex-1">
-            <p className="font-medium text-stone-900 text-sm">Form locked</p>
-            <p className="text-xs text-stone-600 mt-0.5">
+        <div className="mb-5 flex flex-col items-start gap-3 rounded-2xl border border-slate-200 bg-white p-5 sm:flex-row sm:items-center">
+          <div className="min-w-0 flex-1">
+            <p className="font-medium text-slate-950 text-sm">Form locked</p>
+            <p className="text-xs text-slate-600 mt-0.5">
               {savedAt && <>Submitted {savedAt}. </>}
               {editRequested
                 ? "Edit access requested — admin will review and unlock for changes."
@@ -223,7 +223,7 @@ export function IntakeForm({ defaultEmail, defaultName, defaultPhone, existing, 
               type="button"
               onClick={handleRequestEdit}
               disabled={requesting}
-              className="inline-flex items-center justify-center text-xs px-3 min-h-[30px] border border-stone-700 text-stone-900 rounded-md font-medium hover:bg-stone-900 hover:text-white disabled:opacity-50 whitespace-nowrap"
+              className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-xl border border-slate-300 px-4 text-sm font-medium text-slate-950 transition-colors hover:bg-slate-50 disabled:opacity-50"
             >
               {requesting ? "Sending…" : "Request edit access"}
             </button>
@@ -235,7 +235,7 @@ export function IntakeForm({ defaultEmail, defaultName, defaultPhone, existing, 
           )}
         </div>
       )}
-      <fieldset disabled={locked} className={locked ? "opacity-60" : ""}>
+      <fieldset disabled={locked} className={`min-w-0 space-y-5 ${locked ? "opacity-60" : ""}`}>
 
       <Section title="Basic info">
         <Field label="Full name" required><TextInput name="fullName" defaultValue={e?.fullName ?? defaultName} required /></Field>
@@ -246,8 +246,8 @@ export function IntakeForm({ defaultEmail, defaultName, defaultPhone, existing, 
         </Field>
         <Field label="Pronouns" required><TextInput name="pronouns" defaultValue={e?.pronouns} required placeholder="e.g. she/her, they/them, N/A" /></Field>
         <Field label="Age confirmation" required>
-          <label className="flex items-center gap-2.5 text-sm text-stone-800 cursor-pointer">
-            <input type="checkbox" name="age21Confirmed" defaultChecked={e?.age21Confirmed} required className="h-4 w-4 accent-stone-900" />
+          <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-800 has-checked:border-indigo-200 has-checked:bg-indigo-50">
+            <input type="checkbox" name="age21Confirmed" defaultChecked={e?.age21Confirmed} required className="h-4 w-4 shrink-0 accent-indigo-600" />
             I confirm I am 21 or older.
           </label>
         </Field>
@@ -262,12 +262,11 @@ export function IntakeForm({ defaultEmail, defaultName, defaultPhone, existing, 
           required
           hint="Examples: $500, $400-600, no hard cap. The $75 deposit is on top and refundable, so don't include it here."
         >
-          <input
+          <TextInput
             name="maxBudget"
             defaultValue={e?.maxBudget ?? ""}
             required
             placeholder="e.g. $500"
-            className={inputCls}
           />
         </Field>
       </Section>
@@ -277,13 +276,13 @@ export function IntakeForm({ defaultEmail, defaultName, defaultPhone, existing, 
         intro="This is a sober weekend. No alcohol, no recreational drugs — full stop. If that's not for you, this isn't the trip."
       >
         <Field label="" required>
-          <label className="flex items-start gap-2.5 text-sm text-stone-800 cursor-pointer bg-amber-50 border border-amber-300 rounded-lg p-3">
+          <label className="flex min-h-11 cursor-pointer items-start gap-3 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm leading-6 text-slate-800">
             <input
               type="checkbox"
               name="substanceFreeAck"
               defaultChecked={e?.substanceFreeAck}
               required
-              className="h-4 w-4 mt-0.5 accent-stone-900"
+              className="mt-1 h-4 w-4 shrink-0 accent-indigo-600"
             />
             <span>
               I understand and agree that this is a <strong>drug- and alcohol-free</strong> trip.
@@ -428,12 +427,12 @@ export function IntakeForm({ defaultEmail, defaultName, defaultPhone, existing, 
       </fieldset>
 
       {!locked && (
-        <div className="border-t border-stone-200 mt-10 pt-6 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3">
-          <p className="text-xs text-stone-500">Required fields marked with <span className="text-red-600">*</span>.</p>
+        <div className="mt-5 flex flex-col-reverse gap-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-7">
+          <p className="text-xs text-slate-600">Required fields marked with <span className="text-red-600">*</span>.</p>
           <button
             type="submit"
             disabled={submitting}
-            className="px-5 py-2.5 bg-stone-900 hover:bg-stone-800 text-white rounded-lg font-medium text-sm transition-colors disabled:opacity-50"
+            className="inline-flex min-h-12 items-center justify-center rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-indigo-700 disabled:opacity-50"
           >
             {submitting
               ? "Saving…"

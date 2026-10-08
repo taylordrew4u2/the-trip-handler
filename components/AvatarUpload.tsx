@@ -40,8 +40,9 @@ export function AvatarUpload({ userId, currentUrl, name }: AvatarUploadProps) {
   return (
     <div className="flex flex-col items-center gap-3">
       <button
+        aria-label={`Change profile photo for ${name}`}
         onClick={() => fileRef.current?.click()}
-        className="relative group"
+        className="min-w-[44px] min-h-[44px] relative group rounded-full focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-indigo-600"
         type="button"
       >
         {preview ? (
@@ -49,14 +50,14 @@ export function AvatarUpload({ userId, currentUrl, name }: AvatarUploadProps) {
           <img
             src={preview}
             alt={name}
-            className="w-24 h-24 rounded-full object-cover border border-stone-300"
+            className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-sm ring-1 ring-slate-200"
           />
         ) : (
-          <div className="w-24 h-24 rounded-full bg-stone-900 flex items-center justify-center text-stone-100 font-medium text-2xl border border-stone-300">
+          <div className="w-24 h-24 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-700 font-semibold text-2xl border-4 border-white shadow-sm ring-1 ring-slate-200">
             {initials}
           </div>
         )}
-        <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity">
           <span className="text-white text-xs">{uploading ? "Uploading…" : "Change"}</span>
         </div>
       </button>
@@ -67,7 +68,7 @@ export function AvatarUpload({ userId, currentUrl, name }: AvatarUploadProps) {
         onChange={handleChange}
         className="hidden"
       />
-      <p className="text-xs text-stone-500">Click to change photo</p>
+      <p className="text-xs text-slate-600">Click to change photo</p>
     </div>
   );
 }

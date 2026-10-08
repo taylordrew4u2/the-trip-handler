@@ -28,11 +28,11 @@ export default async function ContributionsPage() {
   const claimed = contributions.filter((c) => c.users.length > 0);
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 space-y-6">
       <PageNote pageKey="contributions" />
       <div>
-        <h1 className="font-serif text-3xl font-medium text-stone-900">Contributions</h1>
-        <p className="text-stone-500 text-sm mt-1">
+        <h1 className="font-serif text-3xl font-medium tracking-tight text-slate-950 sm:text-4xl">Contributions</h1>
+        <p className="text-slate-600 text-sm mt-1">
           Add what you&apos;re bringing, or sign up for one of admin&apos;s suggestions.
         </p>
       </div>
@@ -41,7 +41,7 @@ export default async function ContributionsPage() {
 
       {suggestions.length > 0 && (
         <section className="space-y-3">
-          <h2 className="text-xs uppercase tracking-[0.15em] text-stone-500">Suggestions from admin</h2>
+          <h2 className="text-xs uppercase tracking-[0.15em] text-slate-600">Suggestions from admin</h2>
           <div className="space-y-3">
             {suggestions.map((item) => (
               <ContributionItem key={item.id} item={item} currentUserId={userId} />
@@ -52,7 +52,7 @@ export default async function ContributionsPage() {
 
       {claimed.length > 0 && (
         <section className="space-y-3">
-          <h2 className="text-xs uppercase tracking-[0.15em] text-stone-500">Already claimed</h2>
+          <h2 className="text-xs uppercase tracking-[0.15em] text-slate-600">Already claimed</h2>
           <div className="space-y-3">
             {claimed.map((item) => (
               <ContributionItem key={item.id} item={item} currentUserId={userId} />
@@ -62,7 +62,7 @@ export default async function ContributionsPage() {
       )}
 
       {contributions.length === 0 && (
-        <div className="text-center py-12 text-stone-500">
+        <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center text-slate-600 sm:py-12">
           <p>No contributions yet — be the first.</p>
         </div>
       )}

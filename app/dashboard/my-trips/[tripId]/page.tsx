@@ -75,21 +75,23 @@ export default async function ManageTripPage({
   }));
 
   return (
-    <div className="space-y-6">
-      <div>
-        <Link
-          href="/dashboard/my-trips"
-          className="inline-flex items-center min-h-[44px] -ml-1 px-1 text-sm text-stone-500 hover:text-stone-800"
-        >
-          ← My trips
-        </Link>
-        <h1 className="font-serif text-2xl sm:text-3xl font-medium text-stone-900 break-words">
-          {trip.name}
-        </h1>
-        <p className="text-stone-500 text-sm mt-1">Edit the details people see on your invite page.</p>
+    <div className="space-y-6 sm:space-y-8">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="min-w-0">
+          <Link
+            href="/dashboard/my-trips"
+            className="inline-flex items-center min-h-[44px] -ml-1 px-1 text-sm font-medium text-slate-600 hover:text-indigo-700"
+          >
+            ← My trips
+          </Link>
+          <h1 className="font-serif text-3xl sm:text-4xl font-medium tracking-tight text-slate-950 break-words">
+            {trip.name}
+          </h1>
+          <p className="text-slate-600 text-sm leading-6 mt-2">Edit the details people see on your invite page.</p>
+        </div>
         <Link
           href={`/dashboard/my-trips/${trip.id}/meals`}
-          className="inline-flex items-center min-h-[44px] mt-1 text-sm font-medium text-stone-900 underline underline-offset-2"
+          className="inline-flex items-center justify-center min-h-[44px] rounded-xl border border-indigo-100 bg-indigo-50 px-4 text-sm font-semibold text-indigo-700 transition-colors hover:bg-indigo-100"
         >
           Manage meal poll →
         </Link>
