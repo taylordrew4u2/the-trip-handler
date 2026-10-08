@@ -41,12 +41,12 @@ export function FindTripForm() {
           maxLength={12}
           aria-label="Trip code"
           enterKeyHint="go"
-          className="flex-1 min-w-0 px-3 min-h-[48px] rounded-lg border border-stone-300 bg-white focus:outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900 text-base font-mono tracking-widest uppercase placeholder:tracking-normal placeholder:font-sans"
+          className="min-h-12 min-w-0 flex-1 rounded-xl border border-slate-300 bg-white px-3 font-mono text-base uppercase tracking-widest text-slate-900 placeholder:font-sans placeholder:tracking-normal placeholder:text-slate-600 focus:border-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-600/15"
         />
         <button
           type="submit"
           disabled={isPending || !code.trim()}
-          className="inline-flex items-center justify-center px-4 min-h-[48px] rounded-lg bg-stone-900 hover:bg-stone-800 active:bg-stone-700 text-white text-sm font-medium disabled:opacity-50 whitespace-nowrap"
+          className="inline-flex min-h-12 items-center justify-center whitespace-nowrap rounded-xl bg-indigo-600 px-5 text-sm font-semibold text-white transition-colors hover:bg-indigo-700 active:bg-indigo-800 disabled:opacity-50"
         >
           {isPending ? "Searching…" : "Find trip"}
         </button>

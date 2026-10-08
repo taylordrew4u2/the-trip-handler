@@ -27,11 +27,11 @@ export default async function BoardPage() {
   });
 
   return (
-    <div className="space-y-6 max-w-2xl">
+    <div className="min-w-0 space-y-8 max-w-2xl">
       <PageNote pageKey="board" />
       <div>
-        <h1 className="font-serif text-3xl font-medium text-stone-900">The Board</h1>
-        <p className="text-stone-500 text-sm mt-1">
+        <h1 className="font-serif text-3xl font-medium tracking-tight text-slate-950 sm:text-4xl">The Board</h1>
+        <p className="text-slate-600 text-sm mt-1">
           Updates, questions, schedule chaos, anything.
         </p>
       </div>

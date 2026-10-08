@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { getTripByInviteToken } from "@/lib/trip";
 import { SignupForm } from "@/app/signup/SignupForm";
 import { ApplyButton } from "./ApplyButton";
+import { AuthShell } from "@/components/AuthShell";
 
 export const dynamic = "force-dynamic";
 
@@ -22,19 +23,18 @@ export default async function JoinPage({ params }: { params: Promise<{ token: st
 
   if (!trip || !trip.isApplicationOpen) {
     return (
-      <div className="min-h-dvh bg-stone-50 flex items-center justify-center gutter py-10">
-        <div className="w-full max-w-md text-center">
-          <h1 className="font-serif text-3xl font-medium text-stone-900 mb-3">
-            This invite isn&apos;t active.
-          </h1>
-          <p className="text-stone-600 mb-6 text-sm">
-            The link may be wrong, or the trip has stopped accepting applications.
-          </p>
-          <Link href="/login" className="inline-flex items-center min-h-[44px] text-stone-900 font-medium underline underline-offset-2">
+      <AuthShell
+        eyebrow="Trip invite"
+        title="This invite isn't active."
+        description="The link may be wrong, or the trip has stopped accepting applications."
+      >
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm sm:p-8">
+          <p className="mb-6 text-sm leading-6 text-slate-600">Sign in to see the trips you&apos;re already part of.</p>
+          <Link href="/login" className="inline-flex min-h-12 items-center justify-center rounded-xl bg-indigo-600 px-6 text-sm font-semibold text-white transition-colors hover:bg-indigo-700">
             Sign in
           </Link>
         </div>
-      </div>
+      </AuthShell>
     );
   }
 
@@ -43,23 +43,22 @@ export default async function JoinPage({ params }: { params: Promise<{ token: st
   const loggedIn = Boolean(userId) && userId !== "admin";
 
   return (
-    <div className="min-h-dvh bg-stone-50 flex items-center justify-center gutter py-10">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <p className="text-xs uppercase tracking-[0.2em] text-stone-500 mb-2">You&apos;re invited to</p>
-          <h1 className="font-serif text-3xl sm:text-4xl font-medium text-stone-900 leading-tight break-words">
-            {trip.name}
-          </h1>
-          <p className="text-sm text-stone-500 mt-3">
+    <AuthShell
+      eyebrow="You're invited to"
+      title={trip.name}
+      description={
+        <>
+          <p className="text-sm font-medium text-indigo-700">
             {[trip.destination, dateLabel(trip.startDate, trip.endDate)].filter(Boolean).join(" · ")}
           </p>
           {trip.description && (
-            <p className="text-stone-600 mt-4 text-sm leading-relaxed">{trip.description}</p>
+            <p className="text-slate-600 mt-4 text-sm leading-relaxed">{trip.description}</p>
           )}
-        </div>
-
+        </>
+      }
+    >
         {loggedIn ? (
-          <div className="bg-white rounded-xl border border-stone-200 p-6 sm:p-7">
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
             <ApplyButton token={token} ownTrip={trip.ownerId === userId} />
           </div>
         ) : (
@@ -73,7 +72,6 @@ export default async function JoinPage({ params }: { params: Promise<{ token: st
             }}
           />
         )}
-      </div>
-    </div>
+    </AuthShell>
   );
 }

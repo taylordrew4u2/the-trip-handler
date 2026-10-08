@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og";
+import { LogoMark } from "@/components/LogoMark";
 
 // Branded app icon (browser tabs, Android / PWA home screen via the manifest).
 export const size = { width: 512, height: 512 };
@@ -14,14 +15,10 @@ export default function Icon() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "#1c1917",
-          color: "#fafaf9",
-          fontSize: 300,
-          fontWeight: 700,
-          letterSpacing: -12,
+          background: "#f6f7fb",
         }}
       >
-        TH
+        <LogoMark size={384} />
       </div>
     ),
     { ...size },

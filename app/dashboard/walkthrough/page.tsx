@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { Brand } from "@/components/Brand";
 
 type Step = {
   tag: string;
@@ -59,32 +60,36 @@ export default function WalkthroughPage() {
   const isLast = index === STEPS.length - 1;
 
   return (
-    <div className="min-h-dvh bg-stone-50 flex flex-col">
-      <header className="border-b border-stone-200 bg-white pt-safe">
-        <div className="max-w-3xl mx-auto gutter h-14 flex items-center justify-between">
-          <span className="font-serif text-base sm:text-lg font-medium text-stone-900 truncate">The Trip Handler</span>
-          <Link href="/dashboard/start" className="inline-flex items-center min-h-[44px] px-1 text-sm text-stone-500 hover:text-stone-900 shrink-0">
+    <div className="min-h-dvh bg-[#f6f7fb] flex flex-col">
+      <header className="border-b border-slate-200 bg-white pt-safe">
+        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 gutter">
+          <Link href="/" aria-label="The Trip Handler home" className="flex min-h-11 min-w-0 items-center"><Brand /></Link>
+          <Link href="/dashboard/start" className="inline-flex min-h-11 shrink-0 items-center rounded-xl px-3 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-950">
             Skip
           </Link>
         </div>
       </header>
 
       <main className="flex-1 flex items-center justify-center gutter py-8 md:py-10 pb-safe">
-        <div className="w-full max-w-lg">
-          <div className="bg-white rounded-2xl border border-stone-200 p-6 sm:p-8 md:p-10 min-h-[17rem] sm:min-h-[20rem] flex flex-col">
-            <p className="text-xs uppercase tracking-[0.2em] text-stone-500 mb-3">{step.tag}</p>
-            <h1 className="font-serif text-2xl md:text-3xl font-medium text-stone-900 leading-tight">
+        <div className="w-full min-w-0 max-w-2xl">
+          <p className="mb-5 text-center text-sm font-medium text-slate-600">A quick tour of your trip, from the first invite to the final payment.</p>
+          <div className="flex min-h-[23rem] flex-col rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8 md:p-10">
+            <div className="mb-7 flex items-center justify-between gap-4">
+              <span aria-hidden="true" className="grid size-12 shrink-0 place-items-center rounded-2xl bg-indigo-50 text-sm font-semibold text-indigo-700">{String(index + 1).padStart(2, "0")}</span>
+              <p className="text-xs font-semibold uppercase tracking-[0.15em] text-indigo-700">{step.tag}</p>
+            </div>
+            <h1 className="font-serif text-3xl font-medium leading-tight tracking-tight text-slate-950 text-balance sm:text-4xl">
               {step.title}
             </h1>
-            <p className="text-stone-600 mt-4 leading-relaxed flex-1">{step.body}</p>
+            <p className="mt-5 flex-1 text-sm leading-7 text-slate-600 sm:text-base">{step.body}</p>
 
             {/* Progress dots */}
-            <div className="flex items-center gap-1.5 mt-8" aria-hidden>
+            <div className="mt-8 flex items-center gap-1.5" aria-hidden>
               {STEPS.map((_, i) => (
                 <span
                   key={i}
-                  className={`h-1.5 rounded-full transition-all ${
-                    i === index ? "w-6 bg-stone-900" : "w-1.5 bg-stone-300"
+                  className={`h-1.5 flex-1 rounded-full transition-colors ${
+                    i <= index ? "bg-indigo-600" : "bg-slate-200"
                   }`}
                 />
               ))}
@@ -97,12 +102,12 @@ export default function WalkthroughPage() {
               type="button"
               onClick={() => setIndex((i) => Math.max(0, i - 1))}
               disabled={isFirst}
-              className="inline-flex items-center justify-center px-4 min-h-[44px] rounded-lg text-sm font-medium text-stone-600 hover:text-stone-900 disabled:opacity-0 disabled:pointer-events-none"
+              className="inline-flex items-center justify-center px-4 min-h-[44px] rounded-xl text-sm font-medium text-slate-600 hover:text-slate-950 disabled:opacity-0 disabled:pointer-events-none"
             >
               ← Back
             </button>
 
-            <span className="text-xs text-stone-500 tabular-nums">
+            <span className="text-xs text-slate-600 tabular-nums" aria-live="polite">
               {index + 1} / {STEPS.length}
             </span>
 
@@ -110,13 +115,13 @@ export default function WalkthroughPage() {
               <div className="flex gap-2 ml-auto">
                 <Link
                   href="/dashboard/start"
-                  className="inline-flex items-center justify-center px-3 sm:px-4 min-h-[44px] rounded-lg border border-stone-300 hover:bg-stone-100 active:bg-stone-200 text-stone-700 text-sm font-medium whitespace-nowrap"
+                  className="inline-flex items-center justify-center px-3 sm:px-4 min-h-[44px] rounded-xl border border-slate-300 hover:bg-slate-100 active:bg-slate-200 text-slate-700 text-sm font-medium whitespace-nowrap"
                 >
                   Find a trip
                 </Link>
                 <Link
                   href="/dashboard/my-trips"
-                  className="inline-flex items-center justify-center px-3 sm:px-4 min-h-[44px] rounded-lg bg-stone-900 hover:bg-stone-800 active:bg-stone-700 text-white text-sm font-medium whitespace-nowrap"
+                  className="inline-flex items-center justify-center px-3 sm:px-4 min-h-[44px] rounded-xl bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-sm font-medium whitespace-nowrap"
                 >
                   Create a trip →
                 </Link>
@@ -125,7 +130,7 @@ export default function WalkthroughPage() {
               <button
                 type="button"
                 onClick={() => setIndex((i) => Math.min(STEPS.length - 1, i + 1))}
-                className="inline-flex items-center justify-center px-4 min-h-[44px] rounded-lg bg-stone-900 hover:bg-stone-800 text-white text-sm font-medium"
+                className="inline-flex items-center justify-center px-4 min-h-[44px] rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium"
               >
                 Next →
               </button>

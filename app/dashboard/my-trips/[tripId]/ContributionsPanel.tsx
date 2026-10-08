@@ -33,17 +33,17 @@ export function ContributionsPanel({ tripId, items }: { tripId: string; items: I
   }
 
   return (
-    <div className="bg-white rounded-xl border border-stone-200 p-5 sm:p-6 space-y-4">
+    <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm sm:p-6 space-y-4">
       <div>
-        <h2 className="font-serif text-xl font-medium text-stone-900">Contributions</h2>
-        <p className="text-stone-500 text-sm mt-1">Items for people to bring. Participants claim them on the trip dashboard.</p>
+        <h2 className="font-serif text-2xl font-medium tracking-tight text-slate-950">Contributions</h2>
+        <p className="text-slate-600 text-sm leading-6 mt-2">Items for people to bring. Participants claim them on the trip dashboard.</p>
       </div>
 
       {error && (
-        <div role="alert" className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2 text-sm">{error}</div>
+        <div role="alert" className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-3 py-2 text-sm">{error}</div>
       )}
 
-      <form onSubmit={add} className="grid grid-cols-1 sm:grid-cols-[1fr_8rem_auto] gap-2">
+      <form onSubmit={add} className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_8rem_auto] gap-3 rounded-xl border border-slate-200/80 bg-slate-50/60 p-4">
         {/* Compact add-row: placeholders are the visible labels, so the
             accessible name is supplied explicitly. */}
         <input
@@ -51,36 +51,36 @@ export function ContributionsPanel({ tripId, items }: { tripId: string; items: I
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Item to bring"
-          className="min-w-0 px-3 min-h-[44px] rounded-lg border border-stone-300 text-sm focus:outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900"
+          className="min-w-0 px-3 min-h-[44px] rounded-xl border border-slate-300 text-sm text-slate-900 placeholder:text-slate-600 focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600"
         />
         <input
           aria-label="Category"
           value={category}
           onChange={(e) => setCategory(e.target.value)}
           placeholder="Category"
-          className="min-w-0 px-3 min-h-[44px] rounded-lg border border-stone-300 text-sm focus:outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900"
+          className="min-w-0 px-3 min-h-[44px] rounded-xl border border-slate-300 text-sm text-slate-900 placeholder:text-slate-600 focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600"
         />
         <button
           type="submit"
           disabled={isPending || !title.trim()}
-          className="inline-flex items-center justify-center px-4 min-h-[44px] rounded-lg bg-stone-900 hover:bg-stone-800 active:bg-stone-700 text-white text-sm font-medium disabled:opacity-50"
+          className="inline-flex items-center justify-center px-4 min-h-[44px] rounded-xl bg-indigo-600 transition-colors hover:bg-indigo-700 active:bg-indigo-800 text-white text-sm font-medium disabled:opacity-50"
         >
           Add
         </button>
       </form>
 
       {items.length === 0 ? (
-        <p className="text-stone-500 text-sm">No contribution items yet.</p>
+        <p className="rounded-xl border border-dashed border-slate-300 p-4 text-slate-600 text-sm">No contribution items yet.</p>
       ) : (
         <ul className="space-y-2">
           {items.map((item) => (
-            <li key={item.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 border border-stone-100 rounded-lg px-3 py-2.5">
+            <li key={item.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 border border-slate-200/80 bg-slate-50/60 rounded-xl px-4 py-3">
               <div className="min-w-0">
-                <p className="text-sm font-medium text-stone-900 truncate">
+                <p className="text-sm font-medium text-slate-900 truncate">
                   {item.title}
-                  {item.category && <span className="ml-2 text-xs text-stone-500">{item.category}</span>}
+                  {item.category && <span className="ml-2 text-xs text-slate-600">{item.category}</span>}
                 </p>
-                <p className="text-xs text-stone-500 truncate">
+                <p className="text-xs text-slate-600 truncate">
                   {item.claimedBy.length > 0 ? `Claimed by ${item.claimedBy.join(", ")}` : "Unclaimed"}
                 </p>
               </div>
@@ -90,7 +90,7 @@ export function ContributionsPanel({ tripId, items }: { tripId: string; items: I
                 onClick={() => {
                   if (confirm(`Delete "${item.title}"?`)) run(() => deleteTripContribution(item.id));
                 }}
-                className="inline-flex items-center justify-center shrink-0 px-3 min-h-[32px] rounded-md border border-red-200 text-red-700 hover:bg-red-50 active:bg-red-100 text-xs font-medium disabled:opacity-50"
+                className="inline-flex items-center justify-center shrink-0 px-3 min-h-[44px] rounded-xl border border-red-200 text-red-700 transition-colors hover:bg-red-50 active:bg-red-100 text-xs font-medium disabled:opacity-50"
               >
                 Delete
               </button>

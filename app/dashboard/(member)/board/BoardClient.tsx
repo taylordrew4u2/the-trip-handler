@@ -79,29 +79,30 @@ export function BoardClient({
   const remaining = MAX_LEN - body.length;
 
   return (
-    <div className="space-y-6">
-      <form onSubmit={handleSubmit} className="bg-white border border-stone-200 rounded-xl p-4 shadow-sm">
+    <div className="min-w-0 space-y-6">
+      <form onSubmit={handleSubmit} className="min-w-0 bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2 mb-3 text-sm">
             {error}
           </div>
         )}
         <textarea
+          aria-label="Board post"
           value={body}
           onChange={(e) => setBody(e.target.value)}
           rows={3}
           maxLength={MAX_LEN}
           placeholder={placeholder}
-          className="w-full px-3 py-2 rounded-lg border border-stone-300 text-base resize-none focus:outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900 placeholder:text-stone-400"
+          className="w-full min-h-[44px] px-3 py-2.5 rounded-lg border border-slate-300 text-base resize-none focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600/20 placeholder:text-slate-600"
         />
-        <div className="flex items-center justify-between gap-3 mt-2">
-          <p className={`text-xs ${remaining < 100 ? "text-amber-700" : "text-stone-500"}`}>
+        <div className="flex flex-wrap items-center justify-between gap-3 mt-3">
+          <p className={`text-xs ${remaining < 100 ? "text-amber-700" : "text-slate-600"}`}>
             {remaining} characters left
           </p>
           <button
             type="submit"
             disabled={submitting || !body.trim()}
-            className="inline-flex items-center justify-center shrink-0 px-4 min-h-[34px] bg-stone-900 text-white rounded-md text-sm font-medium hover:bg-stone-800 active:bg-stone-700 disabled:opacity-50"
+            className="min-w-[44px] inline-flex items-center justify-center shrink-0 px-4 min-h-[44px] bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 active:bg-indigo-800 disabled:opacity-50"
           >
             {submitting ? "Sending…" : postLabel}
           </button>
@@ -109,9 +110,9 @@ export function BoardClient({
       </form>
 
       {comments.length === 0 ? (
-        <div className="bg-white border border-stone-200 rounded-xl p-10 text-center">
-          <p className="text-stone-700 font-medium">Empty board.</p>
-          <p className="text-stone-500 text-sm mt-1">Be the first to post — set the tone.</p>
+        <div className="bg-white border border-slate-200 rounded-2xl p-10 text-center">
+          <p className="text-slate-700 font-medium">Empty board.</p>
+          <p className="text-slate-600 text-sm mt-1">Be the first to post — set the tone.</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -119,34 +120,34 @@ export function BoardClient({
             const isMine = c.user.id === currentUserId;
             const initials = c.user.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
             return (
-              <div key={c.id} className="bg-white border border-stone-200 rounded-xl p-4 shadow-sm hover:shadow transition-shadow">
+              <div key={c.id} className="min-w-0 bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow transition-shadow">
                 <div className="flex items-start gap-3">
                   {c.user.avatarUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={c.user.avatarUrl} alt={c.user.name} className="w-10 h-10 rounded-full object-cover" />
+                    <img src={c.user.avatarUrl} alt={c.user.name} className="w-10 h-10 shrink-0 rounded-full object-cover" />
                   ) : (
-                    <div className="w-10 h-10 rounded-full bg-stone-900 text-stone-100 flex items-center justify-center text-sm font-medium">
+                    <div className="w-10 h-10 shrink-0 rounded-full bg-indigo-50 text-indigo-700 flex items-center justify-center text-sm font-semibold">
                       {initials}
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">
                       <div className="text-sm">
-                        <span className="font-medium text-stone-900">{c.user.name}</span>
-                        {c.user.username && <span className="text-stone-500"> · @{c.user.username}</span>}
-                        <span className="text-stone-500"> · {timeAgo(c.createdAt)}</span>
+                        <span className="font-semibold text-slate-900 break-words">{c.user.name}</span>
+                        {c.user.username && <span className="text-slate-600"> · @{c.user.username}</span>}
+                        <span className="text-slate-600"> · {timeAgo(c.createdAt)}</span>
                       </div>
                       {isMine && (
                         <button
                           onClick={() => handleDelete(c.id)}
-                          className="text-xs text-stone-500 hover:text-red-700"
+                          className="min-w-[44px] min-h-[44px] self-start px-2 text-xs font-medium text-slate-600 hover:text-red-700"
                           title="Delete"
                         >
                           Delete
                         </button>
                       )}
                     </div>
-                    <p className="text-base text-stone-800 mt-1 whitespace-pre-wrap break-words leading-relaxed">{c.body}</p>
+                    <p className="text-base text-slate-800 mt-1 whitespace-pre-wrap break-words leading-relaxed">{c.body}</p>
                     <div className="flex flex-wrap items-center gap-1.5 mt-2">
                       {REACTION_EMOJIS.map((emoji) => {
                         const forThis = c.reactions.filter((r) => r.emoji === emoji);
@@ -159,11 +160,11 @@ export function BoardClient({
                             onClick={() => handleReact(c.id, emoji)}
                             aria-pressed={mine}
                             aria-label={`${mine ? "Remove" : "Add"} ${emoji} reaction`}
-                            className={`inline-flex items-center gap-1 px-2 min-h-[32px] rounded-full border text-sm transition-colors ${
+                            className={`inline-flex min-w-[44px] items-center justify-center gap-1 px-2 min-h-[44px] rounded-full border text-sm transition-colors ${
                               mine
-                                ? "border-stone-900 bg-stone-900 text-white"
-                                : "border-stone-200 bg-white text-stone-600 hover:border-stone-400"
-                            } ${count === 0 ? "opacity-45 hover:opacity-100" : ""}`}
+                                ? "border-indigo-600 bg-indigo-600 text-white"
+                                : "border-slate-200 bg-white text-slate-600 hover:border-slate-400"
+                            }`}
                           >
                             <span aria-hidden>{emoji}</span>
                             {count > 0 && <span className="tabular-nums text-xs">{count}</span>}

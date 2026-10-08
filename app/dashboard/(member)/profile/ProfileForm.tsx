@@ -7,7 +7,7 @@ import { SLEEP_TAGS } from "@/lib/sleep";
 import { Field, Input, Select, Textarea } from "@/components/forms/field";
 
 const inputCls =
-  "w-full px-3 py-2.5 rounded-lg border border-stone-300 bg-white text-sm focus:outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900";
+  "w-full min-h-[44px] px-3 py-2.5 rounded-lg border border-slate-300 bg-white text-sm focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600/20";
 
 export function ProfileForm({
   userId,
@@ -110,7 +110,7 @@ export function ProfileForm({
           value={email}
           disabled
           readOnly
-          className={`${inputCls} bg-stone-100 text-stone-600 cursor-not-allowed`}
+          className={`${inputCls} bg-slate-100 text-slate-600 cursor-not-allowed`}
         />
       </Field>
 
@@ -146,9 +146,9 @@ export function ProfileForm({
         />
       </Field>
 
-      <div className="border-t border-stone-200 pt-5">
-        <p className="text-xs font-medium text-stone-700 mb-1.5 tracking-wide">SLEEP STYLE</p>
-        <p className="text-xs text-stone-500 mb-3">
+      <div className="border-t border-slate-200 pt-5">
+        <p className="text-xs font-medium text-slate-700 mb-1.5 tracking-wide">SLEEP STYLE</p>
+        <p className="text-xs text-slate-600 mb-3">
           Helps people pick a compatible bedmate. Shown next to your name on the sleeping page.
         </p>
         <div className="flex flex-wrap gap-2">
@@ -160,10 +160,10 @@ export function ProfileForm({
                 type="button"
                 aria-pressed={on}
                 onClick={() => toggleTag(t.value)}
-                className={`inline-flex items-center justify-center text-sm px-3.5 min-h-[34px] rounded-full border transition-colors ${
+                className={`min-w-[44px] inline-flex items-center justify-center text-sm px-3.5 min-h-[44px] rounded-full border transition-colors ${
                   on
-                    ? "border-stone-900 bg-stone-900 text-white"
-                    : "border-stone-300 bg-white text-stone-700 hover:bg-stone-50"
+                    ? "border-indigo-600 bg-indigo-600 text-white"
+                    : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
                 }`}
               >
                 <span className="mr-1">{t.emoji}</span>
@@ -188,7 +188,7 @@ export function ProfileForm({
         <button
           type="submit"
           disabled={submitting}
-          className="px-5 py-2.5 bg-stone-900 hover:bg-stone-800 text-white rounded-lg font-medium text-sm transition-colors disabled:opacity-50"
+          className="min-w-[44px] min-h-[44px] px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium text-sm transition-colors disabled:opacity-50"
         >
           {submitting ? "Saving…" : "Save profile"}
         </button>

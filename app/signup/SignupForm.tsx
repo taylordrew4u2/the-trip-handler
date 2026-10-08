@@ -45,12 +45,13 @@ export function SignupForm({ invite }: { invite?: InviteInfo | null }) {
 
   if (success) {
     return (
-      <div className="w-full max-w-md text-center">
-        <p className="text-xs uppercase tracking-[0.2em] text-stone-500 mb-3">Account created</p>
-        <h1 className="font-serif text-3xl font-medium text-stone-900 mb-3">
+      <div className="w-full rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm sm:p-8">
+        <span aria-hidden="true" className="mx-auto mb-5 grid size-12 place-items-center rounded-2xl bg-indigo-50 text-xl text-indigo-700">✓</span>
+        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-indigo-700">Account created</p>
+        <h2 className="mb-3 font-serif text-3xl font-medium text-slate-950">
           {invite ? "One more step." : "You're all set."}
-        </h1>
-        <p className="text-stone-600 mb-8 leading-relaxed">
+        </h2>
+        <p className="text-slate-600 mb-8 leading-relaxed">
           {invite ? (
             <>
               Sign in and complete the <strong>guest form</strong> — the trip&apos;s organizer
@@ -65,7 +66,7 @@ export function SignupForm({ invite }: { invite?: InviteInfo | null }) {
         </p>
         <Link
           href="/login"
-          className="inline-flex items-center justify-center px-5 min-h-[48px] bg-stone-900 hover:bg-stone-800 active:bg-stone-700 text-white rounded-lg text-sm font-medium transition-colors"
+          className="inline-flex items-center justify-center px-5 min-h-[48px] bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white rounded-xl text-sm font-medium transition-colors"
         >
           Sign in to continue
         </Link>
@@ -75,12 +76,16 @@ export function SignupForm({ invite }: { invite?: InviteInfo | null }) {
 
   return (
     <>
-      <div className="bg-white rounded-xl border border-stone-200 p-6 sm:p-7">
+      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold tracking-tight text-slate-950">Create your account</h2>
+          <p className="mt-1 text-sm text-slate-600">A few details, then you can get started.</p>
+        </div>
         {invite && (
-          <div className="mb-5 rounded-lg border border-stone-900 bg-stone-50 px-4 py-3">
-            <p className="text-xs uppercase tracking-wide text-stone-500">You&apos;re applying to</p>
-            <p className="text-sm font-medium text-stone-900 mt-0.5">{invite.tripName}</p>
-            <p className="text-xs text-stone-500 mt-0.5">
+          <div className="mb-5 min-w-0 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-indigo-700">You&apos;re applying to</p>
+            <p className="mt-1 break-words text-sm font-semibold text-slate-950">{invite.tripName}</p>
+            <p className="text-xs text-slate-600 mt-0.5">
               {[invite.destination, dateLabel(invite.startDate, invite.endDate)]
                 .filter(Boolean)
                 .join(" · ")}
@@ -89,43 +94,46 @@ export function SignupForm({ invite }: { invite?: InviteInfo | null }) {
         )}
 
         {error && (
-          <div role="alert" className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2 mb-4 text-sm">
+          <div role="alert" className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-3 py-2 mb-4 text-sm">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-stone-700 mb-1.5 tracking-wide">NAME *</label>
+              <label htmlFor="signup-name" className="mb-2 block text-xs font-semibold tracking-wide text-slate-700">NAME *</label>
               <input
+                id="signup-name"
                 name="name"
                 required
                 minLength={2}
                 autoComplete="name"
                 autoCapitalize="words"
                 enterKeyHint="next"
-                className="w-full px-3 py-2.5 min-h-[44px] rounded-lg border border-stone-300 bg-white focus:outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900 text-sm"
+                className="min-h-12 w-full min-w-0 rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-600 focus:border-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-600/15"
                 placeholder="Your name"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-stone-700 mb-1.5 tracking-wide">USERNAME</label>
+              <label htmlFor="signup-username" className="mb-2 block text-xs font-semibold tracking-wide text-slate-700">USERNAME</label>
               <input
+                id="signup-username"
                 name="username"
                 autoComplete="username"
                 autoCapitalize="none"
                 autoCorrect="off"
                 spellCheck={false}
                 enterKeyHint="next"
-                className="w-full px-3 py-2.5 min-h-[44px] rounded-lg border border-stone-300 bg-white focus:outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900 text-sm"
+                className="min-h-12 w-full min-w-0 rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-600 focus:border-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-600/15"
                 placeholder="@handle"
               />
             </div>
           </div>
           <div>
-            <label className="block text-xs font-medium text-stone-700 mb-1.5 tracking-wide">EMAIL *</label>
+            <label htmlFor="signup-email" className="mb-2 block text-xs font-semibold tracking-wide text-slate-700">EMAIL *</label>
             <input
+              id="signup-email"
               name="email"
               type="email"
               required
@@ -135,48 +143,50 @@ export function SignupForm({ invite }: { invite?: InviteInfo | null }) {
               autoCorrect="off"
               spellCheck={false}
               enterKeyHint="next"
-              className="w-full px-3 py-2.5 min-h-[44px] rounded-lg border border-stone-300 bg-white focus:outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900 text-sm"
+              className="min-h-12 w-full min-w-0 rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-600 focus:border-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-600/15"
               placeholder="you@example.com"
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-stone-700 mb-1.5 tracking-wide">PASSWORD *</label>
+            <label htmlFor="signup-password" className="mb-2 block text-xs font-semibold tracking-wide text-slate-700">PASSWORD *</label>
             <input
+              id="signup-password"
               name="password"
               type="password"
               required
               minLength={6}
               autoComplete="new-password"
               enterKeyHint="next"
-              className="w-full px-3 py-2.5 min-h-[44px] rounded-lg border border-stone-300 bg-white focus:outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900 text-sm"
+              className="min-h-12 w-full min-w-0 rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-600 focus:border-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-600/15"
               placeholder="At least 6 characters"
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-stone-700 mb-1.5 tracking-wide">PHONE</label>
+            <label htmlFor="signup-phone" className="mb-2 block text-xs font-semibold tracking-wide text-slate-700">PHONE</label>
             <input
+              id="signup-phone"
               name="phone"
               type="tel"
               autoComplete="tel"
               inputMode="tel"
               enterKeyHint="go"
-              className="w-full px-3 py-2.5 min-h-[44px] rounded-lg border border-stone-300 bg-white focus:outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900 text-sm"
+              className="min-h-12 w-full min-w-0 rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-600 focus:border-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-600/15"
               placeholder="Optional"
             />
           </div>
           <button
             type="submit"
             disabled={loading}
-            className="inline-flex items-center justify-center w-full min-h-[48px] px-4 bg-stone-900 hover:bg-stone-800 active:bg-stone-700 text-white rounded-lg font-medium text-sm transition-colors disabled:opacity-50 mt-2"
+            className="mt-2 inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700 active:bg-indigo-800 disabled:opacity-50"
           >
-            {loading ? "Submitting…" : invite ? `Apply to ${invite.tripName}` : "Create account"}
+            <span className="min-w-0 break-words">{loading ? "Submitting…" : invite ? `Apply to ${invite.tripName}` : "Create account"}</span>
           </button>
         </form>
       </div>
 
-      <p className="mt-6 text-center text-sm text-stone-600">
+      <p className="mt-6 text-center text-sm text-slate-600">
         Already have an account?{" "}
-        <Link href="/login" className="text-stone-900 font-medium underline underline-offset-2 decoration-stone-300 hover:decoration-stone-900">
+        <Link href="/login" className="text-slate-950 font-medium underline underline-offset-2 decoration-indigo-200 hover:decoration-indigo-600">
           Sign in
         </Link>
       </p>

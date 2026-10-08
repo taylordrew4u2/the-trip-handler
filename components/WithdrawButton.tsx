@@ -29,7 +29,7 @@ export function WithdrawButton({ canWithdraw }: { canWithdraw: boolean }) {
 
   if (!canWithdraw) {
     return (
-      <p className="text-xs text-stone-500">
+      <p className="text-xs text-slate-600">
         You&apos;ve already paid — contact admin if you need to drop out.
       </p>
     );
@@ -42,7 +42,7 @@ export function WithdrawButton({ canWithdraw }: { canWithdraw: boolean }) {
         onClick={handleClick}
         disabled={busy}
         type="button"
-        className="inline-flex items-center justify-center text-sm px-3 min-h-[32px] border border-red-300 text-red-700 rounded-md hover:bg-red-50 disabled:opacity-50"
+        className="min-w-[44px] inline-flex items-center justify-center text-sm px-3 min-h-[44px] border border-red-300 text-red-700 rounded-lg hover:bg-red-50 disabled:opacity-50"
       >
         {busy ? "Withdrawing…" : "Pull out of the trip"}
       </button>

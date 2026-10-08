@@ -62,14 +62,14 @@ export const viewport: Viewport = {
   viewportFit: "cover",
   // Tints the browser chrome on Android and the status bar of an installed
   // home-screen app so it matches the page rather than floating above it.
-  themeColor: "#fafaf9",
+  themeColor: "#f6f7fb",
   colorScheme: "light",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${inter.variable} ${fraunces.variable}`}>
-      <body className="antialiased bg-stone-50 text-stone-900 min-h-dvh font-sans">
+      <body className="antialiased bg-[#f6f7fb] text-slate-900 min-h-dvh font-sans">
         <Providers>{children}</Providers>
       </body>
     </html>

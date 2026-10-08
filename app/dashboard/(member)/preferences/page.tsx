@@ -18,12 +18,12 @@ export default async function PreferencesPage() {
   const existing = await prisma.guestForm.findUnique({ where: { userId } });
 
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="min-w-0 max-w-3xl mx-auto">
       <PageNote pageKey="preferences" />
       <div className="mb-8">
-        <p className="text-xs uppercase tracking-[0.2em] text-stone-500 mb-2">Trip preferences</p>
-        <h1 className="font-serif text-3xl font-medium text-stone-900">Help plan the trip</h1>
-        <p className="text-stone-600 mt-3 text-sm leading-relaxed">
+        <p className="text-xs uppercase tracking-[0.2em] text-slate-600 mb-2">Trip preferences</p>
+        <h1 className="font-serif text-3xl font-medium tracking-tight text-slate-950 sm:text-4xl">Help plan the trip</h1>
+        <p className="text-slate-600 mt-3 text-sm leading-relaxed">
           Now that you&apos;re approved, fill this out so we can plan emergency contacts, vans, food,
           and the activity itinerary. <strong>Every field is required</strong> — write &ldquo;N/A&rdquo;
           if something genuinely doesn&apos;t apply. You can come back and update this anytime.

@@ -22,7 +22,7 @@ export type NavGroup = {
 
 /**
  * Grouped so the mobile sheet reads as a map of the trip rather than a wall of
- * thirteen links. The wide-screen bar flattens these back into a single row.
+ * thirteen links. Wide screens use the same groups in a persistent side rail.
  */
 export const NAV_GROUPS: readonly NavGroup[] = [
   {
@@ -41,6 +41,7 @@ export const NAV_GROUPS: readonly NavGroup[] = [
       { href: "/dashboard/sleeping", label: "Sleeping", gated: true },
       { href: "/dashboard/meals", label: "Meals", gated: true },
       { href: "/dashboard/board", label: "Board", gated: true },
+      { href: "/dashboard/expenses", label: "Expenses", gated: true },
       { href: "/dashboard/contributions", label: "Contributions", gated: true },
     ],
   },

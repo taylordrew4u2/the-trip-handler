@@ -48,12 +48,12 @@ export function ItineraryView({
   canComment: boolean;
 }) {
   if (days.length === 0) {
-    return <p className="text-stone-500 text-sm">Itinerary details coming soon.</p>;
+    return <p className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-10 text-center text-slate-600 text-sm">Itinerary details coming soon.</p>;
   }
 
   return (
-    <section className="space-y-6">
-      <h2 className="text-xs uppercase tracking-[0.2em] text-stone-500">Schedule</h2>
+    <section className="min-w-0 space-y-6">
+      <h2 className="text-xs uppercase tracking-[0.2em] text-slate-600">Schedule</h2>
       <div className="space-y-8">
         {days.map((day) => (
           <DaySection
@@ -90,18 +90,18 @@ function DaySection({
     : null;
 
   return (
-    <section>
-      <header className="mb-3">
-        <p className="text-xs uppercase tracking-[0.15em] text-stone-500">
+    <section className="min-w-0">
+      <header className="mb-4">
+        <p className="inline-flex rounded-full bg-indigo-50 px-3 py-1 text-xs font-medium uppercase tracking-[0.12em] text-indigo-700">
           Day {day.dayNumber}
           {dateStr && ` · ${dateStr}`}
         </p>
-        <h3 className="font-serif text-2xl font-medium text-stone-900 mt-0.5">{heading}</h3>
-        {day.notes && <p className="text-sm text-stone-600 italic mt-1">{day.notes}</p>}
+        <h3 className="font-serif text-2xl font-medium text-slate-950 mt-3 break-words">{heading}</h3>
+        {day.notes && <p className="text-sm text-slate-600 italic mt-1">{day.notes}</p>}
       </header>
 
       {day.itineraryItems.length === 0 ? (
-        <p className="text-sm text-stone-500 italic">Nothing scheduled yet.</p>
+        <p className="rounded-2xl border border-dashed border-slate-300 bg-white px-5 py-6 text-sm text-slate-600 italic">Nothing scheduled yet.</p>
       ) : (
         <div className="space-y-3">
           {day.itineraryItems.map((item) => (
@@ -134,15 +134,15 @@ function ItineraryItemCard({
   const commentCount = item.comments.length;
 
   return (
-    <article className="bg-white rounded-xl border border-stone-200 p-4 md:p-5">
+    <article className="min-w-0 bg-white rounded-2xl border border-slate-200 p-5 shadow-sm md:p-6">
       <header className="flex items-start justify-between gap-3 flex-wrap">
         <div>
           <div className="flex items-center gap-2 flex-wrap">
             {item.time && (
-              <span className="text-sm font-mono text-stone-700 tabular-nums">{item.time}</span>
+              <span className="text-sm font-mono text-slate-700 tabular-nums">{item.time}</span>
             )}
-            {item.time && <span className="text-stone-300">—</span>}
-            <h4 className="font-medium text-stone-900">{item.title}</h4>
+            {item.time && <span className="text-slate-300">—</span>}
+            <h4 className="font-semibold text-slate-900 break-words">{item.title}</h4>
             {item.pinned && (
               <span className="text-xs px-2 py-0.5 rounded bg-amber-100 text-amber-900">
                 Pinned
@@ -150,7 +150,7 @@ function ItineraryItemCard({
             )}
           </div>
           {item.location && (
-            <p className="text-xs text-stone-500 mt-1">
+            <p className="text-xs text-slate-600 mt-1 break-words">
               <span className="uppercase tracking-wide">Where</span> · {item.location}
             </p>
           )}
@@ -158,17 +158,17 @@ function ItineraryItemCard({
       </header>
 
       {item.description && (
-        <p className="text-sm text-stone-700 mt-2 whitespace-pre-wrap">{item.description}</p>
+        <p className="text-sm text-slate-700 mt-3 whitespace-pre-wrap break-words leading-relaxed">{item.description}</p>
       )}
 
       {item.notes && (
-        <p className="text-xs text-stone-600 italic mt-2 whitespace-pre-wrap">{item.notes}</p>
+        <p className="text-xs text-slate-600 italic mt-2 whitespace-pre-wrap">{item.notes}</p>
       )}
 
-      <div className="mt-3 pt-3 border-t border-stone-100">
+      <div className="mt-3 pt-3 border-t border-slate-100">
         <button
           onClick={() => setShowComments((s) => !s)}
-          className="inline-flex items-center text-xs text-stone-600 hover:text-stone-900"
+          className="min-w-[44px] min-h-[44px] inline-flex items-center text-xs text-slate-600 hover:text-slate-900"
         >
           {showComments ? "Hide" : "Show"} comments ({commentCount})
         </button>
@@ -222,7 +222,7 @@ function CommentsThread({
   return (
     <div className="mt-3 space-y-3">
       {comments.length === 0 ? (
-        <p className="text-xs text-stone-500 italic">No comments yet.</p>
+        <p className="text-xs text-slate-600 italic">No comments yet.</p>
       ) : (
         <ul className="space-y-2">
           {comments.map((c) => (
@@ -237,17 +237,18 @@ function CommentsThread({
       )}
 
       {!canComment ? (
-        <p className="text-xs text-stone-500 italic">
+        <p className="text-xs text-slate-600 italic">
           Get approved to post comments here.
         </p>
       ) : (
       <form onSubmit={handleSubmit} className="flex flex-col gap-2">
         <textarea
+          aria-label="Add an itinerary comment"
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           rows={2}
           placeholder="Add a comment…"
-          className="w-full px-3 py-2 rounded-md border border-stone-300 bg-white text-sm focus:outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900 resize-none"
+          className="w-full min-h-[44px] px-3 py-2.5 rounded-lg border border-slate-300 bg-white text-sm focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600/20 resize-none"
           disabled={busy}
         />
         {error && <p className="text-xs text-red-600">{error}</p>}
@@ -255,7 +256,7 @@ function CommentsThread({
           <button
             type="submit"
             disabled={busy || !draft.trim()}
-            className="inline-flex items-center justify-center text-xs px-3 min-h-[30px] bg-stone-900 text-white rounded-md font-medium hover:bg-stone-800 disabled:opacity-40"
+            className="min-w-[44px] inline-flex items-center justify-center text-xs px-3 min-h-[44px] bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-40"
           >
             {busy ? "Posting…" : "Post comment"}
           </button>
@@ -316,18 +317,18 @@ function CommentRow({
   }
 
   return (
-    <li className="bg-stone-50 rounded-md px-3 py-2">
-      <div className="flex items-baseline justify-between gap-3">
+    <li className="bg-slate-50 rounded-lg px-3 py-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-xs">
-          <span className="font-medium text-stone-900">{comment.user.name}</span>
-          <span className="text-stone-500"> · {tsLabel}</span>
+          <span className="font-semibold text-slate-900 break-words">{comment.user.name}</span>
+          <span className="text-slate-600"> · {tsLabel}</span>
         </p>
         {!editing && (canEdit || canDelete) && (
-          <div className="flex gap-2 text-[10px]">
+          <div className="flex gap-2 text-xs">
             {canEdit && (
               <button
                 onClick={() => setEditing(true)}
-                className="text-stone-500 hover:text-stone-900"
+                className="min-w-[44px] min-h-[44px] text-slate-600 hover:text-slate-900"
               >
                 Edit
               </button>
@@ -336,7 +337,7 @@ function CommentRow({
               <button
                 onClick={remove}
                 disabled={busy}
-                className="text-stone-500 hover:text-red-700 disabled:opacity-50"
+                className="min-w-[44px] min-h-[44px] text-slate-600 hover:text-red-700 disabled:opacity-50"
               >
                 Delete
               </button>
@@ -347,17 +348,18 @@ function CommentRow({
       {editing ? (
         <div className="mt-2 space-y-2">
           <textarea
+            aria-label="Edit itinerary comment"
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             rows={2}
-            className="w-full px-2 py-1.5 rounded-md border border-stone-300 bg-white text-sm focus:outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900 resize-none"
+            className="w-full px-2 py-1.5 rounded-lg border border-slate-300 bg-white text-sm focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600/20 resize-none"
           />
           {error && <p className="text-xs text-red-600">{error}</p>}
           <div className="flex gap-2">
             <button
               onClick={save}
               disabled={busy || !draft.trim()}
-              className="text-xs px-2 py-1 bg-stone-900 text-white rounded-md hover:bg-stone-800 disabled:opacity-40"
+              className="min-w-[44px] min-h-[44px] text-xs px-2 py-1 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-40"
             >
               Save
             </button>
@@ -367,14 +369,14 @@ function CommentRow({
                 setDraft(comment.body);
                 setError("");
               }}
-              className="text-xs px-2 py-1 border border-stone-300 text-stone-700 rounded-md hover:bg-stone-100"
+              className="min-w-[44px] min-h-[44px] text-xs px-2 py-1 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-100"
             >
               Cancel
             </button>
           </div>
         </div>
       ) : (
-        <p className="text-sm text-stone-800 mt-1 whitespace-pre-wrap">{comment.body}</p>
+        <p className="text-sm text-slate-800 mt-1 whitespace-pre-wrap break-words leading-relaxed">{comment.body}</p>
       )}
       {!editing && error && <p className="text-xs text-red-600 mt-1">{error}</p>}
     </li>

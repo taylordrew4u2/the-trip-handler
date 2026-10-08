@@ -68,11 +68,11 @@ export default async function SleepingPage() {
   ]);
 
   return (
-    <div className="space-y-6 max-w-3xl">
+    <div className="min-w-0 space-y-8 max-w-3xl">
       <PageNote pageKey="sleeping" />
       <div>
-        <h1 className="font-serif text-3xl font-medium text-stone-900">Sleeping arrangements</h1>
-        <p className="text-stone-500 text-sm mt-1 leading-relaxed">
+        <h1 className="font-serif text-3xl font-medium tracking-tight text-slate-950 sm:text-4xl">Sleeping arrangements</h1>
+        <p className="text-slate-600 text-sm mt-1 leading-relaxed">
           Claim a bed below. Doubles fit two — empty doubles can be claimed directly; if someone&apos;s
           already there, send them a request to share. Female members can bump a single occupant.
         </p>
@@ -85,8 +85,8 @@ export default async function SleepingPage() {
         outgoingRequests={outgoingRequests}
       />
 
-      <div className="bg-white border border-stone-200 rounded-xl p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <p className="text-sm text-stone-600">Done picking? You can sign out.</p>
+      <div className="bg-white border border-slate-200 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <p className="text-sm text-slate-600">Done picking? You can sign out.</p>
         <SignOutButton />
       </div>
     </div>

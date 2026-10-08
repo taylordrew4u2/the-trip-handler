@@ -16,13 +16,13 @@ export function SearchSort({ search, onSearchChange, sort, onSortChange }: Searc
         value={search}
         onChange={(e) => onSearchChange(e.target.value)}
         enterKeyHint="search"
-        className="flex-1 min-w-0 px-3 min-h-[44px] rounded-lg border border-stone-300 bg-white focus:outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900 text-sm"
+        className="flex-1 min-w-0 px-3 min-h-[44px] rounded-lg border border-slate-300 bg-white focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 text-sm"
       />
       <select
         value={sort}
         onChange={(e) => onSortChange(e.target.value)}
         aria-label="Sort"
-        className="px-3 min-h-[44px] rounded-lg border border-stone-300 bg-white focus:outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900 text-sm"
+        className="px-3 min-h-[44px] rounded-lg border border-slate-300 bg-white focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 text-sm"
       >
         <option value="name">Sort A–Z</option>
         <option value="newest">Newest first</option>

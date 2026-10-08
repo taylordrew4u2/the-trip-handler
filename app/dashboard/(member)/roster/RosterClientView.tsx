@@ -58,11 +58,11 @@ export function RosterClientView({ initialUsers }: { initialUsers: RosterUser[] 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3 flex-wrap">
-        <p className="text-sm text-stone-700 tabular-nums">
+        <p className="text-sm text-slate-700 tabular-nums">
           <span className="font-medium">{filledCount}</span>
-          <span className="text-stone-500"> / {TRIP_CAPACITY} slots filled</span>
+          <span className="text-slate-600"> / {TRIP_CAPACITY} slots filled</span>
           {filledCount < TRIP_CAPACITY && (
-            <span className="text-stone-500"> · {TRIP_CAPACITY - filledCount} open</span>
+            <span className="text-slate-600"> · {TRIP_CAPACITY - filledCount} open</span>
           )}
         </p>
         <SearchSort search={search} onSearchChange={setSearch} sort={sort} onSortChange={setSort} />
@@ -75,11 +75,11 @@ export function RosterClientView({ initialUsers }: { initialUsers: RosterUser[] 
           ) : (
             <div
               key={`open-${i}`}
-              className="bg-stone-50 border border-dashed border-stone-300 rounded-xl p-5 flex items-center justify-center"
+              className="bg-slate-50 border border-dashed border-slate-300 rounded-2xl p-5 flex items-center justify-center"
             >
               <div className="text-center">
-                <p className="text-xs uppercase tracking-[0.15em] text-stone-500">Slot {i + 1}</p>
-                <p className="font-serif text-lg text-stone-700 mt-1">Open</p>
+                <p className="text-xs uppercase tracking-[0.15em] text-slate-600">Slot {i + 1}</p>
+                <p className="font-serif text-lg text-slate-700 mt-1">Open</p>
               </div>
             </div>
           )
@@ -87,7 +87,7 @@ export function RosterClientView({ initialUsers }: { initialUsers: RosterUser[] 
       </div>
 
       {filtered.length === 0 && (
-        <p className="text-center text-stone-500 py-4 text-sm">No campers approved yet.</p>
+        <p className="text-center text-slate-600 py-4 text-sm">No campers approved yet.</p>
       )}
     </div>
   );

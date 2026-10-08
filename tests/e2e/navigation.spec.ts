@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { signIn } from "./helpers";
 
 /**
- * The member area has thirteen destinations. Wide screens show them inline;
+ * The member area has grouped destinations. Wide screens use a side rail;
  * narrower ones collapse to the current page plus a menu. These tests pin the
  * behaviour that makes the collapsed form usable — it must open, say where you
  * are, survive the back button, and close on Escape.
@@ -30,7 +30,7 @@ test("every destination is reachable at this size", async ({ page }, testInfo) =
     await expect(page.locator(MENU_TOGGLE)).toBeHidden();
   }
 
-  for (const label of ["Roster", "Meals", "Contributions", "Payment", "Profile"]) {
+  for (const label of ["Roster", "Meals", "Expenses", "Contributions", "Payment", "Profile"]) {
     await expect(
       page.locator("nav").getByRole("link", { name: label, exact: true }),
       `"${label}" is unreachable at ${testInfo.project.name}`,
@@ -46,6 +46,15 @@ test("the wordmark is never squeezed away", async ({ page }) => {
   await expect(wordmark).toBeVisible();
   const box = await wordmark.boundingBox();
   expect(box?.width ?? 0).toBeGreaterThan(60);
+});
+
+test("desktop destinations stay in view while the page scrolls", async ({ page }, testInfo) => {
+  test.skip((testInfo.project.use.viewport?.width ?? 0) < INLINE_NAV_MIN_WIDTH, "desktop side rail only");
+  await page.goto("/dashboard");
+  const profile = page.locator("nav").getByRole("link", { name: "Profile", exact: true });
+  await expect(profile).toBeInViewport();
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+  await expect(profile).toBeInViewport();
 });
 
 test.describe("collapsed menu", () => {
@@ -88,6 +97,16 @@ test.describe("collapsed menu", () => {
 
     await page.keyboard.press("Escape");
     await expect(page.locator(MENU_TOGGLE)).toHaveAttribute("aria-expanded", "false");
+  });
+
+  test("closes when you tap the page outside the sheet", async ({ page }, testInfo) => {
+    const viewport = page.viewportSize();
+    test.skip(!viewport || viewport.width < 640, "narrow phones use a full-height sheet");
+    await page.goto("/dashboard");
+    await page.locator(MENU_TOGGLE).click();
+    await expect(page.locator(MENU_TOGGLE)).toHaveAttribute("aria-expanded", "true");
+    await page.mouse.click(viewport!.width - 20, viewport!.height - 20);
+    await expect(page.locator(MENU_TOGGLE), testInfo.project.name).toHaveAttribute("aria-expanded", "false");
   });
 
   test("locks the page behind it while open", async ({ page }) => {

@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og";
+import { LogoMark } from "@/components/LogoMark";
 
 // Apple touch icon — used when iOS users "Add to Home Screen".
 // iOS applies its own rounded mask, so we render a full-bleed background.
@@ -15,14 +16,10 @@ export default function AppleIcon() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "#1c1917",
-          color: "#fafaf9",
-          fontSize: 104,
-          fontWeight: 700,
-          letterSpacing: -4,
+          background: "#f6f7fb",
         }}
       >
-        TH
+        <LogoMark size={136} />
       </div>
     ),
     { ...size },
