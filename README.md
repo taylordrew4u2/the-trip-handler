@@ -11,6 +11,8 @@
 
 ---
 
+<p align="center"><img src="docs/screenshots/overview.png" alt="The Trip Handler: member dashboard, applicant approvals, itinerary, and two phone views" width="100%" /></p>
+
 ## Screenshots
 
 Captured from the running app against the seeded demo trip by
