@@ -148,9 +148,10 @@ const YES_NO_ASK = [
   { value: "ask", label: "Ask me first" },
 ];
 
-export function IntakeForm({ defaultEmail, defaultName, defaultPhone, existing, isPending = false }: {
-  defaultEmail: string; defaultName: string; defaultPhone: string; existing: Existing; isPending?: boolean;
+export function IntakeForm({ defaultEmail, defaultName, defaultPhone, existing, isPending = false, deposit = 75 }: {
+  defaultEmail: string; defaultName: string; defaultPhone: string; existing: Existing; isPending?: boolean; deposit?: number;
 }) {
+  const dep = `$${Number.isInteger(deposit) ? deposit : deposit.toFixed(2)}`;
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -255,12 +256,12 @@ export function IntakeForm({ defaultEmail, defaultName, defaultPhone, existing, 
 
       <Section
         title="Budget"
-        intro="The trip price covers travel (rental vans + gas), all meals during the weekend, and lodging. Activity and shared-supply costs are split on top. Heads up: there's also a refundable $75 security deposit billed at payment time — that's separate from your trip share. Be honest with the cap — admin uses it to decide who gets approved."
+        intro={`The trip price covers travel (rental vans + gas), all meals during the weekend, and lodging. Activity and shared-supply costs are split on top. Heads up: there's also a refundable ${dep} security deposit billed at payment time — that's separate from your trip share. Be honest with the cap — admin uses it to decide who gets approved.`}
       >
         <Field
-          label="Max trip share you're willing to pay (per person, before the $75 deposit)"
+          label={`Max trip share you're willing to pay (per person, before the ${dep} deposit)`}
           required
-          hint="Examples: $500, $400-600, no hard cap. The $75 deposit is on top and refundable, so don't include it here."
+          hint={`Examples: $500, $400-600, no hard cap. The ${dep} deposit is on top and refundable, so don't include it here.`}
         >
           <TextInput
             name="maxBudget"
@@ -388,11 +389,11 @@ export function IntakeForm({ defaultEmail, defaultName, defaultPhone, existing, 
 
       <Section
         title="Security deposit"
-        intro="Everyone pays a $75 security deposit before the trip. If everyone follows the rules and the house comes out clean, you get it back. If you damage the house or break a rule, your deposit is forfeit and you're on the hook for any cost beyond it. The host's name is on the rental — they shouldn't be paying for someone else's mess. All four required."
+        intro={`Everyone pays a ${dep} security deposit before the trip. If everyone follows the rules and the house comes out clean, you get it back. If you damage the house or break a rule, your deposit is forfeit and you're on the hook for any cost beyond it. The host's name is on the rental — they shouldn't be paying for someone else's mess. All four required.`}
       >
         <Field label="" required>
           <CheckboxGroup name="securityDepositAcks" defaultValue={e?.securityDepositAcks} options={[
-            { value: "payDeposit", label: "I will send a $75 security deposit before the trip." },
+            { value: "payDeposit", label: `I will send a ${dep} security deposit before the trip.` },
             { value: "returned", label: "I understand the deposit is returned after the trip if everyone follows the rules and there's no damage." },
             { value: "forfeitAndCharged", label: "If I break a rule or damage something, I forfeit my deposit and I'm responsible for any additional cost beyond it." },
             { value: "hostNotLiable", label: "The person whose name is on the rental is not personally liable for damage I cause — that's on me." },

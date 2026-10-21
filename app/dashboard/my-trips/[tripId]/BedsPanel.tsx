@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { addTripBed, deleteTripBed, seedDefaultTripBeds } from "@/app/actions/trips";
+import { addTripBed, deleteTripBed, seedDefaultTripBeds, updateTripBedPrice } from "@/app/actions/trips";
+import { formatAdjustment } from "@/lib/pricing";
 
 type Bed = {
   id: string;
@@ -9,6 +10,7 @@ type Bed = {
   room: string | null;
   type: "SINGLE" | "DOUBLE";
   womenOnly: boolean;
+  priceAdjustment: number;
   occupants: string[];
 };
 
@@ -18,6 +20,7 @@ export function BedsPanel({ tripId, beds }: { tripId: string; beds: Bed[] }) {
   const [type, setType] = useState<"SINGLE" | "DOUBLE">("DOUBLE");
   const [womenOnly, setWomenOnly] = useState(false);
   const [count, setCount] = useState("1");
+  const [price, setPrice] = useState("");
   const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
 
@@ -34,11 +37,19 @@ export function BedsPanel({ tripId, beds }: { tripId: string; beds: Bed[] }) {
     e.preventDefault();
     if (!label.trim()) return;
     run(
-      () => addTripBed(tripId, { label, room: room || undefined, type, womenOnly, count: Number(count) || 1 }),
+      () => addTripBed(tripId, {
+          label,
+          room: room || undefined,
+          type,
+          womenOnly,
+          count: Number(count) || 1,
+          priceAdjustment: price ? parseFloat(price) : 0,
+        }),
       () => {
         setLabel("");
         setRoom("");
         setCount("1");
+        setPrice("");
         setWomenOnly(false);
       },
     );
@@ -49,7 +60,8 @@ export function BedsPanel({ tripId, beds }: { tripId: string; beds: Bed[] }) {
       <div>
         <h2 className="font-serif text-2xl font-medium tracking-tight text-slate-950">Beds</h2>
         <p className="text-slate-600 text-sm leading-6 mt-2">
-          Set up the sleeping layout. Participants claim beds on the trip dashboard.
+          Set up the sleeping layout. Participants claim beds on the trip dashboard. A bed price is added to
+          (or, if negative, taken off) each occupant&apos;s share.
         </p>
       </div>
 
@@ -105,6 +117,16 @@ export function BedsPanel({ tripId, beds }: { tripId: string; beds: Bed[] }) {
           <option value="DOUBLE">Double (2)</option>
           <option value="SINGLE">Single (1)</option>
         </select>
+        <input
+          aria-label="Bed price change per person"
+          type="number"
+          inputMode="decimal"
+          step="0.01"
+          value={price}
+          onChange={(e) => setPrice(e.target.value)}
+          placeholder="± $ per person"
+          className="min-w-0 px-3 min-h-[44px] rounded-xl border border-slate-300 text-sm text-slate-900 placeholder:text-slate-600 focus:outline-none focus:border-indigo-600"
+        />
         <label className="flex items-center gap-2 min-h-[44px] text-xs text-slate-600 cursor-pointer">
           <input type="checkbox" checked={womenOnly} onChange={(e) => setWomenOnly(e.target.checked)} className="accent-indigo-600 w-4 h-4" />
           Women only
@@ -129,12 +151,28 @@ export function BedsPanel({ tripId, beds }: { tripId: string; beds: Bed[] }) {
                   <span className="ml-2 text-xs text-slate-600">
                     {bed.type === "SINGLE" ? "single" : "double"}
                     {bed.womenOnly ? " · women only" : ""}
+                    {bed.priceAdjustment ? ` · ${formatAdjustment(bed.priceAdjustment)}/person` : ""}
                   </span>
                 </p>
                 <p className="text-xs text-slate-600 truncate">
                   {bed.occupants.length > 0 ? bed.occupants.join(", ") : "Empty"}
                 </p>
               </div>
+              <div className="flex shrink-0 items-center gap-2">
+              <input
+                aria-label={`Price change per person for ${bed.label}`}
+                type="number"
+                inputMode="decimal"
+                step="0.01"
+                defaultValue={bed.priceAdjustment || ""}
+                placeholder="± $"
+                disabled={isPending}
+                onBlur={(e) => {
+                  const next = e.target.value === "" ? 0 : parseFloat(e.target.value);
+                  if (Number.isFinite(next) && next !== bed.priceAdjustment) run(() => updateTripBedPrice(bed.id, next));
+                }}
+                className="w-24 px-3 min-h-[44px] rounded-xl border border-slate-300 text-sm text-slate-900 bg-white placeholder:text-slate-600 focus:outline-none focus:border-indigo-600"
+              />
               <button
                 type="button"
                 disabled={isPending}
@@ -145,6 +183,7 @@ export function BedsPanel({ tripId, beds }: { tripId: string; beds: Bed[] }) {
               >
                 Delete
               </button>
+              </div>
             </li>
           ))}
         </ul>

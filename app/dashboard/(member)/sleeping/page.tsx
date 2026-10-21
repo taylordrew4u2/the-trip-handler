@@ -78,7 +78,7 @@ export default async function SleepingPage() {
         </p>
       </div>
       <SleepingClient
-        beds={beds}
+        beds={beds.map((b) => ({ ...b, priceAdjustment: trip?.showBedPrices ? b.priceAdjustment : null }))}
         userId={userId}
         myGender={me?.gender ?? null}
         incomingRequests={incomingRequests}

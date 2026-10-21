@@ -11,6 +11,7 @@ import {
   cancelBedmateRequest,
 } from "@/app/actions/sleeping";
 import { SLEEP_TAG_BY_VALUE } from "@/lib/sleep";
+import { formatAdjustment } from "@/lib/pricing";
 
 interface OccupantUser {
   id: string;
@@ -26,6 +27,8 @@ interface BedRow {
   room: string | null;
   type: "SINGLE" | "DOUBLE";
   womenOnly: boolean;
+  /** Per-person price change for this bed; null when the owner hides bed prices. */
+  priceAdjustment: number | null;
   assignments: {
     userId: string;
     user: OccupantUser;
@@ -279,6 +282,11 @@ export function SleepingClient({
                         <span className="text-xs px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 tabular-nums">
                           {taken}/{capacity} taken
                         </span>
+                        {bed.priceAdjustment ? (
+                          <span className="text-xs px-2 py-0.5 rounded bg-amber-50 text-amber-900 font-medium tabular-nums">
+                            {formatAdjustment(bed.priceAdjustment)} per person
+                          </span>
+                        ) : null}
                       </div>
                     </div>
                     <div className="shrink-0">

@@ -6,7 +6,7 @@ import { prisma } from "@/lib/db";
 import { authOptions } from "@/lib/auth";
 import { deleteBlob } from "@/lib/blob";
 import { sendApprovalEmail, sendRejectionEmail, sendTripLockedEmail } from "@/lib/resend";
-import { COST_SHARE_DIVISOR } from "@/lib/pricing";
+import { COST_SHARE_DIVISOR, memberShare } from "@/lib/pricing";
 import { getServerSession } from "next-auth";
 import { revalidatePath } from "next/cache";
 
@@ -359,10 +359,13 @@ export async function lockMyTripPrice(tripId: string, kind: PriceKind) {
       });
       const participants = await prisma.user.findMany({
         where: { tripId, status: { in: ["PENDING_PAYMENT", "APPROVED"] } },
+        include: { bedAssignment: { include: { bed: { select: { priceAdjustment: true } } } } },
       });
       for (const p of participants) {
+        // Each email carries only that member's own amount.
+        const owed = memberShare(share, p.bedAssignment?.bed.priceAdjustment ?? 0, p.priceAdjustment);
         try {
-          await sendTripLockedEmail(p.email, p.name, share);
+          await sendTripLockedEmail(p.email, p.name, owed, updated.depositAmount);
         } catch (e) {
           console.error("Email failed:", e);
         }
@@ -415,6 +418,119 @@ export async function unlockMyTrip(tripId: string) {
     },
   });
   revalidatePath(`/dashboard/my-trips/${tripId}`);
+  revalidatePath("/dashboard/payment");
+  return { success: true };
+}
+
+// ---------- private pricing (owner-scoped) ----------
+
+export type PriceVisibility = {
+  showLineItems: boolean;
+  showBedPrices: boolean;
+  showPersonalAdjustment: boolean;
+};
+
+/** Choose what members see in their own price breakdown. */
+export async function updateTripPriceVisibility(tripId: string, visibility: PriceVisibility) {
+  const userId = await currentUserId();
+  if (!userId) return { error: "Sign in first." };
+  if (!(await ownedTrip(tripId, userId))) return { error: "Not your trip." };
+
+  await prisma.trip.update({
+    where: { id: tripId },
+    data: {
+      showLineItems: Boolean(visibility.showLineItems),
+      showBedPrices: Boolean(visibility.showBedPrices),
+      showPersonalAdjustment: Boolean(visibility.showPersonalAdjustment),
+    },
+  });
+  revalidatePath(`/dashboard/my-trips/${tripId}`);
+  revalidatePath("/dashboard/payment");
+  revalidatePath("/dashboard/sleeping");
+  return { success: true };
+}
+
+function cleanHandle(raw: string | null | undefined): string | null {
+  const v = (raw ?? "").trim().replace(/^[@$]+/, "").slice(0, 60);
+  return v || null;
+}
+
+/** Set the deposit amount and which off-Stripe methods (Venmo, Cash App) you accept. */
+export async function updateTripPaymentSettings(
+  tripId: string,
+  settings: { depositAmount: number; venmoHandle?: string | null; cashAppHandle?: string | null },
+) {
+  const userId = await currentUserId();
+  if (!userId) return { error: "Sign in first." };
+  const trip = await ownedTrip(tripId, userId);
+  if (!trip) return { error: "Not your trip." };
+
+  const deposit = Math.round(settings.depositAmount * 100) / 100;
+  if (!Number.isFinite(deposit) || deposit < 0) return { error: "Deposit must be a non-negative number." };
+  if (deposit !== trip.depositAmount) {
+    // Same rule as reopening prices: a paid member's bill is settled.
+    const paid = await prisma.user.count({ where: { tripId, status: "CONFIRMED_PAID" } });
+    if (paid > 0) return { error: "Can't change the deposit — members have already paid." };
+  }
+
+  await prisma.trip.update({
+    where: { id: tripId },
+    data: {
+      depositAmount: deposit,
+      venmoHandle: cleanHandle(settings.venmoHandle),
+      cashAppHandle: cleanHandle(settings.cashAppHandle),
+    },
+  });
+  revalidatePath(`/dashboard/my-trips/${tripId}`);
+  revalidatePath("/dashboard/payment");
+  return { success: true };
+}
+
+/**
+ * Give one member of your trip a private price change (negative = they pay
+ * less). Only the owner ever reads it back; the member sees their own total.
+ */
+export async function updateMemberPriceAdjustment(
+  memberId: string,
+  amount: number,
+  note?: string,
+) {
+  const userId = await currentUserId();
+  if (!userId) return { error: "Sign in first." };
+  const member = await prisma.user.findUnique({
+    where: { id: memberId },
+    select: { tripId: true, status: true },
+  });
+  if (!member?.tripId || !(await ownedTrip(member.tripId, userId))) return { error: "Not your trip." };
+  if (member.status === "CONFIRMED_PAID") return { error: "They've already paid." };
+  if (!Number.isFinite(amount)) return { error: "Amount must be a number." };
+
+  await prisma.user.update({
+    where: { id: memberId },
+    data: {
+      priceAdjustment: Math.round(amount * 100) / 100,
+      priceAdjustmentNote: note?.trim() || null,
+    },
+  });
+  revalidatePath(`/dashboard/my-trips/${member.tripId}`);
+  revalidatePath("/dashboard/payment");
+  return { success: true };
+}
+
+/** Make a bed cost more (or less) than the base share. Visible to the trip. */
+export async function updateTripBedPrice(bedId: string, amount: number) {
+  const userId = await currentUserId();
+  if (!userId) return { error: "Sign in first." };
+  const bed = await prisma.bed.findUnique({ where: { id: bedId }, select: { tripId: true } });
+  if (!bed || !(await ownedTrip(bed.tripId, userId))) return { error: "Not your trip." };
+  if (!Number.isFinite(amount)) return { error: "Amount must be a number." };
+
+  await prisma.bed.update({
+    where: { id: bedId },
+    data: { priceAdjustment: Math.round(amount * 100) / 100 },
+  });
+  revalidatePath(`/dashboard/my-trips/${bed.tripId}`);
+  revalidatePath("/dashboard/sleeping");
   revalidatePath("/dashboard/payment");
   return { success: true };
 }
@@ -552,7 +668,14 @@ export async function seedDefaultTripBeds(tripId: string) {
 /** Add one or more beds to a trip you own. */
 export async function addTripBed(
   tripId: string,
-  data: { label: string; room?: string; type: "SINGLE" | "DOUBLE"; womenOnly: boolean; count: number },
+  data: {
+    label: string;
+    room?: string;
+    type: "SINGLE" | "DOUBLE";
+    womenOnly: boolean;
+    count: number;
+    priceAdjustment?: number;
+  },
 ) {
   const userId = await currentUserId();
   if (!userId) return { error: "Sign in first." };
@@ -562,9 +685,14 @@ export async function addTripBed(
   if (!label) return { error: "Give the bed a label." };
   const room = data.room?.trim() || null;
   const count = Math.min(20, Math.max(1, Math.floor(data.count) || 1));
+  const priceAdjustment = Number.isFinite(data.priceAdjustment)
+    ? Math.round((data.priceAdjustment as number) * 100) / 100
+    : 0;
 
   if (count === 1) {
-    await prisma.bed.create({ data: { tripId, label, room, type: data.type, womenOnly: data.womenOnly } });
+    await prisma.bed.create({
+      data: { tripId, label, room, type: data.type, womenOnly: data.womenOnly, priceAdjustment },
+    });
   } else {
     await prisma.bed.createMany({
       data: Array.from({ length: count }, (_, i) => ({
@@ -573,6 +701,7 @@ export async function addTripBed(
         room,
         type: data.type,
         womenOnly: data.womenOnly,
+        priceAdjustment,
       })),
     });
   }

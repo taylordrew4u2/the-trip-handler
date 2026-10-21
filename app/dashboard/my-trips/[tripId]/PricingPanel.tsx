@@ -8,7 +8,7 @@ import {
   updateMyTripPrice,
   type PriceKind,
 } from "@/app/actions/trips";
-import { COST_SHARE_DIVISOR, SECURITY_DEPOSIT_USD } from "@/lib/pricing";
+import { COST_SHARE_DIVISOR } from "@/lib/pricing";
 
 type Pricing = {
   housingPrice: number | null;
@@ -19,6 +19,7 @@ type Pricing = {
   mealsLocked: boolean;
   isLocked: boolean;
   finalPrice: number | null;
+  depositAmount: number;
 };
 
 const LINES: { kind: PriceKind; label: string }[] = [
@@ -71,7 +72,7 @@ export function PricingPanel({ tripId, pricing }: { tripId: string; pricing: Pri
       {pricing.isLocked ? (
         <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-3">
           <p className="text-sm text-green-800 font-medium">
-            Trip locked — per-person share is ${pricing.finalPrice?.toFixed(2)} (+ ${SECURITY_DEPOSIT_USD} deposit).
+            Trip locked — base per-person share is ${pricing.finalPrice?.toFixed(2)} (+ ${pricing.depositAmount.toFixed(2)} deposit).
           </p>
           <p className="text-xs text-green-700 mt-1">
             Approved members have been moved to payment and emailed a checkout link.
@@ -134,7 +135,7 @@ export function PricingPanel({ tripId, pricing }: { tripId: string; pricing: Pri
             <span className="text-slate-600">Per-person share</span>
             <span className="font-semibold text-slate-950">
               ${share.toFixed(2)}{" "}
-              <span className="text-slate-600 font-normal">+ ${SECURITY_DEPOSIT_USD} deposit</span>
+              <span className="text-slate-600 font-normal">+ ${pricing.depositAmount.toFixed(2)} deposit</span>
             </span>
           </div>
         </div>

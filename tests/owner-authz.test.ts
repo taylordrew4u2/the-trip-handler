@@ -40,6 +40,10 @@ import {
   addTripBed,
   deleteTripBed,
   seedDefaultTripBeds,
+  updateTripPriceVisibility,
+  updateTripPaymentSettings,
+  updateMemberPriceAdjustment,
+  updateTripBedPrice,
 } from "@/app/actions/trips";
 
 const session = getServerSession as unknown as Mock;
@@ -48,6 +52,7 @@ const p = prisma as unknown as {
   contribution: { findUnique: Mock };
   expense: { findUnique: Mock };
   bed: { findUnique: Mock };
+  user: { findUnique: Mock; update: Mock };
 };
 
 beforeEach(() => {
@@ -58,6 +63,7 @@ beforeEach(() => {
   p.contribution.findUnique.mockResolvedValue({ tripId: "t1" });
   p.expense.findUnique.mockResolvedValue({ tripId: "t1", receiptUrl: null });
   p.bed.findUnique.mockResolvedValue({ tripId: "t1" });
+  p.user.findUnique.mockResolvedValue({ tripId: "t1", status: "PENDING_PAYMENT" });
 });
 
 describe("owner actions reject non-owners", () => {
@@ -73,12 +79,24 @@ describe("owner actions reject non-owners", () => {
     ["addTripBed", () => addTripBed("t1", { label: "Queen", type: "DOUBLE", womenOnly: false, count: 1 })],
     ["deleteTripBed", () => deleteTripBed("b1")],
     ["seedDefaultTripBeds", () => seedDefaultTripBeds("t1")],
+    [
+      "updateTripPriceVisibility",
+      () => updateTripPriceVisibility("t1", { showLineItems: false, showBedPrices: false, showPersonalAdjustment: false }),
+    ],
+    ["updateTripPaymentSettings", () => updateTripPaymentSettings("t1", { depositAmount: 100 })],
+    ["updateMemberPriceAdjustment", () => updateMemberPriceAdjustment("u1", -50, "friend")],
+    ["updateTripBedPrice", () => updateTripBedPrice("b1", 25)],
   ];
 
   it.each(cases)("%s returns 'Not your trip'", async (_name, run) => {
     const result = await run();
     expect((result as { error?: string }).error).toBe("Not your trip.");
   });
+});
+
+it("a non-owner can't read or write a member's private price", async () => {
+  await updateMemberPriceAdjustment("u1", -50, "friend");
+  expect(p.user.update).not.toHaveBeenCalled();
 });
 
 describe("owner actions require a session", () => {

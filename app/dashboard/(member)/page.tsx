@@ -110,7 +110,7 @@ export default async function DashboardPage() {
           {user.status === "PENDING_PAYMENT" && trip?.isLocked && (
             <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-900">
               The trip is locked and payment is due. Your trip share <strong>plus the refundable
-              $75 security deposit</strong> are billed together.{" "}
+              ${trip.depositAmount.toFixed(2)} security deposit</strong> are billed together.{" "}
               <a href="/dashboard/payment" className="underline underline-offset-2 font-medium">
                 Confirm your spot →
               </a>

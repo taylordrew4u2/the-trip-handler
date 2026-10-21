@@ -26,8 +26,17 @@ export default async function RosterPage() {
         status: { in: ["APPROVED", "CONFIRMED_PAID", "PENDING_PAYMENT"] },
       },
       orderBy: { name: "asc" },
-      include: {
-        contributions: { include: { contribution: true } },
+      // Explicit select: other members' rows must not carry private fields
+      // (password hash, admin notes, price adjustments) to the browser.
+      select: {
+        id: true,
+        name: true,
+        username: true,
+        bio: true,
+        avatarUrl: true,
+        status: true,
+        createdAt: true,
+        contributions: { select: { contribution: { select: { title: true, category: true } } } },
       },
     }),
     prisma.user.count({ where: { ...scope, status: { in: ["APPROVED", "CONFIRMED_PAID", "PENDING_PAYMENT"] } } }),

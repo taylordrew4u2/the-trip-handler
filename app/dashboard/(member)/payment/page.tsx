@@ -1,10 +1,10 @@
 import { prisma } from "@/lib/db";
-import { PaymentClient } from "./PaymentClient";
-import { redirect } from "next/navigation";
+import { PaymentClient, type PaymentView } from "./PaymentClient";
 import { ApprovalRequired } from "@/components/ApprovalRequired";
 import { isAuthzError, requireApprovedMember } from "@/lib/authz";
 import { PageNote } from "@/components/PageNote";
-import { getUserTrip } from "@/lib/trip";
+import { getMemberBill } from "@/lib/bill";
+import { toCents } from "@/lib/pricing";
 
 export default async function PaymentPage() {
   // Approval is read from the database, not the sign-in-time JWT, so a
@@ -12,22 +12,64 @@ export default async function PaymentPage() {
   const member = await requireApprovedMember();
   if (isAuthzError(member)) return <ApprovalRequired what="Payment" />;
   const userId = member.id;
-  if (!userId) redirect("/login");
 
-  const [trip, user, payment] = await Promise.all([
-    getUserTrip(userId),
-    prisma.user.findUnique({ where: { id: userId } }),
-    prisma.payment.findFirst({
+  const [trip, user, payments, bill] = await Promise.all([
+    prisma.trip.findUnique({ where: { id: member.tripId } }),
+    prisma.user.findUnique({ where: { id: userId }, select: { status: true } }),
+    prisma.payment.findMany({
       where: { userId },
       orderBy: { createdAt: "desc" },
+      select: { id: true, amount: true, method: true, status: true, receiptUrl: true, createdAt: true },
     }),
+    getMemberBill(userId),
   ]);
+
+  if (!trip || !bill) {
+    return (
+      <div className="min-w-0 space-y-8 max-w-2xl">
+        <h1 className="font-serif text-3xl font-medium tracking-tight text-slate-950 sm:text-4xl">Payment</h1>
+        <div className="bg-white rounded-2xl border border-slate-200 p-6 text-slate-600 text-sm">No trip set up yet.</div>
+      </div>
+    );
+  }
+
+  // Build exactly what this member is allowed to see. Anything the owner hid
+  // is folded into "Your trip share" here on the server, so the hidden number
+  // never reaches the browser.
+  const showBed = trip.showBedPrices && bill.bedAdjustment !== 0;
+  const showPersonal = trip.showPersonalAdjustment && bill.personalAdjustment !== 0;
+  const shownShare = toCents(
+    bill.share - (showBed ? bill.bedAdjustment : 0) - (showPersonal ? bill.personalAdjustment : 0),
+  );
+
+  const view: PaymentView = {
+    tripName: trip.name,
+    isLocked: trip.isLocked,
+    isPaid: user?.status === "CONFIRMED_PAID",
+    lineItems: trip.showLineItems
+      ? [
+          { key: "housing", label: "Housing", total: trip.housingPrice, locked: trip.housingLocked },
+          { key: "transport", label: "Transport", total: trip.transportPrice, locked: trip.transportLocked },
+          { key: "meals", label: "Meals", total: trip.mealsPrice, locked: trip.mealsLocked },
+        ]
+      : null,
+    share: shownShare,
+    bed: showBed ? { label: bill.bedLabel ?? "Your bed", adjustment: bill.bedAdjustment } : null,
+    personalAdjustment: showPersonal ? bill.personalAdjustment : null,
+    deposit: bill.deposit,
+    total: bill.total,
+    paid: bill.paid,
+    remaining: bill.remaining,
+    venmoHandle: trip.venmoHandle,
+    cashAppHandle: trip.cashAppHandle,
+    payments: payments.map((p) => ({ ...p, createdAt: p.createdAt.toISOString() })),
+  };
 
   return (
     <div className="min-w-0 space-y-8 max-w-2xl">
       <PageNote pageKey="payment" />
       <h1 className="font-serif text-3xl font-medium tracking-tight text-slate-950 sm:text-4xl">Payment</h1>
-      <PaymentClient trip={trip} user={user} payment={payment} />
+      <PaymentClient view={view} />
     </div>
   );
 }
