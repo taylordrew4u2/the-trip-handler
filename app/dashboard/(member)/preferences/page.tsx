@@ -17,7 +17,10 @@ export default async function PreferencesPage() {
   const userId = member.id;
   if (!userId) redirect("/login");
 
-  const existing = await prisma.guestForm.findUnique({ where: { userId } });
+  const [existing, trip] = await Promise.all([
+    prisma.guestForm.findUnique({ where: { userId } }),
+    prisma.trip.findUnique({ where: { id: member.tripId }, select: { disabledSections: true } }),
+  ]);
 
   return (
     <div className="min-w-0 max-w-3xl mx-auto">
@@ -26,12 +29,11 @@ export default async function PreferencesPage() {
         <p className="text-xs uppercase tracking-[0.2em] text-slate-600 mb-2">Trip preferences</p>
         <h1 className="font-serif text-3xl font-medium tracking-tight text-slate-950 sm:text-4xl">Help plan the trip</h1>
         <p className="text-slate-600 mt-3 text-sm leading-relaxed">
-          Now that you&apos;re approved, fill this out so we can plan emergency contacts, vans, food,
-          and the activity itinerary. <strong>Every field is required</strong> — write &ldquo;N/A&rdquo;
+          Now that you&apos;re approved, fill this out so we can plan the trip. <strong>Every field is required</strong> — write &ldquo;N/A&rdquo;
           if something genuinely doesn&apos;t apply. You can come back and update this anytime.
         </p>
       </div>
-      <PreferencesForm existing={existing} />
+      <PreferencesForm existing={existing} off={trip?.disabledSections ?? []} />
     </div>
   );
 }

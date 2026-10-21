@@ -310,7 +310,7 @@ export function PaymentClient({ view }: { view: PaymentView }) {
           </>
         ) : (
           <p className="text-xs text-slate-600 leading-relaxed">
-            Numbers above are estimates while admin lines up housing, transport, and meals. Once each line is locked
+            Numbers above are estimates while admin lines up the costs. Once each line is locked
             the total is final and you&apos;ll get an email asking you to pay (your share + the refundable{" "}
             {money(view.deposit)} deposit).
           </p>

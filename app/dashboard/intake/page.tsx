@@ -11,7 +11,7 @@ export default async function IntakePage() {
   if (!userId || userId === "admin") redirect("/login");
 
   const [user, existing] = await Promise.all([
-    prisma.user.findUnique({ where: { id: userId }, include: { trip: { select: { depositAmount: true } } } }),
+    prisma.user.findUnique({ where: { id: userId }, include: { trip: { select: { depositAmount: true, disabledSections: true } } } }),
     prisma.guestForm.findUnique({ where: { userId } }),
   ]);
 
@@ -61,6 +61,7 @@ export default async function IntakePage() {
         existing={existing}
         isPending={isPending}
         deposit={user.trip?.depositAmount ?? 75}
+        off={user.trip?.disabledSections ?? []}
       />
     </div>
   );

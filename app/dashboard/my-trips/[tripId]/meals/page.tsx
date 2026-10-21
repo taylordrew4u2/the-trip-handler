@@ -21,9 +21,11 @@ export default async function ManageTripMealsPage({
 
   const trip = await prisma.trip.findFirst({
     where: { id: tripId, ownerId: userId },
-    select: { id: true, name: true },
+    select: { id: true, name: true, disabledSections: true },
   });
   if (!trip) redirect("/dashboard/my-trips");
+  // No meals on this trip, so no meal poll.
+  if (trip.disabledSections.includes("meals")) redirect(`/dashboard/my-trips/${tripId}`);
 
   await ensureMealPlanSetup(tripId);
 

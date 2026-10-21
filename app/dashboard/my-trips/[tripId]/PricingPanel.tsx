@@ -20,6 +20,10 @@ type Pricing = {
   isLocked: boolean;
   finalPrice: number | null;
   depositAmount: number;
+  /** False when the owner turned the Meals section off. */
+  hasMeals: boolean;
+  /** False when the owner turned Transportation off. */
+  hasTransport: boolean;
 };
 
 const LINES: { kind: PriceKind; label: string }[] = [
@@ -50,7 +54,13 @@ export function PricingPanel({ tripId, pricing }: { tripId: string; pricing: Pri
   const isLineLocked = (k: PriceKind) =>
     k === "housing" ? pricing.housingLocked : k === "transport" ? pricing.transportLocked : pricing.mealsLocked;
 
-  const total = (pricing.housingPrice ?? 0) + (pricing.transportPrice ?? 0) + (pricing.mealsPrice ?? 0);
+  const lines = LINES.filter(
+    (l) => (l.kind !== "meals" || pricing.hasMeals) && (l.kind !== "transport" || pricing.hasTransport),
+  );
+  const total =
+    (pricing.housingPrice ?? 0) +
+    (pricing.hasTransport ? pricing.transportPrice ?? 0 : 0) +
+    (pricing.hasMeals ? pricing.mealsPrice ?? 0 : 0);
   const share = total / COST_SHARE_DIVISOR;
 
   return (
@@ -58,8 +68,9 @@ export function PricingPanel({ tripId, pricing }: { tripId: string; pricing: Pri
       <div>
         <h2 className="font-serif text-2xl font-medium tracking-tight text-slate-950">Pricing</h2>
         <p className="text-slate-600 text-sm leading-6 mt-2 max-w-2xl">
-          Enter each cost as a total for the trip. It&apos;s split {COST_SHARE_DIVISOR} ways. Lock all
-          three lines to move approved members to payment.
+          Enter each cost as a total for the trip. It&apos;s split {COST_SHARE_DIVISOR} ways. Lock every
+          line to move approved members to payment.
+          {(!pricing.hasMeals || !pricing.hasTransport) && " Lines for things this trip doesn't have are hidden."}
         </p>
       </div>
 
@@ -88,7 +99,7 @@ export function PricingPanel({ tripId, pricing }: { tripId: string; pricing: Pri
         </div>
       ) : (
         <div className="space-y-3">
-          {LINES.map(({ kind, label }) => {
+          {lines.map(({ kind, label }) => {
             const locked = isLineLocked(kind);
             return (
               <div key={kind} className="flex flex-wrap items-center gap-3 rounded-xl border border-slate-200/80 bg-slate-50/60 p-3 sm:p-4">

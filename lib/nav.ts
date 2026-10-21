@@ -29,6 +29,8 @@ export const SECTION_KEYS = [
   "contributions",
   "preferences",
   "payment",
+  // No page of its own: turns off van questions and the transport cost line.
+  "transport",
 ] as const;
 
 export type SectionKey = (typeof SECTION_KEYS)[number];

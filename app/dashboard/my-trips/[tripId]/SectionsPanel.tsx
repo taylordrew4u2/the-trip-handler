@@ -4,9 +4,11 @@ import { useState, useTransition } from "react";
 import { updateTripSections } from "@/app/actions/trips";
 import { NAV_GROUPS, type SectionKey } from "@/lib/nav";
 
-const SECTIONS = NAV_GROUPS.flatMap((g) => g.items).filter(
-  (i): i is typeof i & { section: SectionKey } => Boolean(i.section),
-);
+const SECTIONS: { section: SectionKey; label: string }[] = [
+  ...NAV_GROUPS.flatMap((g) => g.items).flatMap((i) => (i.section ? [{ section: i.section, label: i.label }] : [])),
+  // Not a page: controls the van questions and the transport cost line.
+  { section: "transport", label: "Transportation (vans)" },
+];
 
 export function SectionsPanel({ tripId, disabled }: { tripId: string; disabled: string[] }) {
   const [off, setOff] = useState<string[]>(disabled);
@@ -32,8 +34,9 @@ export function SectionsPanel({ tripId, disabled }: { tripId: string; disabled: 
       <div>
         <h2 className="font-serif text-2xl font-medium tracking-tight text-slate-950">Sections</h2>
         <p className="text-slate-600 text-sm leading-6 mt-2 max-w-2xl">
-          Pick which sections members see. Turned-off sections disappear from their menu and can&apos;t be opened by
-          link. Turn one back on any time — nothing in it is deleted.
+          Pick what this trip has. Turned-off sections disappear from members&apos; menu, can&apos;t be opened by
+          link, and their questions drop out of the guest form and preferences. Turn one back on any time —
+          nothing is deleted.
         </p>
       </div>
 

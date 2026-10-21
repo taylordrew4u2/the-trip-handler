@@ -46,8 +46,14 @@ export async function submitGuestForm(formData: FormData) {
   }
   const userId = sessionUser.id;
 
-  const user = await prisma.user.findUnique({ where: { id: userId } });
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: { trip: { select: { disabledSections: true } } },
+  });
   if (!user) return { error: "User not found." };
+  // Questions about things this trip doesn't have aren't asked, so aren't required.
+  const off = user.trip?.disabledSections ?? [];
+  const hasPayment = !off.includes("payment");
 
   const existing = await prisma.guestForm.findUnique({ where: { userId } });
   if (existing?.locked) {
@@ -78,6 +84,7 @@ export async function submitGuestForm(formData: FormData) {
 
   // Required field validation
   for (const f of REQUIRED_STRING_FIELDS) {
+    if (f === "maxBudget" && !hasPayment) continue;
     if (!data[f]) return { error: `Please fill in ${f}.` };
   }
   if (!data.age21Confirmed) return { error: "You must confirm you're 21 or older." };
@@ -92,7 +99,7 @@ export async function submitGuestForm(formData: FormData) {
     if (!jokeProtection.includes(rule)) return { error: "Please agree to all material / content protection items." };
   }
   const securityDeposit = (data.securityDepositAcks as string[]) || [];
-  for (const rule of REQUIRED_SECURITY_DEPOSIT) {
+  for (const rule of hasPayment ? REQUIRED_SECURITY_DEPOSIT : []) {
     if (!securityDeposit.includes(rule)) return { error: "Please agree to all security deposit terms." };
   }
 
@@ -190,6 +197,37 @@ export async function unlockGuestForm(userId: string) {
   return { success: true };
 }
 
+// Preference questions that only apply when the trip has that section.
+const PREFERENCES_SECTION_FIELDS: Record<string, string[]> = {
+  transport: [
+    "comingFrom",
+    "centralPickup",
+    "preferredArea",
+    "preferredAreaOther",
+    "carsick",
+    "needsFrontSeat",
+    "luggageSize",
+    "bulkyItems",
+    "willingToDrive",
+    "vanAck",
+  ],
+  meals: [
+    "hasAllergies",
+    "allergiesList",
+    "allergySeverity",
+    "dietaryOther",
+    "willNotEat",
+    "likedFoods",
+    "snackRequests",
+    "drinkOther",
+    "communalMeals",
+    "helpCookClean",
+    "dietaryRestrictions",
+    "drinkPrefs",
+  ],
+  itinerary: ["workOnOther"],
+};
+
 const PREFERENCES_STRING_FIELDS = [
   // Emergency contact
   "emergencyName",
@@ -253,13 +291,19 @@ export async function updatePreferences(formData: FormData) {
   if (isAuthzError(auth)) return { error: auth.error };
   const sessionUser = { id: auth.id };
 
+  const trip = await prisma.trip.findUnique({ where: { id: auth.tripId }, select: { disabledSections: true } });
+  // Fields for sections this trip doesn't have are neither asked, required, nor overwritten.
+  const skipped = new Set((trip?.disabledSections ?? []).flatMap((k) => PREFERENCES_SECTION_FIELDS[k] ?? []));
+
   const data: Record<string, string | string[] | boolean | null | Date> = {};
 
   for (const f of PREFERENCES_STRING_FIELDS) {
+    if (skipped.has(f)) continue;
     const v = (formData.get(f) as string | null)?.trim() ?? "";
     data[f] = v || null;
   }
   for (const f of PREFERENCES_ARRAY_FIELDS) {
+    if (skipped.has(f)) continue;
     data[f] = formData.getAll(`${f}[]`).map((v) => v.toString()).filter(Boolean);
     // Also accept the non-bracketed key (for safety)
     if ((data[f] as string[]).length === 0) {
@@ -267,17 +311,19 @@ export async function updatePreferences(formData: FormData) {
     }
   }
   for (const f of PREFERENCES_BOOL_FIELDS) {
+    if (skipped.has(f)) continue;
     const v = formData.get(f);
     data[f] = v === "on" || v === "true";
   }
 
   // Required-field validation: every text field must be filled (use "N/A" if it doesn't apply).
   for (const f of PREFERENCES_REQUIRED) {
+    if (skipped.has(f)) continue;
     if (!data[f]) {
       return { error: `Please answer "${f}" — use "N/A" if it doesn't apply.` };
     }
   }
-  if (!data.vanAck) {
+  if (!skipped.has("vanAck") && !data.vanAck) {
     return { error: "Please acknowledge the van transportation expectations." };
   }
 

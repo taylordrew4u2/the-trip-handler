@@ -12,6 +12,7 @@ import { PaymentSettingsPanel } from "./PaymentSettingsPanel";
 import { SectionsPanel } from "./SectionsPanel";
 import { MemberPaymentsPanel, type MemberPaymentRow } from "./MemberPaymentsPanel";
 import { computeBill } from "@/lib/bill";
+import { hasFeature, hasMeals } from "@/lib/pricing";
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +34,10 @@ export default async function ManageTripPage({
     where: { id: tripId, ownerId: userId },
   });
   if (!trip) redirect("/dashboard/my-trips");
+
+  // An owner who also joined their own trip can flip to what guests see.
+  const me = await prisma.user.findUnique({ where: { id: userId }, select: { tripId: true } });
+  const ownerIsGuest = me?.tripId === trip.id;
 
   const [contributions, expenses, beds, members] = await Promise.all([
     prisma.contribution.findMany({
@@ -134,12 +139,24 @@ export default async function ManageTripPage({
           </h1>
           <p className="text-slate-600 text-sm leading-6 mt-2">Edit the details people see on your invite page.</p>
         </div>
-        <Link
-          href={`/dashboard/my-trips/${trip.id}/meals`}
-          className="inline-flex items-center justify-center min-h-[44px] rounded-xl border border-indigo-100 bg-indigo-50 px-4 text-sm font-semibold text-indigo-700 transition-colors hover:bg-indigo-100"
-        >
-          Manage meal poll →
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          {ownerIsGuest && (
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center justify-center min-h-[44px] rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+            >
+              Switch to guest view →
+            </Link>
+          )}
+          {hasMeals(trip) && (
+            <Link
+              href={`/dashboard/my-trips/${trip.id}/meals`}
+              className="inline-flex items-center justify-center min-h-[44px] rounded-xl border border-indigo-100 bg-indigo-50 px-4 text-sm font-semibold text-indigo-700 transition-colors hover:bg-indigo-100"
+            >
+              Manage meal poll →
+            </Link>
+          )}
+        </div>
       </div>
       <TripEditForm
         tripId={trip.id}
@@ -167,6 +184,8 @@ export default async function ManageTripPage({
           isLocked: trip.isLocked,
           finalPrice: trip.finalPrice,
           depositAmount: trip.depositAmount,
+          hasMeals: hasMeals(trip),
+          hasTransport: hasFeature(trip, "transport"),
         }}
       />
       <PaymentSettingsPanel
