@@ -148,8 +148,8 @@ const YES_NO_ASK = [
   { value: "ask", label: "Ask me first" },
 ];
 
-export function IntakeForm({ defaultEmail, defaultName, defaultPhone, existing, isPending = false, deposit = 75 }: {
-  defaultEmail: string; defaultName: string; defaultPhone: string; existing: Existing; isPending?: boolean; deposit?: number;
+export function IntakeForm({ defaultEmail, defaultName, defaultPhone, existing, isPending = false, deposit = 75, off = [] }: {
+  defaultEmail: string; defaultName: string; defaultPhone: string; existing: Existing; isPending?: boolean; deposit?: number; off?: string[];
 }) {
   const dep = `$${Number.isInteger(deposit) ? deposit : deposit.toFixed(2)}`;
   const router = useRouter();
@@ -254,23 +254,25 @@ export function IntakeForm({ defaultEmail, defaultName, defaultPhone, existing, 
         </Field>
       </Section>
 
-      <Section
-        title="Budget"
-        intro={`The trip price covers travel (rental vans + gas), all meals during the weekend, and lodging. Activity and shared-supply costs are split on top. Heads up: there's also a refundable ${dep} security deposit billed at payment time — that's separate from your trip share. Be honest with the cap — admin uses it to decide who gets approved.`}
-      >
-        <Field
-          label={`Max trip share you're willing to pay (per person, before the ${dep} deposit)`}
-          required
-          hint={`Examples: $500, $400-600, no hard cap. The ${dep} deposit is on top and refundable, so don't include it here.`}
+      {!off.includes("payment") && (
+        <Section
+          title="Budget"
+          intro={`The trip price covers travel (rental vans + gas), all meals during the weekend, and lodging. Activity and shared-supply costs are split on top. Heads up: there's also a refundable ${dep} security deposit billed at payment time — that's separate from your trip share. Be honest with the cap — admin uses it to decide who gets approved.`}
         >
-          <TextInput
-            name="maxBudget"
-            defaultValue={e?.maxBudget ?? ""}
+          <Field
+            label={`Max trip share you're willing to pay (per person, before the ${dep} deposit)`}
             required
-            placeholder="e.g. $500"
-          />
-        </Field>
-      </Section>
+            hint={`Examples: $500, $400-600, no hard cap. The ${dep} deposit is on top and refundable, so don't include it here.`}
+          >
+            <TextInput
+              name="maxBudget"
+              defaultValue={e?.maxBudget ?? ""}
+              required
+              placeholder="e.g. $500"
+            />
+          </Field>
+        </Section>
+      )}
 
       <Section
         title="Drug- and alcohol-free trip"
@@ -293,14 +295,16 @@ export function IntakeForm({ defaultEmail, defaultName, defaultPhone, existing, 
         </Field>
       </Section>
 
-      <Section
-        title="Bed sharing"
-        intro="Heads up — you'll probably have to share a bed. You'll be able to choose who you share with. And if you're a dude, the odds are very high you'll be sharing."
-      >
-        <Field label="Are you OK with that?" required>
-          <RadioGroup name="shareBed" defaultValue={e?.shareBed} options={YES_NO} required />
-        </Field>
-      </Section>
+      {!off.includes("sleeping") && (
+        <Section
+          title="Bed sharing"
+          intro="Heads up — you'll probably have to share a bed. You'll be able to choose who you share with. And if you're a dude, the odds are very high you'll be sharing."
+        >
+          <Field label="Are you OK with that?" required>
+            <RadioGroup name="shareBed" defaultValue={e?.shareBed} options={YES_NO} required />
+          </Field>
+        </Section>
+      )}
 
       <Section title="Medical / safety" intro="Only share what would be useful in an emergency or for planning the house. If something doesn't apply to you, just write “N/A”.">
         <Field label="Any medical conditions we should know about in case of emergency?" required>
@@ -358,48 +362,52 @@ export function IntakeForm({ defaultEmail, defaultName, defaultPhone, existing, 
         </Field>
       </Section>
 
-      <Section title="Group activities" intro="Group activities, content creation, writing sessions, workshops, and other trip activities.">
-        <Field label="Which activities are you interested in?">
-          <CheckboxGroup name="activitiesInterested" defaultValue={e?.activitiesInterested} options={[
-            { value: "Writing sessions", label: "Writing sessions" },
-            { value: "Skill workshop", label: "Skill workshop" },
-            { value: "Talent show / showcase", label: "Talent show / showcase" },
-            { value: "Group games", label: "Group games" },
-            { value: "Group creative projects", label: "Group creative projects" },
-            { value: "Social media content", label: "Social media content" },
-            { value: "Podcast-style recordings", label: "Podcast-style recordings" },
-            { value: "Campfire hang", label: "Campfire hang" },
-            { value: "Board/card games", label: "Board/card games" },
-            { value: "Swimming", label: "Swimming" },
-            { value: "Hiking/walks", label: "Hiking/walks" },
-            { value: "Cooking together", label: "Cooking together" },
-            { value: "Quiet writing time", label: "Quiet writing time" },
-          ]} />
-          <div className="mt-2"><TextInput name="activitiesOtherText" defaultValue={e?.activitiesOtherText} placeholder="Other (or N/A)" required /></div>
-        </Field>
-        <Field label="Any activities you do not want to do?" required><TextArea name="activitiesOptOut" defaultValue={e?.activitiesOptOut} rows={2} required placeholder="N/A if you're up for anything" /></Field>
-        <Field label="Are you okay with structured activities, or do you prefer more free time?" required>
-          <RadioGroup name="structurePref" defaultValue={e?.structurePref} options={[
-            { value: "structure", label: "I like structure" },
-            { value: "mix", label: "I want a mix" },
-            { value: "freeTime", label: "I prefer mostly free time" },
-          ]} required />
-        </Field>
-      </Section>
+      {!off.includes("itinerary") && (
+        <Section title="Group activities" intro="Group activities, content creation, writing sessions, workshops, and other trip activities.">
+          <Field label="Which activities are you interested in?">
+            <CheckboxGroup name="activitiesInterested" defaultValue={e?.activitiesInterested} options={[
+              { value: "Writing sessions", label: "Writing sessions" },
+              { value: "Skill workshop", label: "Skill workshop" },
+              { value: "Talent show / showcase", label: "Talent show / showcase" },
+              { value: "Group games", label: "Group games" },
+              { value: "Group creative projects", label: "Group creative projects" },
+              { value: "Social media content", label: "Social media content" },
+              { value: "Podcast-style recordings", label: "Podcast-style recordings" },
+              { value: "Campfire hang", label: "Campfire hang" },
+              { value: "Board/card games", label: "Board/card games" },
+              { value: "Swimming", label: "Swimming" },
+              { value: "Hiking/walks", label: "Hiking/walks" },
+              { value: "Cooking together", label: "Cooking together" },
+              { value: "Quiet writing time", label: "Quiet writing time" },
+            ]} />
+            <div className="mt-2"><TextInput name="activitiesOtherText" defaultValue={e?.activitiesOtherText} placeholder="Other (or N/A)" required /></div>
+          </Field>
+          <Field label="Any activities you do not want to do?" required><TextArea name="activitiesOptOut" defaultValue={e?.activitiesOptOut} rows={2} required placeholder="N/A if you're up for anything" /></Field>
+          <Field label="Are you okay with structured activities, or do you prefer more free time?" required>
+            <RadioGroup name="structurePref" defaultValue={e?.structurePref} options={[
+              { value: "structure", label: "I like structure" },
+              { value: "mix", label: "I want a mix" },
+              { value: "freeTime", label: "I prefer mostly free time" },
+            ]} required />
+          </Field>
+        </Section>
+      )}
 
-      <Section
-        title="Security deposit"
-        intro={`Everyone pays a ${dep} security deposit before the trip. If everyone follows the rules and the house comes out clean, you get it back. If you damage the house or break a rule, your deposit is forfeit and you're on the hook for any cost beyond it. The host's name is on the rental — they shouldn't be paying for someone else's mess. All four required.`}
-      >
-        <Field label="" required>
-          <CheckboxGroup name="securityDepositAcks" defaultValue={e?.securityDepositAcks} options={[
-            { value: "payDeposit", label: `I will send a ${dep} security deposit before the trip.` },
-            { value: "returned", label: "I understand the deposit is returned after the trip if everyone follows the rules and there's no damage." },
-            { value: "forfeitAndCharged", label: "If I break a rule or damage something, I forfeit my deposit and I'm responsible for any additional cost beyond it." },
-            { value: "hostNotLiable", label: "The person whose name is on the rental is not personally liable for damage I cause — that's on me." },
-          ]} />
-        </Field>
-      </Section>
+      {!off.includes("payment") && (
+        <Section
+          title="Security deposit"
+          intro={`Everyone pays a ${dep} security deposit before the trip. If everyone follows the rules and the house comes out clean, you get it back. If you damage the house or break a rule, your deposit is forfeit and you're on the hook for any cost beyond it. The host's name is on the rental — they shouldn't be paying for someone else's mess. All four required.`}
+        >
+          <Field label="" required>
+            <CheckboxGroup name="securityDepositAcks" defaultValue={e?.securityDepositAcks} options={[
+              { value: "payDeposit", label: `I will send a ${dep} security deposit before the trip.` },
+              { value: "returned", label: "I understand the deposit is returned after the trip if everyone follows the rules and there's no damage." },
+              { value: "forfeitAndCharged", label: "If I break a rule or damage something, I forfeit my deposit and I'm responsible for any additional cost beyond it." },
+              { value: "hostNotLiable", label: "The person whose name is on the rental is not personally liable for damage I cause — that's on me." },
+            ]} />
+          </Field>
+        </Section>
+      )}
 
       <Section title="House rules" intro="All eight required.">
         <Field label="" required>

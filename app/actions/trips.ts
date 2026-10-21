@@ -6,7 +6,7 @@ import { prisma } from "@/lib/db";
 import { authOptions } from "@/lib/auth";
 import { deleteBlob } from "@/lib/blob";
 import { sendApprovalEmail, sendRejectionEmail, sendTripLockedEmail } from "@/lib/resend";
-import { COST_SHARE_DIVISOR, memberShare } from "@/lib/pricing";
+import { COST_SHARE_DIVISOR, hasFeature, hasMeals, memberShare, tripCostTotal } from "@/lib/pricing";
 import { isSectionKey } from "@/lib/nav";
 import { getServerSession } from "next-auth";
 import { revalidatePath } from "next/cache";
@@ -312,36 +312,21 @@ export async function updateMyTripPrice(
 }
 
 /**
- * Lock one cost line. When all three lock, the trip auto-solidifies: the
- * per-person share is computed, the trip locks, this trip's approved
- * participants move to PENDING_PAYMENT, and each gets a payment email.
+ * Once every required cost line is locked, solidify the trip: compute the
+ * per-person share, lock it, move this trip's approved participants to
+ * PENDING_PAYMENT, and email each their own amount. Meals / transport lines
+ * aren't required (or counted) when the trip doesn't have them.
  */
-export async function lockMyTripPrice(tripId: string, kind: PriceKind) {
-  const userId = await currentUserId();
-  if (!userId) return { error: "Sign in first." };
-  const trip = await ownedTrip(tripId, userId);
-  if (!trip) return { error: "Not your trip." };
-
-  const fields = PRICE_FIELDS[kind];
-  if (trip[fields.amount] == null) return { error: "Set an amount before locking." };
-
-  await prisma.trip.update({
-    where: { id: tripId },
-    data: { [fields.locked]: true },
-  });
-
+async function finalizeTripIfReady(tripId: string) {
   const updated = await prisma.trip.findUnique({ where: { id: tripId } });
   if (
     updated &&
     updated.housingLocked &&
-    updated.transportLocked &&
-    updated.mealsLocked &&
+    (updated.transportLocked || !hasFeature(updated, "transport")) &&
+    (updated.mealsLocked || !hasMeals(updated)) &&
     !updated.isLocked
   ) {
-    const total =
-      (updated.housingPrice ?? 0) +
-      (updated.transportPrice ?? 0) +
-      (updated.mealsPrice ?? 0);
+    const total = tripCostTotal(updated);
     // Round to whole cents so the stored amount-owed is exact.
     const share = Math.round((total / COST_SHARE_DIVISOR) * 100) / 100;
 
@@ -373,6 +358,27 @@ export async function lockMyTripPrice(tripId: string, kind: PriceKind) {
       }
     }
   }
+}
+
+/**
+ * Lock one cost line. When every required line is locked the trip
+ * auto-solidifies (see finalizeTripIfReady).
+ */
+export async function lockMyTripPrice(tripId: string, kind: PriceKind) {
+  const userId = await currentUserId();
+  if (!userId) return { error: "Sign in first." };
+  const trip = await ownedTrip(tripId, userId);
+  if (!trip) return { error: "Not your trip." };
+
+  const fields = PRICE_FIELDS[kind];
+  if (trip[fields.amount] == null) return { error: "Set an amount before locking." };
+
+  await prisma.trip.update({
+    where: { id: tripId },
+    data: { [fields.locked]: true },
+  });
+
+  await finalizeTripIfReady(tripId);
 
   revalidatePath(`/dashboard/my-trips/${tripId}`);
   revalidatePath("/dashboard/payment");
@@ -433,6 +439,8 @@ export async function updateTripSections(tripId: string, disabled: string[]) {
 
   const clean = Array.from(new Set(disabled.filter(isSectionKey)));
   await prisma.trip.update({ where: { id: tripId }, data: { disabledSections: clean } });
+  // Turning meals or transport off can leave every remaining cost line locked.
+  if (clean.includes("meals") || clean.includes("transport")) await finalizeTripIfReady(tripId);
   revalidatePath("/dashboard", "layout");
   revalidatePath(`/dashboard/my-trips/${tripId}`);
   return { success: true };

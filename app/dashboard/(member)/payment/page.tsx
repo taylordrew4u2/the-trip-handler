@@ -5,7 +5,7 @@ import { ApprovalRequired } from "@/components/ApprovalRequired";
 import { isAuthzError, requireApprovedMember } from "@/lib/authz";
 import { PageNote } from "@/components/PageNote";
 import { getMemberBill } from "@/lib/bill";
-import { toCents } from "@/lib/pricing";
+import { hasFeature, hasMeals, toCents } from "@/lib/pricing";
 
 export default async function PaymentPage() {
   await requireSection("payment");
@@ -51,8 +51,12 @@ export default async function PaymentPage() {
     lineItems: trip.showLineItems
       ? [
           { key: "housing", label: "Housing", total: trip.housingPrice, locked: trip.housingLocked },
-          { key: "transport", label: "Transport", total: trip.transportPrice, locked: trip.transportLocked },
-          { key: "meals", label: "Meals", total: trip.mealsPrice, locked: trip.mealsLocked },
+          ...(hasFeature(trip, "transport")
+            ? [{ key: "transport", label: "Transport", total: trip.transportPrice, locked: trip.transportLocked }]
+            : []),
+          ...(hasMeals(trip)
+            ? [{ key: "meals", label: "Meals", total: trip.mealsPrice, locked: trip.mealsLocked }]
+            : []),
         ]
       : null,
     share: shownShare,

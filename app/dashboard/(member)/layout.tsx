@@ -14,7 +14,7 @@ export default async function MemberLayout({ children }: { children: React.React
     where: { id: sessionUser.id },
     select: {
       tripId: true,
-      trip: { select: { disabledSections: true } },
+      trip: { select: { disabledSections: true, ownerId: true } },
       _count: { select: { ownedTrips: true } },
     },
   });
@@ -56,12 +56,27 @@ export default async function MemberLayout({ children }: { children: React.React
   }
 
   const isPending = sessionUser.status === "PENDING";
+  // The owner joined their own trip: everything below is the guest view.
+  const ownerTripId = membership.trip?.ownerId === sessionUser.id ? membership.tripId : null;
 
   return (
     <div className="min-h-dvh bg-[#f6f7fb]">
       <DashboardNav status={sessionUser.status ?? null} disabledSections={membership.trip?.disabledSections ?? []} />
       <div className="2xl:pl-60">
       <main className="max-w-6xl mx-auto gutter py-8 md:py-10">
+        {ownerTripId && (
+          <div className="mb-6 flex flex-col gap-2 rounded-2xl border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+            <span className="text-indigo-900">
+              <strong>Guest view.</strong> You&apos;re seeing exactly what your guests see.
+            </span>
+            <a
+              href={`/dashboard/my-trips/${ownerTripId}`}
+              className="inline-flex items-center justify-center min-h-[44px] rounded-xl bg-indigo-600 px-4 font-medium text-white hover:bg-indigo-700"
+            >
+              Back to managing →
+            </a>
+          </div>
+        )}
         {isPending && (
           <div className="bg-amber-50 border border-amber-300 rounded-2xl px-4 py-3 mb-6 text-sm text-amber-900 leading-relaxed">
             <strong>You&apos;re pending admin approval.</strong> You can browse the itinerary and

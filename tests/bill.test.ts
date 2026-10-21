@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { computeBill, baseShareOf } from "@/lib/bill";
-import { formatAdjustment, memberShare } from "@/lib/pricing";
+import { formatAdjustment, hasMeals, memberShare, tripCostTotal } from "@/lib/pricing";
 
 const lockedTrip = {
   finalPrice: 500,
@@ -43,5 +43,28 @@ describe("member bill", () => {
   it("formats adjustments with a sign", () => {
     expect(formatAdjustment(20)).toBe("+$20.00");
     expect(formatAdjustment(-15.5)).toBe("−$15.50");
+  });
+});
+
+describe("trips without meals or transport", () => {
+  const trip = { housingPrice: 4000, transportPrice: 600, mealsPrice: 400 };
+
+  it("counts every line by default", () => {
+    expect(tripCostTotal(trip)).toBe(5000);
+  });
+
+  it("drops the meals line when meals are off", () => {
+    expect(hasMeals({ disabledSections: ["meals"] })).toBe(false);
+    expect(tripCostTotal({ ...trip, disabledSections: ["meals"] })).toBe(4600);
+  });
+
+  it("drops the transport line when transport is off", () => {
+    expect(tripCostTotal({ ...trip, disabledSections: ["transport", "meals"] })).toBe(4000);
+  });
+
+  it("estimates the base share without the hidden lines", () => {
+    expect(
+      baseShareOf({ ...lockedTrip, ...trip, isLocked: false, finalPrice: null, disabledSections: ["meals"] }),
+    ).toBe(460);
   });
 });

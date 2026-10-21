@@ -137,7 +137,7 @@ export default async function DashboardPage() {
           { href: "/dashboard/sleeping", label: "Sleeping", detail: "Choose a bed and settle in.", show: user?.status !== "PENDING" },
           { href: "/dashboard/contributions", label: "Contributions", detail: "Claim something to bring.", show: user?.status !== "PENDING" },
         ]
-          .filter((item) => item.show)
+          .filter((item) => item.show && !trip?.disabledSections.includes(item.href.split("/").pop() ?? ""))
           .map((item) => (
             <a
               key={item.href}
