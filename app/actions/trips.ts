@@ -7,6 +7,7 @@ import { authOptions } from "@/lib/auth";
 import { deleteBlob } from "@/lib/blob";
 import { sendApprovalEmail, sendRejectionEmail, sendTripLockedEmail } from "@/lib/resend";
 import { COST_SHARE_DIVISOR, memberShare } from "@/lib/pricing";
+import { isSectionKey } from "@/lib/nav";
 import { getServerSession } from "next-auth";
 import { revalidatePath } from "next/cache";
 
@@ -419,6 +420,21 @@ export async function unlockMyTrip(tripId: string) {
   });
   revalidatePath(`/dashboard/my-trips/${tripId}`);
   revalidatePath("/dashboard/payment");
+  return { success: true };
+}
+
+// ---------- sections (owner-scoped) ----------
+
+/** Turn member dashboard sections on or off. Pass the keys to turn off. */
+export async function updateTripSections(tripId: string, disabled: string[]) {
+  const userId = await currentUserId();
+  if (!userId) return { error: "Sign in first." };
+  if (!(await ownedTrip(tripId, userId))) return { error: "Not your trip." };
+
+  const clean = Array.from(new Set(disabled.filter(isSectionKey)));
+  await prisma.trip.update({ where: { id: tripId }, data: { disabledSections: clean } });
+  revalidatePath("/dashboard", "layout");
+  revalidatePath(`/dashboard/my-trips/${tripId}`);
   return { success: true };
 }
 

@@ -93,6 +93,8 @@ model Trip {
   // Owner's handles for off-Stripe payments. Null = method not offered.
   venmoHandle            String?
   cashAppHandle          String?
+  // Member dashboard sections the owner turned off (keys from lib/nav.ts).
+  disabledSections       String[]  @default([])
   totalExpenses     Float          @default(0)
   createdAt         DateTime       @default(now())
   updatedAt         DateTime       @updatedAt

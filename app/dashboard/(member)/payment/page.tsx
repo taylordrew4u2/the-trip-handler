@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { requireSection } from "@/lib/sections";
 import { PaymentClient, type PaymentView } from "./PaymentClient";
 import { ApprovalRequired } from "@/components/ApprovalRequired";
 import { isAuthzError, requireApprovedMember } from "@/lib/authz";
@@ -7,6 +8,7 @@ import { getMemberBill } from "@/lib/bill";
 import { toCents } from "@/lib/pricing";
 
 export default async function PaymentPage() {
+  await requireSection("payment");
   // Approval is read from the database, not the sign-in-time JWT, so a
   // member removed from the trip loses access on their next request.
   const member = await requireApprovedMember();

@@ -9,6 +9,7 @@ import { ContributionsPanel } from "./ContributionsPanel";
 import { ExpensesPanel } from "./ExpensesPanel";
 import { BedsPanel } from "./BedsPanel";
 import { PaymentSettingsPanel } from "./PaymentSettingsPanel";
+import { SectionsPanel } from "./SectionsPanel";
 import { MemberPaymentsPanel, type MemberPaymentRow } from "./MemberPaymentsPanel";
 import { computeBill } from "@/lib/bill";
 
@@ -153,6 +154,7 @@ export default async function ManageTripPage({
           meals: trip.meals ?? "",
         }}
       />
+      <SectionsPanel tripId={trip.id} disabled={trip.disabledSections} />
       <PricingPanel
         tripId={trip.id}
         pricing={{

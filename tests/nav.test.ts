@@ -86,3 +86,17 @@ describe("current destination", () => {
     expect(currentNavItem("PENDING", "/dashboard/roster")).toBeUndefined();
   });
 });
+
+describe("owner-disabled sections", () => {
+  it("drops sections the owner turned off", () => {
+    const labels = visibleNavItems("APPROVED", ["meals", "board"]).map((i) => i.label);
+    expect(labels).not.toContain("Meals");
+    expect(labels).not.toContain("Board");
+    expect(labels).toContain("Sleeping");
+  });
+
+  it("never hides the always-on pages", () => {
+    const labels = visibleNavItems("APPROVED", ["itinerary", "lodging", "payment", "preferences"]).map((i) => i.label);
+    expect(labels).toEqual(expect.arrayContaining(["Home", "My trips", "Guest form", "Profile"]));
+  });
+});

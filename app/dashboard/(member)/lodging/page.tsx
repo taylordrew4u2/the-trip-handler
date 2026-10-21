@@ -1,4 +1,5 @@
 import { getServerSession } from "next-auth";
+import { requireSection } from "@/lib/sections";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { PageNote } from "@/components/PageNote";
@@ -7,6 +8,7 @@ import { getUserTrip } from "@/lib/trip";
 export const dynamic = "force-dynamic";
 
 export default async function LodgingPage() {
+  await requireSection("lodging");
   const session = await getServerSession(authOptions);
   const userId = (session?.user as { id?: string } | undefined)?.id ?? "";
   const trip = userId ? await getUserTrip(userId) : null;

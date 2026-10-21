@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { requireSection } from "@/lib/sections";
 import { ApprovalRequired } from "@/components/ApprovalRequired";
 import { isAuthzError, requireApprovedMember } from "@/lib/authz";
 import { BoardClient } from "./BoardClient";
@@ -8,6 +9,7 @@ import { PageNote } from "@/components/PageNote";
 export const dynamic = "force-dynamic";
 
 export default async function BoardPage() {
+  await requireSection("board");
   // The same guard the write path uses, so approval is read from the database
   // rather than from a sign-in-time JWT.
   const member = await requireApprovedMember();

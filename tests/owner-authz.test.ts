@@ -44,6 +44,7 @@ import {
   updateTripPaymentSettings,
   updateMemberPriceAdjustment,
   updateTripBedPrice,
+  updateTripSections,
 } from "@/app/actions/trips";
 
 const session = getServerSession as unknown as Mock;
@@ -86,6 +87,7 @@ describe("owner actions reject non-owners", () => {
     ["updateTripPaymentSettings", () => updateTripPaymentSettings("t1", { depositAmount: 100 })],
     ["updateMemberPriceAdjustment", () => updateMemberPriceAdjustment("u1", -50, "friend")],
     ["updateTripBedPrice", () => updateTripBedPrice("b1", 25)],
+    ["updateTripSections", () => updateTripSections("t1", ["meals"])],
   ];
 
   it.each(cases)("%s returns 'Not your trip'", async (_name, run) => {

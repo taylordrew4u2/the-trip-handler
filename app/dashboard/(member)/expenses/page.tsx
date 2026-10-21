@@ -1,4 +1,5 @@
 import { getServerSession } from "next-auth";
+import { requireSection } from "@/lib/sections";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { ExpensesClient } from "./ExpensesClient";
@@ -10,6 +11,7 @@ import { getUserTrip } from "@/lib/trip";
 export const dynamic = "force-dynamic";
 
 export default async function ExpensesPage() {
+  await requireSection("expenses");
   if (!isApproved(await getUserStatus())) return <ApprovalRequired what="Expenses" />;
 
   const session = await getServerSession(authOptions);

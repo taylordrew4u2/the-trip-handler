@@ -81,7 +81,7 @@ export default async function DashboardPage() {
         </div>
       )}
 
-      {user && guestForm && !guestForm.preferencesSubmittedAt && user.status !== "PENDING" && user.status !== "CANCELLED" && (
+      {user && guestForm && !guestForm.preferencesSubmittedAt && user.status !== "PENDING" && user.status !== "CANCELLED" && !trip?.disabledSections.includes("preferences") && (
         <div className="bg-blue-50 border border-blue-300 rounded-2xl p-4 sm:p-5">
           <p className="text-xs uppercase tracking-[0.15em] text-blue-800">Next step</p>
           <h2 className="font-serif text-xl font-medium text-slate-900 mt-1">Fill out your trip preferences</h2>
@@ -107,7 +107,7 @@ export default async function DashboardPage() {
               </>
             )}
           </p>
-          {user.status === "PENDING_PAYMENT" && trip?.isLocked && (
+          {user.status === "PENDING_PAYMENT" && trip?.isLocked && !trip.disabledSections.includes("payment") && (
             <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-900">
               The trip is locked and payment is due. Your trip share <strong>plus the refundable
               ${trip.depositAmount.toFixed(2)} security deposit</strong> are billed together.{" "}
