@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { requireSection } from "@/lib/sections";
 import { prisma } from "@/lib/db";
 import { ApprovalRequired } from "@/components/ApprovalRequired";
 import { isAuthzError, requireApprovedMember } from "@/lib/authz";
@@ -8,6 +9,7 @@ import { PageNote } from "@/components/PageNote";
 export const dynamic = "force-dynamic";
 
 export default async function PreferencesPage() {
+  await requireSection("preferences");
   // Approval is read from the database, not the sign-in-time JWT, so a
   // member removed from the trip loses access on their next request.
   const member = await requireApprovedMember();

@@ -13,7 +13,29 @@ export type NavItem = {
   exact?: boolean;
   /** Hidden until the member is approved. */
   gated?: boolean;
+  /** Set when the trip owner can turn this section off. */
+  section?: SectionKey;
 };
+
+/** Sections a trip owner can turn on or off for their members. */
+export const SECTION_KEYS = [
+  "itinerary",
+  "lodging",
+  "roster",
+  "sleeping",
+  "meals",
+  "board",
+  "expenses",
+  "contributions",
+  "preferences",
+  "payment",
+] as const;
+
+export type SectionKey = (typeof SECTION_KEYS)[number];
+
+export function isSectionKey(v: string): v is SectionKey {
+  return (SECTION_KEYS as readonly string[]).includes(v);
+}
 
 export type NavGroup = {
   heading: string;
@@ -30,27 +52,27 @@ export const NAV_GROUPS: readonly NavGroup[] = [
     items: [
       { href: "/dashboard", label: "Home", exact: true },
       { href: "/dashboard/my-trips", label: "My trips" },
-      { href: "/dashboard/itinerary", label: "Itinerary" },
-      { href: "/dashboard/lodging", label: "Lodging" },
+      { href: "/dashboard/itinerary", label: "Itinerary", section: "itinerary" },
+      { href: "/dashboard/lodging", label: "Lodging", section: "lodging" },
     ],
   },
   {
     heading: "The group",
     items: [
-      { href: "/dashboard/roster", label: "Roster", gated: true },
-      { href: "/dashboard/sleeping", label: "Sleeping", gated: true },
-      { href: "/dashboard/meals", label: "Meals", gated: true },
-      { href: "/dashboard/board", label: "Board", gated: true },
-      { href: "/dashboard/expenses", label: "Expenses", gated: true },
-      { href: "/dashboard/contributions", label: "Contributions", gated: true },
+      { href: "/dashboard/roster", label: "Roster", gated: true, section: "roster" },
+      { href: "/dashboard/sleeping", label: "Sleeping", gated: true, section: "sleeping" },
+      { href: "/dashboard/meals", label: "Meals", gated: true, section: "meals" },
+      { href: "/dashboard/board", label: "Board", gated: true, section: "board" },
+      { href: "/dashboard/expenses", label: "Expenses", gated: true, section: "expenses" },
+      { href: "/dashboard/contributions", label: "Contributions", gated: true, section: "contributions" },
     ],
   },
   {
     heading: "You",
     items: [
       { href: "/dashboard/intake", label: "Guest form" },
-      { href: "/dashboard/preferences", label: "Preferences", gated: true },
-      { href: "/dashboard/payment", label: "Payment", gated: true },
+      { href: "/dashboard/preferences", label: "Preferences", gated: true, section: "preferences" },
+      { href: "/dashboard/payment", label: "Payment", gated: true, section: "payment" },
       { href: "/dashboard/profile", label: "Profile" },
     ],
   },
@@ -64,17 +86,19 @@ export const NAV_GROUPS: readonly NavGroup[] = [
  * This mirrors, and never replaces, the server-side checks in `lib/approval.ts`
  * — hiding a link is a UI affordance, not the security boundary.
  */
-export function visibleNavGroups(status: string | null): NavGroup[] {
+export function visibleNavGroups(status: string | null, disabled: readonly string[] = []): NavGroup[] {
   const isPending = status === "PENDING";
   return NAV_GROUPS.map((group) => ({
     ...group,
-    items: group.items.filter((item) => !item.gated || !isPending),
+    items: group.items.filter(
+      (item) => (!item.gated || !isPending) && !(item.section && disabled.includes(item.section)),
+    ),
   })).filter((group) => group.items.length > 0);
 }
 
 /** Every visible destination in one list, in group order. */
-export function visibleNavItems(status: string | null): NavItem[] {
-  return visibleNavGroups(status).flatMap((group) => group.items);
+export function visibleNavItems(status: string | null, disabled: readonly string[] = []): NavItem[] {
+  return visibleNavGroups(status, disabled).flatMap((group) => group.items);
 }
 
 /**
@@ -94,8 +118,12 @@ export function isActiveNavItem(item: NavItem, pathname: string): boolean {
  * specific destination rather than whichever ancestor happens to come first in
  * the nav order.
  */
-export function currentNavItem(status: string | null, pathname: string): NavItem | undefined {
-  return visibleNavItems(status)
+export function currentNavItem(
+  status: string | null,
+  pathname: string,
+  disabled: readonly string[] = [],
+): NavItem | undefined {
+  return visibleNavItems(status, disabled)
     .filter((item) => isActiveNavItem(item, pathname))
     .sort((a, b) => b.href.length - a.href.length)[0];
 }

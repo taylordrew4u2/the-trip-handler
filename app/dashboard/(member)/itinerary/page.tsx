@@ -1,4 +1,5 @@
 import { getServerSession } from "next-auth";
+import { requireSection } from "@/lib/sections";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getUserStatus, isApproved } from "@/lib/approval";
@@ -9,6 +10,7 @@ import { getUserTrip } from "@/lib/trip";
 export const dynamic = "force-dynamic";
 
 export default async function ItineraryPage() {
+  await requireSection("itinerary");
   const session = await getServerSession(authOptions);
   const sessionUser = session?.user as { id?: string; status?: string; role?: string } | undefined;
   const userId = sessionUser?.id ?? "";

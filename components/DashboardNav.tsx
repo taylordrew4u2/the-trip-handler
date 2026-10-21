@@ -11,13 +11,19 @@ import {
   visibleNavGroups,
 } from "@/lib/nav";
 
-export function DashboardNav({ status }: { status: string | null }) {
+export function DashboardNav({
+  status,
+  disabledSections = [],
+}: {
+  status: string | null;
+  disabledSections?: string[];
+}) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const menuId = useId();
 
-  const groups = visibleNavGroups(status);
-  const current = currentNavItem(status, pathname);
+  const groups = visibleNavGroups(status, disabledSections);
+  const current = currentNavItem(status, pathname, disabledSections);
 
   // Navigating away closes the sheet — including via the back button, which no
   // link handler would catch. Adjusting during render (rather than in an effect)

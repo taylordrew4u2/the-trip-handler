@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { requireSection } from "@/lib/sections";
 import { ApprovalRequired } from "@/components/ApprovalRequired";
 import { isAuthzError, requireApprovedMember } from "@/lib/authz";
 import { ensureMealPlanSetup, votingCompletionSummary } from "@/app/actions/meals";
@@ -10,6 +11,7 @@ import { getUserTrip } from "@/lib/trip";
 export const dynamic = "force-dynamic";
 
 export default async function MealsPage() {
+  await requireSection("meals");
   // Approval is read from the database, not the sign-in-time JWT, so a
   // member removed from the trip loses access on their next request.
   const member = await requireApprovedMember();

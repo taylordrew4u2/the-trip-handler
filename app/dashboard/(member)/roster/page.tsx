@@ -1,4 +1,5 @@
 import { getServerSession } from "next-auth";
+import { requireSection } from "@/lib/sections";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { RosterClientView } from "./RosterClientView";
@@ -10,6 +11,7 @@ import { getUserTrip } from "@/lib/trip";
 export const dynamic = "force-dynamic";
 
 export default async function RosterPage() {
+  await requireSection("roster");
   if (!isApproved(await getUserStatus())) return <ApprovalRequired what="The roster" />;
 
   const session = await getServerSession(authOptions);

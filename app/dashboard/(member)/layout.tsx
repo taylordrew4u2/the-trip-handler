@@ -12,7 +12,11 @@ export default async function MemberLayout({ children }: { children: React.React
 
   const membership = await prisma.user.findUnique({
     where: { id: sessionUser.id },
-    select: { tripId: true, _count: { select: { ownedTrips: true } } },
+    select: {
+      tripId: true,
+      trip: { select: { disabledSections: true } },
+      _count: { select: { ownedTrips: true } },
+    },
   });
 
   // A member who isn't a participant on any trip doesn't get dropped into one.
@@ -55,7 +59,7 @@ export default async function MemberLayout({ children }: { children: React.React
 
   return (
     <div className="min-h-dvh bg-[#f6f7fb]">
-      <DashboardNav status={sessionUser.status ?? null} />
+      <DashboardNav status={sessionUser.status ?? null} disabledSections={membership.trip?.disabledSections ?? []} />
       <div className="2xl:pl-60">
       <main className="max-w-6xl mx-auto gutter py-8 md:py-10">
         {isPending && (
