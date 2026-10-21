@@ -23,6 +23,10 @@ model User {
   sleepTags               String[]           @default([])
   sleepNote               String?
   adminNotes              String?
+  // Private per-member price change set by the trip owner (e.g. a discount).
+  // Only the owner sees it; the member sees just their own total.
+  priceAdjustment         Float              @default(0)
+  priceAdjustmentNote     String?
   createdAt               DateTime           @default(now())
   updatedAt               DateTime           @updatedAt
   payments                Payment[]
@@ -81,6 +85,14 @@ model Trip {
   transportLocked   Boolean        @default(false)
   mealsPrice        Float?
   mealsLocked       Boolean        @default(false)
+  // What members see on their payment page. Owner-controlled.
+  showLineItems          Boolean   @default(true)
+  showBedPrices          Boolean   @default(true)
+  showPersonalAdjustment Boolean   @default(false)
+  depositAmount          Float     @default(75)
+  // Owner's handles for off-Stripe payments. Null = method not offered.
+  venmoHandle            String?
+  cashAppHandle          String?
   totalExpenses     Float          @default(0)
   createdAt         DateTime       @default(now())
   updatedAt         DateTime       @updatedAt
@@ -229,8 +241,19 @@ model Payment {
   stripeSessionId String?       @unique
   stripePaymentId String?
   status          PaymentStatus @default(PENDING)
+  method          PaymentMethod @default(STRIPE)
+  // Venmo / Cash App: member-uploaded screenshot, reviewed by the owner.
+  receiptUrl      String?
+  note            String?
+  reviewedAt      DateTime?
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
+}
+
+enum PaymentMethod {
+  STRIPE
+  VENMO
+  CASH_APP
 }
 
 enum PaymentStatus {
@@ -306,6 +329,8 @@ model Bed {
   room            String?
   type            BedType          @default(DOUBLE)
   womenOnly       Boolean          @default(false)
+  // Added to (or taken off) each occupant's share. Public to the trip.
+  priceAdjustment Float            @default(0)
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
   assignments     BedAssignment[]

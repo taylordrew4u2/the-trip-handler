@@ -21,3 +21,12 @@ export async function uploadReceipt(file: File, expenseId: string): Promise<stri
 export async function deleteBlob(url: string): Promise<void> {
   await del(url);
 }
+
+export async function uploadPaymentReceipt(file: File, paymentId: string): Promise<string> {
+  const ext = file.name.split(".").pop() ?? "jpg";
+  const { url } = await put(`payment-receipts/${paymentId}.${ext}`, file, {
+    access: "public",
+    allowOverwrite: true,
+  });
+  return url;
+}

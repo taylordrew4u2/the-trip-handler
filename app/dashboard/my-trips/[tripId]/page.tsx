@@ -8,6 +8,9 @@ import { PricingPanel } from "./PricingPanel";
 import { ContributionsPanel } from "./ContributionsPanel";
 import { ExpensesPanel } from "./ExpensesPanel";
 import { BedsPanel } from "./BedsPanel";
+import { PaymentSettingsPanel } from "./PaymentSettingsPanel";
+import { MemberPaymentsPanel, type MemberPaymentRow } from "./MemberPaymentsPanel";
+import { computeBill } from "@/lib/bill";
 
 export const dynamic = "force-dynamic";
 
@@ -30,7 +33,7 @@ export default async function ManageTripPage({
   });
   if (!trip) redirect("/dashboard/my-trips");
 
-  const [contributions, expenses, beds] = await Promise.all([
+  const [contributions, expenses, beds, members] = await Promise.all([
     prisma.contribution.findMany({
       where: { tripId },
       orderBy: { createdAt: "desc" },
@@ -46,7 +49,47 @@ export default async function ManageTripPage({
       orderBy: [{ room: "asc" }, { label: "asc" }],
       include: { assignments: { include: { user: { select: { name: true } } } } },
     }),
+    // Owner-only: every member's private price and payment trail.
+    prisma.user.findMany({
+      where: { tripId, status: { in: ["APPROVED", "PENDING_PAYMENT", "CONFIRMED_PAID"] } },
+      orderBy: { name: "asc" },
+      select: {
+        id: true,
+        name: true,
+        status: true,
+        priceAdjustment: true,
+        priceAdjustmentNote: true,
+        bedAssignment: { select: { bed: { select: { label: true, priceAdjustment: true } } } },
+        payments: {
+          orderBy: { createdAt: "desc" },
+          select: { id: true, amount: true, method: true, status: true, receiptUrl: true, note: true, createdAt: true },
+        },
+      },
+    }),
   ]);
+
+  const memberData: MemberPaymentRow[] = members.map((m) => {
+    const bed = m.bedAssignment?.bed ?? null;
+    const bill = computeBill(trip, {
+      priceAdjustment: m.priceAdjustment,
+      bed,
+      completedPayments: m.payments.filter((p) => p.status === "COMPLETED").map((p) => p.amount),
+    });
+    return {
+      id: m.id,
+      name: m.name,
+      status: m.status,
+      bedLabel: bed?.label ?? null,
+      bedAdjustment: bill.bedAdjustment,
+      priceAdjustment: m.priceAdjustment,
+      priceAdjustmentNote: m.priceAdjustmentNote,
+      share: bill.share,
+      total: bill.total,
+      paid: bill.paid,
+      remaining: bill.remaining,
+      payments: m.payments.map((p) => ({ ...p, createdAt: p.createdAt.toISOString() })),
+    };
+  });
 
   const contributionData = contributions.map((c) => ({
     id: c.id,
@@ -71,6 +114,7 @@ export default async function ManageTripPage({
     room: b.room,
     type: b.type,
     womenOnly: b.womenOnly,
+    priceAdjustment: b.priceAdjustment,
     occupants: b.assignments.map((a) => a.user.name),
   }));
 
@@ -120,9 +164,22 @@ export default async function ManageTripPage({
           mealsLocked: trip.mealsLocked,
           isLocked: trip.isLocked,
           finalPrice: trip.finalPrice,
+          depositAmount: trip.depositAmount,
+        }}
+      />
+      <PaymentSettingsPanel
+        tripId={trip.id}
+        settings={{
+          depositAmount: trip.depositAmount,
+          venmoHandle: trip.venmoHandle,
+          cashAppHandle: trip.cashAppHandle,
+          showLineItems: trip.showLineItems,
+          showBedPrices: trip.showBedPrices,
+          showPersonalAdjustment: trip.showPersonalAdjustment,
         }}
       />
       <BedsPanel tripId={trip.id} beds={bedData} />
+      <MemberPaymentsPanel members={memberData} />
       <ContributionsPanel tripId={trip.id} items={contributionData} />
       <ExpensesPanel expenses={expenseData} totalExpenses={trip.totalExpenses} />
     </div>
