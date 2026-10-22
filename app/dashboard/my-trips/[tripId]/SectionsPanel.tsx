@@ -3,12 +3,19 @@
 import { useState, useTransition } from "react";
 import { updateTripSections } from "@/app/actions/trips";
 import { NAV_GROUPS, type SectionKey } from "@/lib/nav";
+import { GUEST_FORM_TOGGLES } from "@/lib/guestForm";
 
 const SECTIONS: { section: SectionKey; label: string }[] = [
   ...NAV_GROUPS.flatMap((g) => g.items).flatMap((i) => (i.section ? [{ section: i.section, label: i.label }] : [])),
   // Not a page: controls the van questions and the transport cost line.
   { section: "transport", label: "Transportation (vans)" },
 ];
+
+// Not pages: switch whole question groups in the guest form on or off.
+const FORM_SWITCHES: { section: SectionKey; label: string }[] = GUEST_FORM_TOGGLES.map((t) => ({
+  section: t.key,
+  label: t.label,
+}));
 
 export function SectionsPanel({ tripId, disabled }: { tripId: string; disabled: string[] }) {
   const [off, setOff] = useState<string[]>(disabled);
@@ -46,26 +53,46 @@ export function SectionsPanel({ tripId, disabled }: { tripId: string; disabled: 
         </div>
       )}
 
-      <ul className="grid gap-2 sm:grid-cols-2">
-        {SECTIONS.map((item) => {
-          const on = !off.includes(item.section);
-          return (
-            <li key={item.section}>
-              <label className="flex items-center justify-between gap-3 min-h-[44px] rounded-xl border border-slate-200/80 bg-slate-50/60 px-4 cursor-pointer">
-                <span className={`text-sm ${on ? "text-slate-900" : "text-slate-500 line-through"}`}>{item.label}</span>
-                <input
-                  type="checkbox"
-                  checked={on}
-                  disabled={isPending}
-                  onChange={() => toggle(item.section)}
-                  aria-label={`Show ${item.label} to members`}
-                  className="accent-indigo-600 w-4 h-4"
-                />
-              </label>
-            </li>
-          );
-        })}
-      </ul>
+      <SwitchList items={SECTIONS} off={off} disabled={isPending} onToggle={toggle} />
+      <div>
+        <h3 className="text-sm font-semibold text-slate-900 mb-2">Guest form questions</h3>
+        <SwitchList items={FORM_SWITCHES} off={off} disabled={isPending} onToggle={toggle} />
+      </div>
     </div>
+  );
+}
+
+function SwitchList({
+  items,
+  off,
+  disabled,
+  onToggle,
+}: {
+  items: { section: SectionKey; label: string }[];
+  off: string[];
+  disabled: boolean;
+  onToggle: (key: SectionKey) => void;
+}) {
+  return (
+    <ul className="grid gap-2 sm:grid-cols-2">
+      {items.map((item) => {
+        const on = !off.includes(item.section);
+        return (
+          <li key={item.section}>
+            <label className="flex items-center justify-between gap-3 min-h-[44px] rounded-xl border border-slate-200/80 bg-slate-50/60 px-4 cursor-pointer">
+              <span className={`text-sm ${on ? "text-slate-900" : "text-slate-500 line-through"}`}>{item.label}</span>
+              <input
+                type="checkbox"
+                checked={on}
+                disabled={disabled}
+                onChange={() => onToggle(item.section)}
+                aria-label={`Turn ${item.label} ${on ? "off" : "on"}`}
+                className="accent-indigo-600 w-4 h-4"
+              />
+            </label>
+          </li>
+        );
+      })}
+    </ul>
   );
 }

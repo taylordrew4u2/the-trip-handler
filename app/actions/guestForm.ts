@@ -6,37 +6,17 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { notifyAdmin, sendFormUnlockedEmail } from "@/lib/resend";
 import { isAuthzError, requireApprovedMember } from "@/lib/authz";
+import { intakeError, readIntake } from "@/lib/guestForm";
 
-const STRING_ARRAY_FIELDS = new Set([
-  "bringingItems",
-  "dietaryRestrictions",
-  "drinkPrefs",
-  "workOnGoals",
-  "contentAcks",
-  "jokeProtectionAcks",
-  "activitiesInterested",
-  "securityDepositAcks",
-  "houseRulesAcks",
-]);
-
-const BOOL_FIELDS = new Set(["age21Confirmed", "vanAck", "substanceFreeAck"]);
-
-const REQUIRED_STRING_FIELDS = ["fullName", "phoneNumber", "maxBudget"];
-
-const REQUIRED_HOUSE_RULES = [
-  "shared",
-  "food",
-  "noStealing",
-  "quietHours",
-  "alcohol",
-  "damage",
-  "respect",
-  "groupTrip",
-];
-
-const REQUIRED_JOKE_PROTECTION = ["noPostMaterial", "workshopPrivate", "groupOk", "noRepeat", "noPost"];
-
-const REQUIRED_SECURITY_DEPOSIT = ["payDeposit", "returned", "forfeitAndCharged", "hostNotLiable"];
+/** Who hears about guest-form activity: the trip's owner, else the site admin inbox. */
+async function tripOwnerEmail(tripId: string | null): Promise<string | undefined> {
+  if (!tripId) return undefined;
+  const trip = await prisma.trip.findUnique({
+    where: { id: tripId },
+    select: { owner: { select: { email: true } } },
+  });
+  return trip?.owner?.email ?? undefined;
+}
 
 export async function submitGuestForm(formData: FormData) {
   const session = await getServerSession(authOptions);
@@ -48,68 +28,27 @@ export async function submitGuestForm(formData: FormData) {
 
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    include: { trip: { select: { disabledSections: true } } },
+    include: { trip: { select: { id: true, disabledSections: true } } },
   });
   if (!user) return { error: "User not found." };
-  // Questions about things this trip doesn't have aren't asked, so aren't required.
-  const off = user.trip?.disabledSections ?? [];
-  const hasPayment = !off.includes("payment");
+  // The form is an application to a specific trip.
+  if (!user.trip) return { error: "Join a trip with an invite link or code first." };
+  const off = user.trip.disabledSections;
 
   const existing = await prisma.guestForm.findUnique({ where: { userId } });
   if (existing?.locked) {
-    return { error: "Your form is locked. Request edit access from admin before resubmitting." };
+    return { error: "Your form is locked. Request edit access from the organizer before resubmitting." };
   }
 
-  // Build the data object from form fields
-  const data: Record<string, string | string[] | boolean | null> = {};
-  const seenArrays = new Set<string>();
-
-  for (const [rawKey, rawValue] of formData.entries()) {
-    const key = rawKey.endsWith("[]") ? rawKey.slice(0, -2) : rawKey;
-    const value = rawValue.toString();
-
-    if (STRING_ARRAY_FIELDS.has(key)) {
-      if (!seenArrays.has(key)) {
-        data[key] = formData.getAll(rawKey).map((v) => v.toString()).filter(Boolean);
-        seenArrays.add(key);
-      }
-      continue;
-    }
-    if (BOOL_FIELDS.has(key)) {
-      data[key] = value === "on" || value === "true";
-      continue;
-    }
-    data[key] = value.trim() || null;
-  }
-
-  // Required field validation
-  for (const f of REQUIRED_STRING_FIELDS) {
-    if (f === "maxBudget" && !hasPayment) continue;
-    if (!data[f]) return { error: `Please fill in ${f}.` };
-  }
-  if (!data.age21Confirmed) return { error: "You must confirm you're 21 or older." };
-  if (!data.substanceFreeAck) return { error: "You must agree this is a drug- and alcohol-free trip." };
-
-  const houseRules = (data.houseRulesAcks as string[]) || [];
-  for (const rule of REQUIRED_HOUSE_RULES) {
-    if (!houseRules.includes(rule)) return { error: "Please agree to all house rules." };
-  }
-  const jokeProtection = (data.jokeProtectionAcks as string[]) || [];
-  for (const rule of REQUIRED_JOKE_PROTECTION) {
-    if (!jokeProtection.includes(rule)) return { error: "Please agree to all material / content protection items." };
-  }
-  const securityDeposit = (data.securityDepositAcks as string[]) || [];
-  for (const rule of hasPayment ? REQUIRED_SECURITY_DEPOSIT : []) {
-    if (!securityDeposit.includes(rule)) return { error: "Please agree to all security deposit terms." };
-  }
-
-  // Make sure all expected array fields exist (so unchecked groups become [])
-  for (const f of STRING_ARRAY_FIELDS) {
-    if (!(f in data)) data[f] = [];
-  }
+  // Only the questions this trip asks are read; everything else in the
+  // request (ids, lock flags, preference answers) is ignored.
+  const data = readIntake(formData, off);
+  const problem = intakeError(data, off);
+  if (problem) return { error: problem };
+  if (!data.fullName || !data.phoneNumber) return { error: "Please fill in your name and phone number." };
 
   // Lock the form after every successful submit so the user can't keep
-  // changing things without admin approval.
+  // changing things without the organizer's approval.
   const dataWithLock = { ...data, locked: true, editRequested: false };
   type UpsertInput = Parameters<typeof prisma.guestForm.upsert>[0];
   await prisma.guestForm.upsert({
@@ -120,22 +59,22 @@ export async function submitGuestForm(formData: FormData) {
 
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/intake");
-  revalidatePath("/admin/intake");
+  revalidatePath(`/dashboard/my-trips/${user.trip.id}/applicants/${userId}`);
 
   if (!existing) {
-    // First-time submission — let admin know there's a new application to review.
+    // First-time submission — let the organizer know there's an application to review.
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
     await notifyAdmin({
+      to: await tripOwnerEmail(user.trip.id),
       subject: `${user.name} submitted their guest form`,
       intro: `A new applicant just finished the pre-approval form. Review it and approve or reject.`,
       details: {
         Name: user.name,
         Email: user.email,
         "Max budget": (data.maxBudget as string | null) ?? null,
-        "Substance-free ack": data.substanceFreeAck ? "Agreed" : "NOT AGREED",
       },
       actionLabel: "Review application",
-      actionUrl: `${baseUrl}/dashboard/my-trips`,
+      actionUrl: `${baseUrl}/dashboard/my-trips/${user.trip.id}/applicants/${userId}`,
     });
   }
 
@@ -159,17 +98,17 @@ export async function requestFormEditAccess() {
     data: { editRequested: true },
   });
   revalidatePath("/dashboard/intake");
-  revalidatePath("/admin/intake");
 
-  const u = await prisma.user.findUnique({ where: { id: userId }, select: { name: true, email: true } });
+  const u = await prisma.user.findUnique({ where: { id: userId }, select: { name: true, email: true, tripId: true } });
   if (u) {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
     await notifyAdmin({
+      to: await tripOwnerEmail(u.tripId),
       subject: `${u.name} requested edit access to their guest form`,
-      intro: `They want to make changes to a previously submitted form. Unlock it from your trip's applicant list if that's fine.`,
+      intro: `They want to make changes to a previously submitted form. Unlock it from their answers page if that's fine.`,
       details: { Name: u.name, Email: u.email },
       actionLabel: "Open & unlock",
-      actionUrl: `${baseUrl}/dashboard/my-trips`,
+      actionUrl: u.tripId ? `${baseUrl}/dashboard/my-trips/${u.tripId}/applicants/${userId}` : `${baseUrl}/dashboard/my-trips`,
     });
   }
   return { success: true };
@@ -177,8 +116,16 @@ export async function requestFormEditAccess() {
 
 export async function unlockGuestForm(userId: string) {
   const session = await getServerSession(authOptions);
-  const role = (session?.user as { role?: string } | undefined)?.role;
-  if (role !== "ADMIN") return { error: "Admin only." };
+  const caller = session?.user as { id?: string; role?: string } | undefined;
+  if (!caller?.id) return { error: "Sign in first." };
+
+  // The organizer of the applicant's trip (or the site admin) may unlock.
+  const applicant = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { trip: { select: { id: true, ownerId: true } } },
+  });
+  const isOwner = Boolean(applicant?.trip && applicant.trip.ownerId === caller.id);
+  if (!isOwner && caller.role !== "ADMIN") return { error: "Not your trip." };
 
   const form = await prisma.guestForm.findUnique({ where: { userId } });
   if (!form) return { error: "No form to unlock." };
@@ -188,8 +135,7 @@ export async function unlockGuestForm(userId: string) {
     data: { locked: false, editRequested: false },
   });
   revalidatePath("/dashboard/intake");
-  revalidatePath("/admin/intake");
-  revalidatePath(`/admin/intake/${userId}`);
+  if (applicant?.trip) revalidatePath(`/dashboard/my-trips/${applicant.trip.id}/applicants/${userId}`);
 
   const u = await prisma.user.findUnique({ where: { id: userId }, select: { name: true, email: true } });
   if (u) await sendFormUnlockedEmail(u.email, u.name);
@@ -338,6 +284,6 @@ export async function updatePreferences(formData: FormData) {
 
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/preferences");
-  revalidatePath(`/admin/intake/${sessionUser.id}`);
+  revalidatePath(`/dashboard/my-trips/${auth.tripId}/applicants/${sessionUser.id}`);
   return { success: true };
 }

@@ -10,7 +10,14 @@ import {
   setMyTripApplicationOpen,
 } from "@/app/actions/trips";
 
-type Applicant = { id: string; name: string; email: string; status: string };
+type Applicant = {
+  id: string;
+  name: string;
+  email: string;
+  status: string;
+  hasForm: boolean;
+  editRequested: boolean;
+};
 type TripData = {
   id: string;
   name: string;
@@ -260,6 +267,17 @@ export function MyTripsClient({ trips }: { trips: TripData[] }) {
                           <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusBadge(a.status)}`}>
                             {a.status.replace("_", " ").toLowerCase()}
                           </span>
+                          <Link
+                            href={`/dashboard/my-trips/${trip.id}/applicants/${a.id}`}
+                            className="inline-flex items-center justify-center px-3 min-h-[44px] rounded-xl border border-slate-300 bg-white text-slate-700 text-xs font-medium transition-colors hover:bg-slate-50"
+                          >
+                            {a.hasForm ? "View answers" : "No form yet"}
+                            {a.editRequested && (
+                              <span className="ml-2 rounded bg-amber-200 px-1.5 py-0.5 text-[10px] font-semibold text-amber-900">
+                                Edit request
+                              </span>
+                            )}
+                          </Link>
                           {a.status === "PENDING" && (
                             <>
                               <button

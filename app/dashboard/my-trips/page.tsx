@@ -17,7 +17,13 @@ export default async function MyTripsPage() {
     include: {
       users: {
         orderBy: { createdAt: "desc" },
-        select: { id: true, name: true, email: true, status: true },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          status: true,
+          guestForm: { select: { editRequested: true } },
+        },
       },
     },
   });
@@ -28,7 +34,11 @@ export default async function MyTripsPage() {
     inviteToken: t.inviteToken,
     joinCode: t.joinCode,
     isApplicationOpen: t.isApplicationOpen,
-    applicants: t.users,
+    applicants: t.users.map(({ guestForm, ...u }) => ({
+      ...u,
+      hasForm: Boolean(guestForm),
+      editRequested: guestForm?.editRequested ?? false,
+    })),
   }));
 
   return (

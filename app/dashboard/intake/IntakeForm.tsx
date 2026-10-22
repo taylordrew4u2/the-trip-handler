@@ -11,6 +11,13 @@ import {
   useFieldId,
   useId,
 } from "@/components/forms/field";
+import { activeHouseRules } from "@/lib/guestForm";
+
+/** "a, b, and c" from the truthy items. */
+function listJoin(items: (string | false)[]): string {
+  const xs = items.filter((x): x is string => Boolean(x));
+  return xs.length <= 2 ? xs.join(" and ") : `${xs.slice(0, -1).join(", ")}, and ${xs[xs.length - 1]}`;
+}
 
 type Existing = GuestForm | null;
 
@@ -152,6 +159,12 @@ export function IntakeForm({ defaultEmail, defaultName, defaultPhone, existing, 
   defaultEmail: string; defaultName: string; defaultPhone: string; existing: Existing; isPending?: boolean; deposit?: number; off?: string[];
 }) {
   const dep = `$${Number.isInteger(deposit) ? deposit : deposit.toFixed(2)}`;
+  const houseRules = activeHouseRules(off);
+  const covers = listJoin([
+    !off.includes("transport") && "travel (rental vans + gas)",
+    !off.includes("meals") && "meals during the trip",
+    "lodging",
+  ]);
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -215,8 +228,8 @@ export function IntakeForm({ defaultEmail, defaultName, defaultPhone, existing, 
             <p className="text-xs text-slate-600 mt-0.5">
               {savedAt && <>Submitted {savedAt}. </>}
               {editRequested
-                ? "Edit access requested — admin will review and unlock for changes."
-                : "Submitted. To make changes, request edit access from admin."}
+                ? "Edit access requested — the organizer will review and unlock it for changes."
+                : "Submitted. To make changes, request edit access from the organizer."}
             </p>
           </div>
           {!editRequested && (
@@ -231,7 +244,7 @@ export function IntakeForm({ defaultEmail, defaultName, defaultPhone, existing, 
           )}
           {editRequested && (
             <span className="text-xs px-2 py-1 rounded bg-amber-200 text-amber-900 font-medium whitespace-nowrap">
-              Pending admin
+              Waiting on organizer
             </span>
           )}
         </div>
@@ -246,18 +259,20 @@ export function IntakeForm({ defaultEmail, defaultName, defaultPhone, existing, 
           <ReadOnlyInput type="email" value={defaultEmail} />
         </Field>
         <Field label="Pronouns" required><TextInput name="pronouns" defaultValue={e?.pronouns} required placeholder="e.g. she/her, they/them, N/A" /></Field>
-        <Field label="Age confirmation" required>
-          <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-800 has-checked:border-indigo-200 has-checked:bg-indigo-50">
-            <input type="checkbox" name="age21Confirmed" defaultChecked={e?.age21Confirmed} required className="h-4 w-4 shrink-0 accent-indigo-600" />
-            I confirm I am 21 or older.
-          </label>
-        </Field>
+        {!off.includes("age21") && (
+          <Field label="Age confirmation" required>
+            <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-800 has-checked:border-indigo-200 has-checked:bg-indigo-50">
+              <input type="checkbox" name="age21Confirmed" defaultChecked={e?.age21Confirmed} required className="h-4 w-4 shrink-0 accent-indigo-600" />
+              I confirm I am 21 or older.
+            </label>
+          </Field>
+        )}
       </Section>
 
       {!off.includes("payment") && (
         <Section
           title="Budget"
-          intro={`The trip price covers travel (rental vans + gas), all meals during the weekend, and lodging. Activity and shared-supply costs are split on top. Heads up: there's also a refundable ${dep} security deposit billed at payment time — that's separate from your trip share. Be honest with the cap — admin uses it to decide who gets approved.`}
+          intro={`The trip price covers ${covers}. Activity and shared-supply costs are split on top. Heads up: there's also a refundable ${dep} security deposit billed at payment time — that's separate from your trip share. Be honest with the cap — the organizer uses it to decide who gets approved.`}
         >
           <Field
             label={`Max trip share you're willing to pay (per person, before the ${dep} deposit)`}
@@ -274,31 +289,33 @@ export function IntakeForm({ defaultEmail, defaultName, defaultPhone, existing, 
         </Section>
       )}
 
-      <Section
-        title="Drug- and alcohol-free trip"
-        intro="This is a sober weekend. No alcohol, no recreational drugs — full stop. If that's not for you, this isn't the trip."
-      >
-        <Field label="" required>
-          <label className="flex min-h-11 cursor-pointer items-start gap-3 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm leading-6 text-slate-800">
-            <input
-              type="checkbox"
-              name="substanceFreeAck"
-              defaultChecked={e?.substanceFreeAck}
-              required
-              className="mt-1 h-4 w-4 shrink-0 accent-indigo-600"
-            />
-            <span>
-              I understand and agree that this is a <strong>drug- and alcohol-free</strong> trip.
-              I will not bring, use, or share any alcohol or recreational drugs during the weekend.
-            </span>
-          </label>
-        </Field>
-      </Section>
+      {!off.includes("sober") && (
+        <Section
+          title="Drug- and alcohol-free trip"
+          intro="This is a sober trip. No alcohol, no recreational drugs — full stop. If that's not for you, this isn't the trip."
+        >
+          <Field label="" required>
+            <label className="flex min-h-11 cursor-pointer items-start gap-3 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm leading-6 text-slate-800">
+              <input
+                type="checkbox"
+                name="substanceFreeAck"
+                defaultChecked={e?.substanceFreeAck}
+                required
+                className="mt-1 h-4 w-4 shrink-0 accent-indigo-600"
+              />
+              <span>
+                I understand and agree that this is a <strong>drug- and alcohol-free</strong> trip.
+                I will not bring, use, or share any alcohol or recreational drugs during the trip.
+              </span>
+            </label>
+          </Field>
+        </Section>
+      )}
 
       {!off.includes("sleeping") && (
         <Section
           title="Bed sharing"
-          intro="Heads up — you'll probably have to share a bed. You'll be able to choose who you share with. And if you're a dude, the odds are very high you'll be sharing."
+          intro="Heads up — you'll probably have to share a bed. You'll be able to choose who you share with."
         >
           <Field label="Are you OK with that?" required>
             <RadioGroup name="shareBed" defaultValue={e?.shareBed} options={YES_NO} required />
@@ -318,49 +335,53 @@ export function IntakeForm({ defaultEmail, defaultName, defaultPhone, existing, 
         <Field label="Anything you cannot or should not do?" hint="Hiking, swimming, drinking, late nights, stairs, etc." required>
           <TextArea name="cannotDo" defaultValue={e?.cannotDo} rows={2} required placeholder="N/A if none" />
         </Field>
-        <Field label="Anything that would make the weekend safer, easier, or less annoying for you?" required>
+        <Field label="Anything that would make the trip safer, easier, or less annoying for you?" required>
           <TextArea name="safetyNotes" defaultValue={e?.safetyNotes} required placeholder="N/A if nothing" />
         </Field>
       </Section>
 
-      <Section title="Content / social media" intro="We'll be making content for social media during the weekend. This may include group videos, photos, sketches, recap clips, behind-the-scenes footage, and other planned content.">
-        <Field label="Instagram handle" required><TextInput name="instagram" defaultValue={e?.instagram} required placeholder="@handle or N/A" /></Field>
-        <Field label="TikTok handle" required><TextInput name="tiktok" defaultValue={e?.tiktok} required placeholder="@handle or N/A" /></Field>
-        <Field label="Any other handle you want promoted" required><TextInput name="otherHandles" defaultValue={e?.otherHandles} required placeholder="N/A if none" /></Field>
-        <Field label="Are you comfortable appearing in group photos?" required><RadioGroup name="comfortGroupPhotos" defaultValue={e?.comfortGroupPhotos} options={YES_NO_ASK} required /></Field>
-        <Field label="Are you comfortable appearing in group videos?" required><RadioGroup name="comfortGroupVideos" defaultValue={e?.comfortGroupVideos} options={YES_NO_ASK} required /></Field>
-        <Field label="Are you comfortable being tagged on social media?" required><RadioGroup name="comfortTagged" defaultValue={e?.comfortTagged} options={YES_NO_ASK} required /></Field>
-        <Field label="Are you comfortable being part of planned group content?" required>
-          <RadioGroup name="comfortPlannedContent" defaultValue={e?.comfortPlannedContent} options={[
-            { value: "yes", label: "Yes" },
-            { value: "no", label: "No" },
-            { value: "depends", label: "Depends on the idea" },
-          ]} required />
-        </Field>
-        <Field label="Content acknowledgements">
-          <CheckboxGroup name="contentAcks" defaultValue={e?.contentAcks} options={[
-            { value: "filmed", label: "I am okay being filmed during group activities." },
-            { value: "photographed", label: "I am okay being photographed during group activities." },
-            { value: "recap", label: "I am okay appearing in recap videos from the weekend." },
-            { value: "promo", label: "I am okay appearing in promotional content for future trips." },
-            { value: "tagged", label: "I am okay being tagged in posts." },
-            { value: "approveClips", label: "I want to approve clips before they are posted." },
-            { value: "doNotFilm", label: "I do not want to be filmed or photographed." },
-          ]} />
-        </Field>
-      </Section>
+      {!off.includes("social") && (
+        <Section title="Content / social media" intro="We'll be making content for social media during the trip. This may include group videos, photos, sketches, recap clips, behind-the-scenes footage, and other planned content.">
+          <Field label="Instagram handle" required><TextInput name="instagram" defaultValue={e?.instagram} required placeholder="@handle or N/A" /></Field>
+          <Field label="TikTok handle" required><TextInput name="tiktok" defaultValue={e?.tiktok} required placeholder="@handle or N/A" /></Field>
+          <Field label="Any other handle you want promoted" required><TextInput name="otherHandles" defaultValue={e?.otherHandles} required placeholder="N/A if none" /></Field>
+          <Field label="Are you comfortable appearing in group photos?" required><RadioGroup name="comfortGroupPhotos" defaultValue={e?.comfortGroupPhotos} options={YES_NO_ASK} required /></Field>
+          <Field label="Are you comfortable appearing in group videos?" required><RadioGroup name="comfortGroupVideos" defaultValue={e?.comfortGroupVideos} options={YES_NO_ASK} required /></Field>
+          <Field label="Are you comfortable being tagged on social media?" required><RadioGroup name="comfortTagged" defaultValue={e?.comfortTagged} options={YES_NO_ASK} required /></Field>
+          <Field label="Are you comfortable being part of planned group content?" required>
+            <RadioGroup name="comfortPlannedContent" defaultValue={e?.comfortPlannedContent} options={[
+              { value: "yes", label: "Yes" },
+              { value: "no", label: "No" },
+              { value: "depends", label: "Depends on the idea" },
+            ]} required />
+          </Field>
+          <Field label="Content acknowledgements">
+            <CheckboxGroup name="contentAcks" defaultValue={e?.contentAcks} options={[
+              { value: "filmed", label: "I am okay being filmed during group activities." },
+              { value: "photographed", label: "I am okay being photographed during group activities." },
+              { value: "recap", label: "I am okay appearing in recap videos from the trip." },
+              { value: "promo", label: "I am okay appearing in promotional content for future trips." },
+              { value: "tagged", label: "I am okay being tagged in posts." },
+              { value: "approveClips", label: "I want to approve clips before they are posted." },
+              { value: "doNotFilm", label: "I do not want to be filmed or photographed." },
+            ]} />
+          </Field>
+        </Section>
+      )}
 
-      <Section title="Material / content protection" intro="This part matters. People can create together without taking or posting each other's unfinished work. All five required.">
-        <Field label="" required>
-          <CheckboxGroup name="jokeProtectionAcks" defaultValue={e?.jokeProtectionAcks} options={[
-            { value: "noPostMaterial", label: "No one may post my material without my permission." },
-            { value: "workshopPrivate", label: "Workshop footage is private unless I approve it being posted." },
-            { value: "groupOk", label: "Group/social content is okay, but my own material should not be posted without approval." },
-            { value: "noRepeat", label: "I understand other people's ideas, premises, unfinished work, and personal stories should not be repeated, posted, or used without permission." },
-            { value: "noPost", label: "I will not post another person's material without asking them first." },
-          ]} />
-        </Field>
-      </Section>
+      {!off.includes("material") && (
+        <Section title="Material / content protection" intro="This part matters. People can create together without taking or posting each other's unfinished work. All five required.">
+          <Field label="" required>
+            <CheckboxGroup name="jokeProtectionAcks" defaultValue={e?.jokeProtectionAcks} options={[
+              { value: "noPostMaterial", label: "No one may post my material without my permission." },
+              { value: "workshopPrivate", label: "Workshop footage is private unless I approve it being posted." },
+              { value: "groupOk", label: "Group/social content is okay, but my own material should not be posted without approval." },
+              { value: "noRepeat", label: "I understand other people's ideas, premises, unfinished work, and personal stories should not be repeated, posted, or used without permission." },
+              { value: "noPost", label: "I will not post another person's material without asking them first." },
+            ]} />
+          </Field>
+        </Section>
+      )}
 
       {!off.includes("itinerary") && (
         <Section title="Group activities" intro="Group activities, content creation, writing sessions, workshops, and other trip activities.">
@@ -409,26 +430,21 @@ export function IntakeForm({ defaultEmail, defaultName, defaultPhone, existing, 
         </Section>
       )}
 
-      <Section title="House rules" intro="All eight required.">
+      <Section title="House rules" intro={`All ${houseRules.length} required.`}>
         <Field label="" required>
-          <CheckboxGroup name="houseRulesAcks" defaultValue={e?.houseRulesAcks} options={[
-            { value: "shared", label: "I understand this is a shared house and I'm expected to clean up after myself." },
-            { value: "food", label: "I understand food is being planned in advance and I need to list allergies and dietary restrictions honestly." },
-            { value: "noStealing", label: "I understand I should not eat food that is clearly set aside for someone else." },
-            { value: "quietHours", label: "I understand quiet hours may exist." },
-            { value: "alcohol", label: "I understand this is a drug- and alcohol-free weekend and I will not bring or use either on the trip." },
-            { value: "damage", label: "I understand I am responsible for damage I personally cause." },
-            { value: "respect", label: "I understand I need to respect people's space, sleep, food needs, creative work, and boundaries." },
-            { value: "groupTrip", label: "I understand this is a group trip, not a hotel, and everyone needs to help keep the house functional." },
-          ]} />
+          <CheckboxGroup
+            name="houseRulesAcks"
+            defaultValue={e?.houseRulesAcks}
+            options={houseRules.map((r) => ({ value: r.value, label: r.label }))}
+          />
         </Field>
       </Section>
 
       <Section title="Final notes">
-        <Field label="Anything else we should know before planning the weekend?" required>
+        <Field label="Anything else we should know before planning the trip?" required>
           <TextArea name="finalNotes" defaultValue={e?.finalNotes} required placeholder="N/A if nothing comes to mind" />
         </Field>
-        <Field label="What would make this weekend actually fun for you?" required>
+        <Field label="What would make this trip actually fun for you?" required>
           <TextArea name="whatWouldMakeFun" defaultValue={e?.whatWouldMakeFun} required placeholder="N/A if not sure" />
         </Field>
       </Section>

@@ -6,6 +6,8 @@ const FROM_ADDRESS = process.env.EMAIL_FROM ?? "onboarding@resend.dev";
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 
 type AdminEvent = {
+  /** Recipient. Defaults to ADMIN_EMAIL (e.g. when the trip has no owner). */
+  to?: string;
   subject: string;
   intro: string;
   details?: Record<string, string | null | undefined>;
@@ -14,12 +16,13 @@ type AdminEvent = {
 };
 
 /**
- * Send an admin notification to ADMIN_EMAIL. No-ops when ADMIN_EMAIL is
- * unset, and best-effort otherwise — never throws (we don't want a Resend
+ * Send an organizer notification to `event.to`, falling back to ADMIN_EMAIL.
+ * No-ops when there's no recipient, and best-effort otherwise — never throws (we don't want a Resend
  * hiccup to fail the underlying user action).
  */
 export async function notifyAdmin(event: AdminEvent): Promise<void> {
-  if (!ADMIN_EMAIL) return;
+  const to = event.to ?? ADMIN_EMAIL;
+  if (!to) return;
   try {
     const detailRows = Object.entries(event.details ?? {})
       .filter(([, v]) => v !== null && v !== undefined && v !== "")
@@ -36,12 +39,12 @@ export async function notifyAdmin(event: AdminEvent): Promise<void> {
 
     await resend.emails.send({
       from: FROM_ADDRESS,
-      to: ADMIN_EMAIL,
-      subject: `[Trip Handler admin] ${event.subject}`,
+      to,
+      subject: `[Trip Handler] ${event.subject}`,
       html: `
         <div style="font-family: ui-sans-serif, system-ui, sans-serif; max-width: 560px; margin: 0 auto; color: #1c1917;">
-          <p style="font-size: 12px; text-transform: uppercase; letter-spacing: 2px; color: #888; margin: 0 0 8px;">The Trip Handler · admin</p>
-          <h1 style="font-size: 22px; margin: 0 0 12px;">${event.subject}</h1>
+          <p style="font-size: 12px; text-transform: uppercase; letter-spacing: 2px; color: #888; margin: 0 0 8px;">The Trip Handler</p>
+          <h1 style="font-size: 22px; margin: 0 0 12px;">${escapeHtml(event.subject)}</h1>
           <p style="font-size: 14px; line-height: 1.5; color: #444;">${event.intro}</p>
           ${detailRows ? `<table style="border-collapse:collapse;margin-top:12px;">${detailRows}</table>` : ""}
           ${button}
