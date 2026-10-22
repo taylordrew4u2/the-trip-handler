@@ -5,9 +5,18 @@
  * answers page all read this, so they can't drift apart.
  */
 
+/** The no-alcohol / no-drugs / no-smoking checks, in the order the form asks them. */
+export const SUBSTANCE_RULES = [
+  { key: "alcohol", field: "noAlcoholAck", label: "No alcohol. I won't bring, drink, or share alcohol on the trip." },
+  { key: "drugs", field: "noDrugsAck", label: "No drugs. I won't bring, use, or share recreational drugs on the trip." },
+  { key: "smoking", field: "noSmokingAck", label: "No smoking. I won't smoke or vape anything (tobacco, cannabis, or otherwise) on the trip." },
+] as const;
+
 /** Guest-form switches a trip owner can turn off (stored in Trip.disabledSections). */
 export const GUEST_FORM_TOGGLES = [
-  { key: "sober", label: "Sober trip (no alcohol or drugs)" },
+  { key: "alcohol", label: "No alcohol" },
+  { key: "drugs", label: "No drugs" },
+  { key: "smoking", label: "No smoking / vaping" },
   { key: "age21", label: "21+ only" },
   { key: "material", label: "Creative material protection" },
   { key: "social", label: "Social media & content" },
@@ -30,7 +39,6 @@ export const HOUSE_RULES = [
   { value: "food", label: "I understand food is being planned in advance and I need to list allergies and dietary restrictions honestly.", when: "meals" },
   { value: "noStealing", label: "I understand I should not eat food that is clearly set aside for someone else." },
   { value: "quietHours", label: "I understand quiet hours may exist." },
-  { value: "alcohol", label: "I understand this is a drug- and alcohol-free trip and I will not bring or use either on the trip.", when: "sober" },
   { value: "damage", label: "I understand I am responsible for damage I personally cause." },
   { value: "respect", label: "I understand I need to respect people's space, sleep, food needs, creative work, and boundaries." },
   { value: "groupTrip", label: "I understand this is a group trip, not a hotel, and everyone needs to help keep the house functional." },
@@ -50,7 +58,9 @@ export const INTAKE_FIELDS: readonly GuestField[] = [
   { name: "pronouns", kind: "string", label: "Pronouns", required: true },
   { name: "age21Confirmed", kind: "bool", label: "Confirmed 21 or older", required: true, when: "age21" },
   { name: "maxBudget", kind: "string", label: "Max trip share", required: true, when: "payment" },
-  { name: "substanceFreeAck", kind: "bool", label: "Agreed to sober trip", required: true, when: "sober" },
+  { name: "noAlcoholAck", kind: "bool", label: "Agreed: no alcohol", required: true, when: "alcohol" },
+  { name: "noDrugsAck", kind: "bool", label: "Agreed: no drugs", required: true, when: "drugs" },
+  { name: "noSmokingAck", kind: "bool", label: "Agreed: no smoking / vaping", required: true, when: "smoking" },
   { name: "shareBed", kind: "string", label: "OK sharing a bed", required: true, when: "sleeping" },
   { name: "medicalConditions", kind: "string", label: "Medical conditions", required: true },
   { name: "refrigeratedMeds", kind: "string", label: "Refrigerated medications", required: true },

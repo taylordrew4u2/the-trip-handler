@@ -33,7 +33,9 @@ function fullForm(): FormData {
     "activitiesOtherText", "activitiesOptOut", "structurePref", "finalNotes", "whatWouldMakeFun",
   ]) fd.set(k, "N/A");
   fd.set("age21Confirmed", "on");
-  fd.set("substanceFreeAck", "on");
+  fd.set("noAlcoholAck", "on");
+  fd.set("noDrugsAck", "on");
+  fd.set("noSmokingAck", "on");
   for (const v of MATERIAL_ACKS) fd.append("jokeProtectionAcks[]", v);
   for (const v of DEPOSIT_ACKS) fd.append("securityDepositAcks[]", v);
   for (const r of HOUSE_RULES) fd.append("houseRulesAcks[]", r.value);
@@ -43,6 +45,20 @@ function fullForm(): FormData {
 describe("guest form rules", () => {
   it("accepts a complete form", () => {
     expect(intakeError(readIntake(fullForm(), []), [])).toBeNull();
+  });
+
+  it("requires each substance rule on its own", () => {
+    for (const field of ["noAlcoholAck", "noDrugsAck", "noSmokingAck"]) {
+      const fd = fullForm();
+      fd.delete(field);
+      expect(intakeError(readIntake(fd, []), [])).toMatch(/Please confirm/);
+    }
+  });
+
+  it("only asks the substance rules the trip has on", () => {
+    const fd = fullForm();
+    fd.delete("noSmokingAck");
+    expect(intakeError(readIntake(fd, ["smoking"]), ["smoking"])).toBeNull();
   });
 
   it("requires every visible question", () => {
@@ -57,14 +73,15 @@ describe("guest form rules", () => {
       "fullName", "stageName", "phoneNumber", "pronouns", "medicalConditions", "refrigeratedMeds",
       "emergencyMedItem", "mobilityNeeds", "cannotDo", "safetyNotes", "finalNotes", "whatWouldMakeFun",
     ]) fd.set(k, "N/A");
-    for (const r of HOUSE_RULES.filter((r) => r.value !== "food" && r.value !== "alcohol")) {
+    for (const r of HOUSE_RULES.filter((r) => r.value !== "food")) {
       fd.append("houseRulesAcks[]", r.value);
     }
-    const off = ["payment", "sleeping", "itinerary", "meals", "sober", "age21", "social", "material"];
+    const off = ["payment", "sleeping", "itinerary", "meals", "alcohol", "drugs", "smoking", "age21", "social", "material"];
     const data = readIntake(fd, off);
     expect(intakeError(data, off)).toBeNull();
     expect(data).not.toHaveProperty("maxBudget");
-    expect(data).not.toHaveProperty("substanceFreeAck");
+    expect(data).not.toHaveProperty("noAlcoholAck");
+    expect(data).not.toHaveProperty("noSmokingAck");
   });
 
   it("ignores fields that aren't questions", () => {

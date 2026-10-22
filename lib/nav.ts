@@ -32,7 +32,9 @@ export const SECTION_KEYS = [
   // No page of its own: turns off van questions and the transport cost line.
   "transport",
   // Guest-form switches (see lib/guestForm.ts).
-  "sober",
+  "alcohol",
+  "drugs",
+  "smoking",
   "age21",
   "material",
   "social",
