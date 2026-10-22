@@ -538,3 +538,15 @@ fits together.
 ## License
 
 MIT — see [`LICENSE`](./LICENSE).
+
+## Cost sharing
+
+In a trip's **Pricing** panel, the owner sets **Split costs between** and clicks
+**Save split**. Trip cost totals are divided by that saved number for estimates,
+finalized member bills, and payment breakdowns. The split is independent of
+roster capacity. Save changes before locking the cost lines; a locked trip must
+be unlocked first, and the existing restriction on reopening prices after a
+member has paid still applies.
+
+The migration adds `Trip.costShareDivisor` with a default of 10 to preserve
+existing trips' prices. Owners can change it to any positive whole number.

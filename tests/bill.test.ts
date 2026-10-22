@@ -3,6 +3,7 @@ import { computeBill, baseShareOf } from "@/lib/bill";
 import { formatAdjustment, hasMeals, memberShare, tripCostTotal } from "@/lib/pricing";
 
 const lockedTrip = {
+  costShareDivisor: 10,
   finalPrice: 500,
   isLocked: true,
   housingPrice: 4000,
@@ -38,6 +39,16 @@ describe("member bill", () => {
 
   it("estimates from the line totals before the trip locks", () => {
     expect(baseShareOf({ ...lockedTrip, isLocked: false, finalPrice: null })).toBe(500);
+  });
+
+  it.each([1, 7, 13, 20])("uses the owner's %i-way split for estimates", (costShareDivisor) => {
+    expect(baseShareOf({ ...lockedTrip, costShareDivisor, isLocked: false })).toBe(
+      Math.round((5000 / costShareDivisor) * 100) / 100,
+    );
+  });
+
+  it("keeps the finalized share for a locked trip", () => {
+    expect(baseShareOf({ ...lockedTrip, costShareDivisor: 7 })).toBe(500);
   });
 
   it("formats adjustments with a sign", () => {

@@ -3,10 +3,11 @@
 import { useState } from "react";
 import { createCheckoutSession, submitManualPayment } from "@/app/actions/payments";
 import { useRouter, useSearchParams } from "next/navigation";
-import { COST_SHARE_DIVISOR, formatAdjustment } from "@/lib/pricing";
+import { formatAdjustment } from "@/lib/pricing";
 
 export type PaymentView = {
   tripName: string;
+  costShareDivisor: number;
   isLocked: boolean;
   isPaid: boolean;
   /** Null when the owner hides the housing/transport/meals totals. */
@@ -119,7 +120,7 @@ export function PaymentClient({ view }: { view: PaymentView }) {
           </h2>
           {lines && (
             <p className="text-xs text-slate-600 mt-1.5">
-              Costs are entered as totals for the trip and split {COST_SHARE_DIVISOR} ways.
+              Costs are entered as totals for the trip and split {view.costShareDivisor} ways.
             </p>
           )}
         </div>
@@ -158,7 +159,7 @@ export function PaymentClient({ view }: { view: PaymentView }) {
                   </p>
                   {row.total != null && (
                     <p className="text-xs text-slate-600 mt-0.5 tabular-nums">
-                      ÷ {COST_SHARE_DIVISOR} = {money(row.total / COST_SHARE_DIVISOR)} each
+                      ÷ {view.costShareDivisor} = {money(row.total / view.costShareDivisor)} each
                     </p>
                   )}
                 </div>

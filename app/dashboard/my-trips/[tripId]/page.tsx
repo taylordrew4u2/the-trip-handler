@@ -175,6 +175,7 @@ export default async function ManageTripPage({
       <PricingPanel
         tripId={trip.id}
         pricing={{
+          costShareDivisor: trip.costShareDivisor,
           housingPrice: trip.housingPrice,
           housingLocked: trip.housingLocked,
           transportPrice: trip.transportPrice,

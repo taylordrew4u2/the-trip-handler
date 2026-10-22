@@ -46,6 +46,7 @@ export default async function PaymentPage() {
 
   const view: PaymentView = {
     tripName: trip.name,
+    costShareDivisor: trip.costShareDivisor,
     isLocked: trip.isLocked,
     isPaid: user?.status === "CONFIRMED_PAID",
     lineItems: trip.showLineItems
