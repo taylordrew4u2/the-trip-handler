@@ -11,7 +11,7 @@ import {
   useFieldId,
   useId,
 } from "@/components/forms/field";
-import { activeHouseRules } from "@/lib/guestForm";
+import { SUBSTANCE_RULES, activeHouseRules } from "@/lib/guestForm";
 
 /** "a, b, and c" from the truthy items. */
 function listJoin(items: (string | false)[]): string {
@@ -160,6 +160,7 @@ export function IntakeForm({ defaultEmail, defaultName, defaultPhone, existing, 
 }) {
   const dep = `$${Number.isInteger(deposit) ? deposit : deposit.toFixed(2)}`;
   const houseRules = activeHouseRules(off);
+  const substanceRules = SUBSTANCE_RULES.filter((r) => !off.includes(r.key));
   const covers = listJoin([
     !off.includes("transport") && "travel (rental vans + gas)",
     !off.includes("meals") && "meals during the trip",
@@ -289,26 +290,25 @@ export function IntakeForm({ defaultEmail, defaultName, defaultPhone, existing, 
         </Section>
       )}
 
-      {!off.includes("sober") && (
+      {substanceRules.length > 0 && (
         <Section
-          title="Drug- and alcohol-free trip"
-          intro="This is a sober trip. No alcohol, no recreational drugs — full stop. If that's not for you, this isn't the trip."
+          title="Trip rules"
+          intro="These are firm. Check each one — if any of them isn't for you, this isn't the trip."
         >
-          <Field label="" required>
-            <label className="flex min-h-11 cursor-pointer items-start gap-3 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm leading-6 text-slate-800">
-              <input
-                type="checkbox"
-                name="substanceFreeAck"
-                defaultChecked={e?.substanceFreeAck}
-                required
-                className="mt-1 h-4 w-4 shrink-0 accent-indigo-600"
-              />
-              <span>
-                I understand and agree that this is a <strong>drug- and alcohol-free</strong> trip.
-                I will not bring, use, or share any alcohol or recreational drugs during the trip.
-              </span>
-            </label>
-          </Field>
+          {substanceRules.map((r) => (
+            <Field key={r.key} label="" required>
+              <label className="flex min-h-11 cursor-pointer items-start gap-3 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm leading-6 text-slate-800">
+                <input
+                  type="checkbox"
+                  name={r.field}
+                  defaultChecked={Boolean(e?.[r.field])}
+                  required
+                  className="mt-1 h-4 w-4 shrink-0 accent-indigo-600"
+                />
+                <span>{r.label}</span>
+              </label>
+            </Field>
+          ))}
         </Section>
       )}
 

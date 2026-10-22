@@ -436,8 +436,11 @@ model GuestForm {
   emergencyName  String?
   emergencyPhone String?
 
-  // Substance-free policy (required acknowledgement)
+  // Substance rules, one check each (substanceFreeAck is the old combined one)
   substanceFreeAck Boolean @default(false)
+  noAlcoholAck     Boolean @default(false)
+  noDrugsAck       Boolean @default(false)
+  noSmokingAck     Boolean @default(false)
 
   // Van Transportation
   comingFrom         String?
