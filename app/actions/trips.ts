@@ -6,7 +6,7 @@ import { prisma } from "@/lib/db";
 import { authOptions } from "@/lib/auth";
 import { deleteBlob } from "@/lib/blob";
 import { sendApprovalEmail, sendRejectionEmail, sendTripLockedEmail } from "@/lib/resend";
-import { COST_SHARE_DIVISOR, hasFeature, hasMeals, memberShare, tripCostTotal } from "@/lib/pricing";
+import { hasFeature, hasMeals, memberShare, tripCostTotal } from "@/lib/pricing";
 import { isSectionKey } from "@/lib/nav";
 import { getServerSession } from "next-auth";
 import { revalidatePath } from "next/cache";
@@ -285,6 +285,28 @@ const PRICE_FIELDS: Record<
   meals: { amount: "mealsPrice", locked: "mealsLocked" },
 };
 
+/** Set how many ways costs are split on a trip you own. */
+export async function updateMyTripCostShareDivisor(tripId: string, divisor: number) {
+  const userId = await currentUserId();
+  if (!userId) return { error: "Sign in first." };
+  const trip = await ownedTrip(tripId, userId);
+  if (!trip) return { error: "Not your trip." };
+  if (trip.isLocked) return { error: "Unlock the trip before changing the split." };
+  if (!Number.isInteger(divisor) || divisor < 1 || divisor > 2147483647) {
+    return { error: "Split count must be a positive whole number." };
+  }
+
+  const updated = await prisma.trip.updateMany({
+    where: { id: tripId, ownerId: userId, isLocked: false },
+    data: { costShareDivisor: divisor },
+  });
+  if (updated.count === 0) return { error: "Trip changed. Refresh and try again." };
+  revalidatePath(`/dashboard/my-trips/${tripId}`);
+  revalidatePath("/dashboard/payment");
+  revalidatePath("/dashboard");
+  return { success: true };
+}
+
 /** Set one of the three cost lines on a trip you own. */
 export async function updateMyTripPrice(
   tripId: string,
@@ -328,13 +350,13 @@ async function finalizeTripIfReady(tripId: string) {
   ) {
     const total = tripCostTotal(updated);
     // Round to whole cents so the stored amount-owed is exact.
-    const share = Math.round((total / COST_SHARE_DIVISOR) * 100) / 100;
+    const share = Math.round((total / updated.costShareDivisor) * 100) / 100;
 
     // Atomically claim finalization: only the call that actually flips
     // isLocked from false proceeds to move members and send emails, so two
     // concurrent/double-fired locks can't double-bill or double-email.
     const claim = await prisma.trip.updateMany({
-      where: { id: tripId, isLocked: false },
+      where: { id: tripId, isLocked: false, costShareDivisor: updated.costShareDivisor },
       data: { finalPrice: share, isLocked: true, lockedAt: new Date() },
     });
     if (claim.count > 0) {

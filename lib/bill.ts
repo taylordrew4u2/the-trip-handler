@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db";
-import { COST_SHARE_DIVISOR, memberShare, toCents, tripCostTotal } from "@/lib/pricing";
+import { memberShare, toCents, tripCostTotal } from "@/lib/pricing";
 
 /**
  * One member's bill. Holds private numbers (their personal adjustment), so it
@@ -22,6 +22,7 @@ export type MemberBill = {
 };
 
 type TripPricing = {
+  costShareDivisor: number;
   finalPrice: number | null;
   isLocked: boolean;
   housingPrice: number | null;
@@ -33,7 +34,7 @@ type TripPricing = {
 
 export function baseShareOf(trip: TripPricing): number {
   if (trip.isLocked && trip.finalPrice != null) return trip.finalPrice;
-  return toCents(tripCostTotal(trip) / COST_SHARE_DIVISOR);
+  return toCents(tripCostTotal(trip) / trip.costShareDivisor);
 }
 
 export function computeBill(

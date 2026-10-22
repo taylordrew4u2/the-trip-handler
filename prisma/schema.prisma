@@ -78,6 +78,8 @@ model Trip {
   meals             String?
   isLocked          Boolean        @default(false)
   lockedAt          DateTime?
+  // Number of shares chosen by the trip owner, independent of roster capacity.
+  costShareDivisor  Int            @default(10)
   finalPrice        Float?
   housingPrice      Float?
   housingLocked     Boolean        @default(false)
