@@ -18,6 +18,17 @@ export default async function IntakePage() {
   if (!user) redirect("/login");
 
   const isPending = user.status === "PENDING";
+  const off = user.trip?.disabledSections ?? [];
+  const planning = [
+    "the house",
+    !off.includes("meals") && "food",
+    !off.includes("sleeping") && "sleeping",
+    !off.includes("transport") && "van transportation",
+    !off.includes("itinerary") && "group activities",
+    !off.includes("social") && "social-media content",
+  ]
+    .filter(Boolean)
+    .join(", ");
 
   return (
     <div className="min-w-0">
@@ -42,18 +53,22 @@ export default async function IntakePage() {
         <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-600">
           {isPending ? (
             <>
-              Admin needs this filled out before approving you for the trip. We use it to plan food, sleeping,
-              van transportation, group activities, workshops, and social-media content — without
+              The organizer needs this filled out before approving you. We use it to plan {planning} without
               texting everyone individually 400 times. <strong>Submit this and you&apos;ll be reviewed for approval.</strong>
             </>
           ) : (
-            <>
-              Fill this out so we can plan food, sleeping arrangements, van transportation, group activities,
-              workshops, and social-media content without texting everyone individually 400 times.
-            </>
+            <>Fill this out so we can plan {planning} without texting everyone individually 400 times.</>
           )}
         </p>
       </div>
+      {!user.tripId ? (
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-600">
+          This form is your application to a trip, so join one first with an invite link or join code.{" "}
+          <Link href="/dashboard/start" className="font-semibold text-indigo-700 underline underline-offset-4">
+            Find a trip →
+          </Link>
+        </div>
+      ) : (
       <IntakeForm
         defaultEmail={user.email}
         defaultName={user.name}
@@ -63,6 +78,7 @@ export default async function IntakePage() {
         deposit={user.trip?.depositAmount ?? 75}
         off={user.trip?.disabledSections ?? []}
       />
+      )}
     </div>
   );
 }

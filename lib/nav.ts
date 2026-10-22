@@ -31,6 +31,11 @@ export const SECTION_KEYS = [
   "payment",
   // No page of its own: turns off van questions and the transport cost line.
   "transport",
+  // Guest-form switches (see lib/guestForm.ts).
+  "sober",
+  "age21",
+  "material",
+  "social",
 ] as const;
 
 export type SectionKey = (typeof SECTION_KEYS)[number];
