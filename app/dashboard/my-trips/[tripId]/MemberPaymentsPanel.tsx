@@ -35,7 +35,7 @@ const STATUS_STYLE = {
   REFUNDED: "bg-slate-100 text-slate-700",
   FAILED: "bg-red-100 text-red-800",
 } as const;
-const STATUS_LABEL = { PENDING: "Needs review", COMPLETED: "Confirmed", REFUNDED: "Refunded", FAILED: "Rejected" } as const;
+const STATUS_LABEL = { PENDING: "Needs review", COMPLETED: "Confirmed", REFUNDED: "Refunded", FAILED: "Not counted" } as const;
 
 const money = (n: number) => `$${n.toFixed(2)}`;
 

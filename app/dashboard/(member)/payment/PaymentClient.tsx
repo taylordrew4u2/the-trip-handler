@@ -39,7 +39,7 @@ const STATUS_LABEL = {
   PENDING: "Waiting on review",
   COMPLETED: "Confirmed",
   REFUNDED: "Refunded",
-  FAILED: "Not accepted",
+  FAILED: "Not counted",
 } as const;
 
 const money = (n: number) => `$${n.toFixed(2)}`;
