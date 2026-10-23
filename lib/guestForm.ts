@@ -9,14 +9,14 @@
 export const SUBSTANCE_RULES = [
   { key: "alcohol", field: "noAlcoholAck", label: "No alcohol. I won't bring, drink, or share alcohol on the trip." },
   { key: "drugs", field: "noDrugsAck", label: "No drugs. I won't bring, use, or share recreational drugs on the trip." },
-  { key: "smoking", field: "noSmokingAck", label: "No smoking. I won't smoke or vape anything (tobacco, cannabis, or otherwise) on the trip." },
+  { key: "smoking", field: "noSmokingAck", label: "No smoking at the house. I won't smoke or vape anything (tobacco, cannabis, or otherwise) inside the house or anywhere on the property." },
 ] as const;
 
 /** Guest-form switches a trip owner can turn off (stored in Trip.disabledSections). */
 export const GUEST_FORM_TOGGLES = [
   { key: "alcohol", label: "No alcohol" },
   { key: "drugs", label: "No drugs" },
-  { key: "smoking", label: "No smoking / vaping" },
+  { key: "smoking", label: "No smoking / vaping at the house" },
   { key: "age21", label: "21+ only" },
   { key: "material", label: "Creative material protection" },
   { key: "social", label: "Social media & content" },
@@ -60,7 +60,7 @@ export const INTAKE_FIELDS: readonly GuestField[] = [
   { name: "maxBudget", kind: "string", label: "Max trip share", required: true, when: "payment" },
   { name: "noAlcoholAck", kind: "bool", label: "Agreed: no alcohol", required: true, when: "alcohol" },
   { name: "noDrugsAck", kind: "bool", label: "Agreed: no drugs", required: true, when: "drugs" },
-  { name: "noSmokingAck", kind: "bool", label: "Agreed: no smoking / vaping", required: true, when: "smoking" },
+  { name: "noSmokingAck", kind: "bool", label: "Agreed: no smoking / vaping at the house", required: true, when: "smoking" },
   { name: "shareBed", kind: "string", label: "OK sharing a bed", required: true, when: "sleeping" },
   { name: "medicalConditions", kind: "string", label: "Medical conditions", required: true },
   { name: "refrigeratedMeds", kind: "string", label: "Refrigerated medications", required: true },
