@@ -550,3 +550,12 @@ member has paid still applies.
 
 The migration adds `Trip.costShareDivisor` with a default of 10 to preserve
 existing trips' prices. Owners can change it to any positive whole number.
+
+## Roster spots
+
+The owner can set **Number of roster spots** in the trip's **Roster spots** panel
+(1–1,000). Existing trips start with 13 spots. This controls the roster's total
+and open placeholders, independently of the cost split and price locks. It does
+not automatically reject applicants or remove approved members. All approved
+members stay visible if the number of spots is reduced below the current roster.
+Searching the roster does not change its filled/open counts.

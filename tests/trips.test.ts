@@ -21,6 +21,7 @@ vi.mock("@/lib/db", () => ({
 import { getServerSession } from "next-auth";
 import { prisma } from "@/lib/db";
 import {
+  updateMyTripRosterCapacity,
   updateMyTripCostShareDivisor,
   lockMyTripPrice,
   createMyTrip,
@@ -272,6 +273,37 @@ describe("admin cost split", () => {
     expect(prisma.trip.updateMany).toHaveBeenCalledWith({
       where: { id: "t1", isLocked: false, costShareDivisor: 7 },
       data: { finalPrice: 800, isLocked: true, lockedAt: expect.any(Date) },
+    });
+  });
+});
+
+describe("admin roster spots", () => {
+  it("requires sign-in", async () => {
+    session.mockResolvedValue(null);
+    expect(await updateMyTripRosterCapacity("t1", 8)).toEqual({ error: "Sign in first." });
+    expect(prisma.trip.update).not.toHaveBeenCalled();
+  });
+
+  it("rejects another owner's trip", async () => {
+    session.mockResolvedValue({ user: { id: "other" } });
+    tripFindFirst.mockResolvedValue(null);
+    expect(await updateMyTripRosterCapacity("t1", 8)).toEqual({ error: "Not your trip." });
+    expect(prisma.trip.update).not.toHaveBeenCalled();
+  });
+
+  it.each([0, -1, 1.5, NaN, Infinity, 1001])("rejects invalid roster count %s", async (capacity) => {
+    session.mockResolvedValue({ user: { id: "owner1" } });
+    tripFindFirst.mockResolvedValue({ id: "t1" });
+    expect(await updateMyTripRosterCapacity("t1", capacity)).toHaveProperty("error");
+    expect(prisma.trip.update).not.toHaveBeenCalled();
+  });
+
+  it.each([1, 8, 20, 1000])("saves %i roster spots independently of locked pricing", async (capacity) => {
+    session.mockResolvedValue({ user: { id: "owner1" } });
+    tripFindFirst.mockResolvedValue({ id: "t1", isLocked: true, costShareDivisor: 7 });
+    expect(await updateMyTripRosterCapacity("t1", capacity)).toEqual({ success: true });
+    expect(prisma.trip.update).toHaveBeenCalledWith({
+      where: { id: "t1", ownerId: "owner1" }, data: { rosterCapacity: capacity },
     });
   });
 });
