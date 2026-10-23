@@ -32,6 +32,8 @@ function fullForm(): FormData {
     "otherHandles", "comfortGroupPhotos", "comfortGroupVideos", "comfortTagged", "comfortPlannedContent",
     "activitiesOtherText", "activitiesOptOut", "structurePref", "finalNotes", "whatWouldMakeFun",
   ]) fd.set(k, "N/A");
+  for (const k of ["shareBed", "refrigeratedMeds", "emergencyMedItem", "comfortGroupPhotos", "comfortGroupVideos", "comfortTagged", "comfortPlannedContent"]) fd.set(k, "yes");
+  fd.set("structurePref", "mix");
   fd.set("age21Confirmed", "on");
   fd.set("noAlcoholAck", "on");
   fd.set("noDrugsAck", "on");
@@ -121,6 +123,49 @@ describe("submitGuestForm", () => {
     expect(arg.where).toEqual({ userId: "u1" });
     expect(arg.update).not.toHaveProperty("userId");
     expect(arg.create.userId).toBe("u1");
+  });
+});
+
+describe("custom intake submissions", () => {
+  const config = [
+    { id: "fullName", type: "text", label: "Your name", section: "About you", required: true, hidden: false, help: "", options: [] },
+    { id: "phoneNumber", type: "text", label: "Phone", section: "About you", required: true, hidden: false, help: "", options: [] },
+    { id: "custom_packing", type: "text", label: "What can you bring?", section: "Packing", required: true, hidden: false, help: "", options: [] },
+  ];
+  beforeEach(() => {
+    vi.clearAllMocks();
+    session.mockResolvedValue({ user: { id: "u1" } });
+    p.guestForm.findUnique.mockResolvedValue(null);
+    p.user.findUnique.mockResolvedValue({ id: "u1", name: "A", email: "a@x", trip: { id: "t1", disabledSections: [], intakeQuestions: config, depositAmount: 75 } });
+    p.trip.findUnique.mockResolvedValue({ owner: { email: "owner@example.com" } });
+  });
+  it("saves custom answers with question wording, without treating IDs as columns", async () => {
+    const fd = new FormData(); fd.set("fullName", "A"); fd.set("phoneNumber", "123"); fd.set("custom_packing", "Blankets"); fd.set("locked", "false");
+    expect(await submitGuestForm(fd)).toEqual({ success: true });
+    const data = p.guestForm.upsert.mock.calls[0][0].create;
+    expect(data).not.toHaveProperty("custom_packing");
+    expect(data.locked).toBe(true);
+    expect(data.intakeSnapshot.answers.custom_packing).toBe("Blankets");
+    expect(data.intakeSnapshot.questions[2].label).toBe("What can you bring?");
+  });
+  it("enforces custom required questions even if the browser omits them", async () => {
+    const fd = new FormData(); fd.set("fullName", "A"); fd.set("phoneNumber", "123");
+    expect(await submitGuestForm(fd)).toEqual({ error: 'Please answer "What can you bring?".' });
+    expect(p.guestForm.upsert).not.toHaveBeenCalled();
+  });
+  it("does not permit submitting a locked form", async () => {
+    p.guestForm.findUnique.mockResolvedValue({ locked: true });
+    expect(await submitGuestForm(new FormData())).toHaveProperty("error");
+    expect(p.guestForm.upsert).not.toHaveBeenCalled();
+  });
+  it("preserves removed questions and answers when an unlocked form is resubmitted", async () => {
+    const old = { ...config[2], id: "custom_previous", label: "Original question" };
+    p.guestForm.findUnique.mockResolvedValue({ locked: false, intakeSnapshot: { questions: [old], answers: { custom_previous: "Original answer" } } });
+    const fd = new FormData(); fd.set("fullName", "A"); fd.set("phoneNumber", "123"); fd.set("custom_packing", "Blankets");
+    expect(await submitGuestForm(fd)).toEqual({ success: true });
+    const snapshot = p.guestForm.upsert.mock.calls[0][0].update.intakeSnapshot;
+    expect(snapshot.answers.custom_previous).toBe("Original answer");
+    expect(snapshot.questions.find((q: { id: string }) => q.id === old.id)).toEqual({ ...old, hidden: true });
   });
 });
 

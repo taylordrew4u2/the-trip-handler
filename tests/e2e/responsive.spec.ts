@@ -14,7 +14,7 @@ import {
  * hit with a thumb.
  */
 
-const PUBLIC_PAGES = ["/", "/login", "/signup"];
+const PUBLIC_PAGES = ["/help", "/", "/login", "/signup"];
 
 const MEMBER_PAGES = [
   "/dashboard",

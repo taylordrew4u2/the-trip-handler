@@ -36,7 +36,7 @@ async function scan(page: Page) {
   );
 }
 
-const PUBLIC_PAGES = ["/", "/login", "/signup", "/join/demo-invite-token"];
+const PUBLIC_PAGES = ["/help", "/", "/login", "/signup", "/join/demo-invite-token"];
 
 for (const path of PUBLIC_PAGES) {
   test(`public page ${path} has no accessibility violations`, async ({ page }, testInfo) => {

@@ -14,7 +14,7 @@ const STEPS: Step[] = [
   {
     tag: "The idea",
     title: "One place to run a group trip",
-    body: "The Trip Handler is for the friend who accidentally became the adult in charge. It keeps the roster, lodging, meals, money, and logistics in one spot instead of fifteen group chats and a spreadsheet.",
+    body: "Keep trip details, guests, meals, and payments together. Organizers manage the plan; guests see the information and next steps they need.",
   },
   {
     tag: "Getting in",
@@ -24,12 +24,12 @@ const STEPS: Step[] = [
   {
     tag: "Step 1 · Intake",
     title: "Everyone fills out a guest form",
-    body: "After applying, each person completes a short guest form — contact info, who they are, the basics the organizer needs. The organizer reviews it before saying yes.",
+    body: "After joining through an invite, answer the guest form and submit it for review. The organizer chooses the questions and decides whether to approve your application.",
   },
   {
     tag: "Step 2 · Approval",
     title: "The organizer approves the roster",
-    body: "Applicants sit as pending until approved. Once you're in, the rest of the app unlocks: the roster, sleeping arrangements, meals, contributions, and payment.",
+    body: "Pending approval means the organizer is still reviewing your application. After approval, you can use the group tools that the organizer has enabled.",
   },
   {
     tag: "Step 3 · Plan",
@@ -44,7 +44,7 @@ const STEPS: Step[] = [
   {
     tag: "Step 5 · Money",
     title: "Pricing, locking & payment",
-    body: "The organizer sets housing, transport, and meal costs, then locks them. The app splits the total per person, adds a refundable deposit, and collects everyone's share through Stripe.",
+    body: "The organizer enters total costs and chooses how many ways to split them. Before prices are locked, your share is an estimate. After prices are locked, review your share and deposit on Payment, then choose an available payment method.",
   },
   {
     tag: "Step 6 · The extras",
@@ -70,6 +70,7 @@ export default function WalkthroughPage() {
         </div>
       </header>
 
+      <div className="mx-auto px-5 pt-3 text-sm"><Link href="/help" className="inline-flex min-h-11 items-center text-indigo-700 underline">Open Help &amp; FAQ</Link></div>
       <main className="flex-1 flex items-center justify-center gutter py-8 md:py-10 pb-safe">
         <div className="w-full min-w-0 max-w-2xl">
           <p className="mb-5 text-center text-sm font-medium text-slate-600">A quick tour of your trip, from the first invite to the final payment.</p>

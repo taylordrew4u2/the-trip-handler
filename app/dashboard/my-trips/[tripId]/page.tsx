@@ -173,6 +173,11 @@ export default async function ManageTripPage({
         }}
       />
       <SectionsPanel tripId={trip.id} disabled={trip.disabledSections} />
+      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+        <h2 className="font-serif text-2xl font-medium text-slate-950">Guest form questions</h2>
+        <p className="mt-2 text-sm leading-6 text-slate-600">Choose what applicants answer before you approve them. Edit questions, add instructions, and mark answers as required or optional.</p>
+        <Link href={`/dashboard/my-trips/${trip.id}/intake`} className="mt-3 inline-flex min-h-11 items-center rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white">Edit intake questions</Link>
+      </section>
       <RosterSettingsPanel tripId={trip.id} capacity={trip.rosterCapacity} />
       <PricingPanel
         tripId={trip.id}
