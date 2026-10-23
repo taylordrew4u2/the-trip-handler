@@ -81,6 +81,23 @@ test("owner edits questions, guest submits, and later edits preserve the origina
     await guestPage.goto(new URL("/dashboard/intake", page.url()).toString());
     await expect(guestPage.getByLabel("What can you bring for the group?", { exact: false })).toHaveValue("Extra blankets");
     await expect(guestPage.getByLabel("What can you bring for the group?", { exact: false })).toBeDisabled();
+
+    // Suggested questions are added on demand, and choice questions take a chosen number of choices.
+    await page.goto(`/dashboard/my-trips/${trip.id}/intake`);
+    await expect(page.locator("summary")).toHaveCount(3);
+    await page.getByRole("button", { name: "Add: Pronouns", exact: true }).click();
+    await expect(page.getByRole("button", { name: "Add: Pronouns", exact: true })).toHaveCount(0);
+    await page.getByLabel("Choices for choice questions").fill("4");
+    await page.getByRole("button", { name: "Add choose one", exact: true }).click();
+    const choice = page.locator("details").nth(4);
+    await choice.locator("summary").click();
+    await expect(choice.getByLabel(/^Choice \d/)).toHaveCount(4);
+    await choice.getByLabel("Number of choices").fill("3");
+    await expect(choice.getByLabel(/^Choice \d/)).toHaveCount(3);
+    await page.getByRole("button", { name: "Save questions", exact: true }).click();
+    await expect(page.getByRole("status")).toContainText("Questions saved");
+    await page.reload();
+    await expect(page.locator("summary").filter({ hasText: "3 choices" })).toBeVisible();
   } finally {
     await guestContext.close().catch(() => {});
     await db.guestForm.deleteMany({ where: { userId: guest.id } });

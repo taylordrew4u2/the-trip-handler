@@ -116,6 +116,11 @@ export function defaultIntakeQuestions(off: readonly string[] = []): IntakeQuest
   }));
 }
 
+/** A new trip's form: only the two identity questions. The organizer adds the rest. */
+export function starterIntakeQuestions(): IntakeQuestion[] {
+  return defaultIntakeQuestions().filter(q => ESSENTIAL_QUESTIONS.includes(q.id));
+}
+
 /** Validate editable text, stable answer IDs, and the two identity fields used by the application. */
 export function validateIntakeQuestions(input: unknown): { questions: IntakeQuestion[]; error?: never } | { error: string; questions?: never } {
   const parsed = questionsSchema.safeParse(input);
@@ -130,8 +135,8 @@ export function validateIntakeQuestions(input: unknown): { questions: IntakeQues
     if (q.when !== builtIn?.when) return { error: "Question section switches cannot be changed." };
     if (["radio", "checks"].includes(q.type) && !q.options.length) return { error: `Add at least one choice for ${q.label}.` };
     if (new Set(q.options.map(o => o.value)).size !== q.options.length) return { error: `Choices must have unique IDs for ${q.label}.` };
-    // Built-in values are read elsewhere in the app; edit labels, not their IDs.
-    if (builtIn && q.options.some(o => !builtIn.options.some(b => b.value === o.value))) return { error: "Keep the original choice IDs for built-in questions." };
+    // Built-in values are read elsewhere in the app; edit labels, not their IDs. Added choices get custom IDs.
+    if (builtIn && q.options.some(o => !o.value.startsWith("custom_") && !builtIn.options.some(b => b.value === o.value))) return { error: "Keep the original choice IDs for built-in questions." };
   }
   for (const id of ESSENTIAL_QUESTIONS) {
     const q = questions.find(q => q.id === id);
@@ -140,11 +145,11 @@ export function validateIntakeQuestions(input: unknown): { questions: IntakeQues
   return { questions };
 }
 
-export function intakeQuestions(config: unknown, off: readonly string[] = []): IntakeQuestion[] {
+export function intakeQuestions(config: unknown): IntakeQuestion[] {
   // The editor keeps {deposit} as a live placeholder instead of storing stale amounts.
-  if (config == null) return defaultIntakeQuestions(off);
+  if (config == null) return starterIntakeQuestions();
   const parsed = validateIntakeQuestions(config);
-  return parsed.questions ?? defaultIntakeQuestions(off);
+  return parsed.questions ?? starterIntakeQuestions();
 }
 
 export function fillIntakeAmounts(questions: IntakeQuestion[], deposit = 75): IntakeQuestion[] {

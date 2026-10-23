@@ -76,7 +76,7 @@ export default async function IntakePage() {
         defaultPhone={user.phone ?? ""}
         existing={existing}
         isPending={isPending}
-        questions={visibleQuestions(fillIntakeAmounts(intakeQuestions(user.trip?.intakeQuestions, off), user.trip?.depositAmount), off)}
+        questions={visibleQuestions(fillIntakeAmounts(intakeQuestions(user.trip?.intakeQuestions), user.trip?.depositAmount), off)}
       />
       )}
     </div>

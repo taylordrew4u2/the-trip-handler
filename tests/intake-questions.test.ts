@@ -16,9 +16,21 @@ function answers() { const fd = new FormData(); fd.set("fullName", "Guest"); fd.
 describe("editable intake questions", () => {
   it("keeps defaults valid and uses the trip's deposit in help and agreements", () => {
     expect(validateIntakeQuestions(defaultIntakeQuestions()).error).toBeUndefined();
-    const qs = fillIntakeAmounts(intakeQuestions(null), 123);
+    const qs = fillIntakeAmounts(defaultIntakeQuestions(), 123);
     expect(qs.find(q => q.id === "maxBudget")?.help).toContain("$123.00");
     expect(qs.find(q => q.id === "securityDepositAcks")?.options[0].label).toContain("$123.00");
+  });
+  it("starts a trip with only name and phone number", () => {
+    expect(intakeQuestions(null).map(q => q.id)).toEqual(["fullName", "phoneNumber"]);
+    expect(intakeQuestions("garbage").map(q => q.id)).toEqual(["fullName", "phoneNumber"]);
+  });
+  it("lets the organizer add and remove choices on suggested questions", () => {
+    const share = defaultIntakeQuestions().find(q => q.id === "comfortPlannedContent")!;
+    const fewer = { ...share, options: share.options.slice(0, 2) };
+    const more = { ...share, options: [...share.options, { value: "custom_maybe", label: "Maybe later" }] };
+    expect(validateIntakeQuestions([...minimal(), fewer]).error).toBeUndefined();
+    expect(validateIntakeQuestions([...minimal(), more]).error).toBeUndefined();
+    expect(validateIntakeQuestions([...minimal(), { ...share, options: [...share.options, { value: "maybe", label: "Maybe" }] }]).error).toMatch(/original choice IDs/);
   });
   it("keeps the deposit live after an admin saves questions", () => {
     const qs = defaultIntakeQuestions();

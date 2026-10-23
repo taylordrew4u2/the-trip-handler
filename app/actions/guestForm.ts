@@ -43,7 +43,7 @@ export async function submitGuestForm(formData: FormData) {
 
   // Only the questions this trip asks are read; everything else in the
   // request (ids, lock flags, preference answers) is ignored.
-  const questions = visibleQuestions(fillIntakeAmounts(intakeQuestions(user.trip.intakeQuestions, off), user.trip.depositAmount), off);
+  const questions = visibleQuestions(fillIntakeAmounts(intakeQuestions(user.trip.intakeQuestions), user.trip.depositAmount), off);
   // Requirements come from the saved template, never from the browser.
   const parsed = readQuestionAnswers(formData, questions);
   const data = parsed.answers;
