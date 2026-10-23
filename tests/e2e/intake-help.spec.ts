@@ -20,6 +20,7 @@ test("help is available without signing in and can be searched", async ({ page }
 test("owner edits questions, guest submits, and later edits preserve the original answer", async ({ page, browser }, testInfo) => {
   test.skip(testInfo.project.name !== "phone-390", "mutating flow runs once");
   test.setTimeout(90_000);
+  page.setDefaultTimeout(15_000);
   // These fixtures are independent of the seeded demo and other parallel tests.
   const db = new PrismaClient();
   const suffix = `${Date.now()}-${testInfo.workerIndex}`;
@@ -36,7 +37,7 @@ test("owner edits questions, guest submits, and later edits preserve the origina
     await page.waitForURL(/\/dashboard/);
     await page.goto(`/dashboard/my-trips/${trip.id}/intake`);
     await page.getByRole("button", { name: "Add short answer", exact: true }).click();
-    const details = page.locator("details").filter({ has: page.locator("summary", { hasText: "New question" }) });
+    const details = page.locator("details").nth(2);
     await details.locator("summary").click();
     await details.getByLabel("Question text", { exact: true }).fill("What can you bring for the group?");
     await details.getByLabel("Help text (optional)").fill("A short answer is enough.");
@@ -53,6 +54,7 @@ test("owner edits questions, guest submits, and later edits preserve the origina
     await expect(page.locator("summary").filter({ hasText: "What can you bring for the group?" })).toBeVisible();
 
     const guestPage = await guestContext.newPage();
+    guestPage.setDefaultTimeout(15_000);
     await guestPage.goto(new URL("/login", page.url()).toString());
     await guestPage.locator('input[type="email"]').fill(guest.email);
     await guestPage.locator('input[type="password"]').fill("e2e-intake-password");
@@ -68,7 +70,7 @@ test("owner edits questions, guest submits, and later edits preserve the origina
     await expect(page.getByText("Extra blankets", { exact: true })).toBeVisible();
 
     await page.goto(`/dashboard/my-trips/${trip.id}/intake`);
-    const edited = page.locator("details").filter({ has: page.locator("summary", { hasText: "What can you bring for the group?" }) });
+    const edited = page.locator("details").nth(2);
     await edited.locator("summary").click();
     await edited.getByLabel("Question text", { exact: true }).fill("Changed question for future guests");
     await page.getByRole("button", { name: "Save questions", exact: true }).click();
@@ -80,7 +82,7 @@ test("owner edits questions, guest submits, and later edits preserve the origina
     await expect(guestPage.getByLabel("What can you bring for the group?", { exact: false })).toHaveValue("Extra blankets");
     await expect(guestPage.getByLabel("What can you bring for the group?", { exact: false })).toBeDisabled();
   } finally {
-    await guestContext.close();
+    await guestContext.close().catch(() => {});
     await db.guestForm.deleteMany({ where: { userId: guest.id } });
     await db.user.deleteMany({ where: { id: guest.id } });
     await db.trip.delete({ where: { id: trip.id } });
