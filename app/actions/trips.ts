@@ -4,7 +4,7 @@ import { randomBytes } from "crypto";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { authOptions } from "@/lib/auth";
-import { deleteBlob } from "@/lib/blob";
+import { MAX_UPLOAD_BYTES, deleteUpload, safeUploadType, saveUpload } from "@/lib/files";
 import { sendApprovalEmail, sendRejectionEmail, sendTripLockedEmail } from "@/lib/resend";
 import { hasFeature, hasMeals, memberShare, tripCostTotal } from "@/lib/pricing";
 import { isSectionKey } from "@/lib/nav";
@@ -795,7 +795,7 @@ export async function deleteTripExpense(expenseId: string) {
 
   if (expense.receiptUrl) {
     try {
-      await deleteBlob(expense.receiptUrl);
+      await deleteUpload(expense.receiptUrl);
     } catch (err) {
       console.error("Failed to delete receipt blob:", err);
     }
@@ -905,5 +905,47 @@ export async function deleteTripBed(bedId: string) {
   await prisma.bed.delete({ where: { id: bedId } });
   revalidatePath(`/dashboard/my-trips/${bed.tripId}`);
   revalidatePath("/dashboard/sleeping");
+  return { success: true };
+}
+
+// ---------- lodging photos (owner-scoped) ----------
+
+/** Add a photo of the place to a trip you own. Stored in the app's own database. */
+export async function addTripLodgingPhoto(tripId: string, formData: FormData) {
+  const userId = await currentUserId();
+  if (!userId) return { error: "Sign in first." };
+  if (!(await ownedTrip(tripId, userId))) return { error: "Not your trip." };
+
+  const photo = formData.get("photo");
+  const file = photo instanceof File && photo.size > 0 ? photo : null;
+  if (!file) return { error: "Pick a photo." };
+  const contentType = safeUploadType(file);
+  if (!contentType) return { error: "Photos must be JPG, PNG, WebP, GIF or HEIC." };
+  if (file.size > MAX_UPLOAD_BYTES) return { error: "That photo is too big — try a smaller one." };
+  const caption = String(formData.get("caption") ?? "").trim().slice(0, 200) || null;
+
+  const count = await prisma.lodgingPhoto.count({ where: { tripId } });
+  if (count >= 30) return { error: "That's the limit of 30 photos. Remove one first." };
+
+  const url = await saveUpload(file, { kind: "lodging", contentType, uploaderId: userId, tripId });
+  const last = await prisma.lodgingPhoto.findFirst({ where: { tripId }, orderBy: { position: "desc" } });
+  await prisma.lodgingPhoto.create({
+    data: { tripId, url, caption, position: (last?.position ?? -1) + 1 },
+  });
+  revalidatePath(`/dashboard/my-trips/${tripId}`);
+  revalidatePath("/dashboard/lodging");
+  return { success: true };
+}
+
+export async function deleteTripLodgingPhoto(photoId: string) {
+  const userId = await currentUserId();
+  if (!userId) return { error: "Sign in first." };
+  const photo = await prisma.lodgingPhoto.findUnique({ where: { id: photoId } });
+  if (!photo || !(await ownedTrip(photo.tripId, userId))) return { error: "Not your trip." };
+
+  await prisma.lodgingPhoto.delete({ where: { id: photoId } });
+  await deleteUpload(photo.url);
+  revalidatePath(`/dashboard/my-trips/${photo.tripId}`);
+  revalidatePath("/dashboard/lodging");
   return { success: true };
 }

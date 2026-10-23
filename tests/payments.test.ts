@@ -3,7 +3,7 @@ import { describe, it, expect, beforeEach, vi, type Mock } from "vitest";
 vi.mock("next-auth", () => ({ getServerSession: vi.fn() }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("@/lib/stripe", () => ({ getStripe: vi.fn() }));
-vi.mock("@/lib/blob", () => ({ deleteBlob: vi.fn(), uploadPaymentReceipt: vi.fn(), safeUploadType: () => "image/png" }));
+vi.mock("@/lib/files", () => ({ deleteUpload: vi.fn(), saveUpload: vi.fn(), safeUploadType: () => "image/png", MAX_UPLOAD_BYTES: 4194304 }));
 vi.mock("@/lib/db", () => ({
   prisma: {
     payment: {

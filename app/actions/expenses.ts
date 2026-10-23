@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/db";
-import { deleteBlob, safeUploadType, uploadReceipt } from "@/lib/blob";
+import { deleteUpload, safeUploadType, saveUpload } from "@/lib/files";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
@@ -53,7 +53,12 @@ export async function addExpense(formData: FormData) {
   if (receiptFile) {
     let uploadedUrl: string | null = null;
     try {
-      uploadedUrl = await uploadReceipt(receiptFile, expense.id);
+      uploadedUrl = await saveUpload(receiptFile, {
+        kind: "expense-receipt",
+        contentType: safeUploadType(receiptFile, true)!,
+        uploaderId: userId,
+        tripId,
+      });
       await prisma.expense.update({
         where: { id: expense.id },
         data: { receiptUrl: uploadedUrl },
@@ -62,7 +67,7 @@ export async function addExpense(formData: FormData) {
       console.error("Receipt upload failed:", err);
       if (uploadedUrl) {
         try {
-          await deleteBlob(uploadedUrl);
+          await deleteUpload(uploadedUrl);
         } catch (cleanupErr) {
           console.error("Failed to cleanup uploaded receipt:", cleanupErr);
         }
@@ -116,7 +121,7 @@ export async function deleteExpense(expenseId: string) {
 
   if (expense.receiptUrl) {
     try {
-      await deleteBlob(expense.receiptUrl);
+      await deleteUpload(expense.receiptUrl);
     } catch (err) {
       console.error("Failed to delete receipt blob:", err);
     }

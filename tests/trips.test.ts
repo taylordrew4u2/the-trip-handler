@@ -10,7 +10,7 @@ vi.mock("@/lib/resend", () => ({
   sendRejectionEmail: vi.fn(),
   sendTripLockedEmail: vi.fn(),
 }));
-vi.mock("@/lib/blob", () => ({ deleteBlob: vi.fn() }));
+vi.mock("@/lib/files", () => ({ deleteUpload: vi.fn(), saveUpload: vi.fn(), safeUploadType: () => "image/png", MAX_UPLOAD_BYTES: 4194304 }));
 vi.mock("@/lib/db", () => ({
   prisma: {
     trip: { findUnique: vi.fn(), findFirst: vi.fn(), update: vi.fn(), create: vi.fn(), updateMany: vi.fn() },

@@ -6,7 +6,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { getMemberBill } from "@/lib/bill";
-import { deleteBlob, safeUploadType, uploadPaymentReceipt } from "@/lib/blob";
+import { MAX_UPLOAD_BYTES, deleteUpload, safeUploadType, saveUpload } from "@/lib/files";
 import { toCents } from "@/lib/pricing";
 import { settleCheckoutSession } from "@/lib/checkout";
 
@@ -186,20 +186,25 @@ export async function submitManualPayment(formData: FormData) {
   if (!userId) return { error: "Sign in as a participant first." };
 
   const method = formData.get("method");
-  if (method !== "VENMO" && method !== "CASH_APP") return { error: "Pick Venmo or Cash App." };
+  if (method !== "VENMO" && method !== "CASH_APP" && method !== "OTHER") {
+    return { error: "Pick how you paid." };
+  }
   const amount = toCents(parseFloat(String(formData.get("amount") ?? "")));
   if (!Number.isFinite(amount) || amount <= 0) return { error: "Enter the amount you sent." };
   const note = String(formData.get("note") ?? "").trim().slice(0, 500) || null;
 
   const receipt = formData.get("receipt");
   const file = receipt instanceof File && receipt.size > 0 ? receipt : null;
-  if (!file) return { error: "Attach a screenshot of the payment." };
-  if (file.size > 10 * 1024 * 1024) return { error: "Receipt must be 10MB or less." };
-  if (!safeUploadType(file, true)) return { error: "Receipt must be a photo (JPG, PNG, HEIC…) or a PDF." };
+  // Venmo and Cash App always leave a screenshot; "other" (cash, Zelle…) may not.
+  if (!file && method !== "OTHER") return { error: "Attach a screenshot of the payment." };
+  if (method === "OTHER" && !note && !file) return { error: "Say how you paid (cash, Zelle…) or attach a receipt." };
+  const contentType = file ? safeUploadType(file, true) : null;
+  if (file && file.size > MAX_UPLOAD_BYTES) return { error: "Receipt is too big — try a screenshot instead." };
+  if (file && !contentType) return { error: "Receipt must be a photo (JPG, PNG, HEIC…) or a PDF." };
 
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { status: true, trip: { select: { isLocked: true, venmoHandle: true, cashAppHandle: true } } },
+    select: { status: true, tripId: true, trip: { select: { isLocked: true, venmoHandle: true, cashAppHandle: true } } },
   });
   if (!user?.trip) return { error: "You're not on a trip yet." };
   if (user.status === "CONFIRMED_PAID") return { error: "You're already paid up." };
@@ -210,27 +215,105 @@ export async function submitManualPayment(formData: FormData) {
   if (method === "VENMO" && !user.trip.venmoHandle) return { error: "Venmo isn't accepted for this trip." };
   if (method === "CASH_APP" && !user.trip.cashAppHandle) return { error: "Cash App isn't accepted for this trip." };
 
-  const payment = await prisma.payment.create({
-    data: { userId, amount, method, note, status: "PENDING" },
-  });
-
-  let url: string | null = null;
-  try {
-    url = await uploadPaymentReceipt(file, payment.id);
-    await prisma.payment.update({ where: { id: payment.id }, data: { receiptUrl: url } });
-  } catch (err) {
-    console.error("Payment receipt upload failed:", err);
-    if (url) {
-      try {
-        await deleteBlob(url);
-      } catch (cleanupErr) {
-        console.error("Failed to cleanup payment receipt:", cleanupErr);
-      }
+  let receiptUrl: string | null = null;
+  if (file && contentType) {
+    try {
+      receiptUrl = await saveUpload(file, {
+        kind: "payment-receipt",
+        contentType,
+        uploaderId: userId,
+        tripId: user.tripId,
+      });
+    } catch (err) {
+      console.error("Payment receipt upload failed:", err);
+      return { error: "Receipt upload failed. Please try again." };
     }
-    await prisma.payment.delete({ where: { id: payment.id } });
-    return { error: "Receipt upload failed. Please try again." };
   }
 
+  try {
+    await prisma.payment.create({
+      data: { userId, amount, method, note, status: "PENDING", receiptUrl },
+    });
+  } catch (err) {
+    await deleteUpload(receiptUrl);
+    throw err;
+  }
+
+  revalidatePath("/dashboard/payment");
+  if (user.tripId) revalidatePath(`/dashboard/my-trips/${user.tripId}`);
+  return { success: true };
+}
+
+/** The trip owner, and the member if it's on their trip — or an error. */
+async function ownerOfMember(memberId: string) {
+  const session = await getServerSession(authOptions);
+  const ownerId = (session?.user as { id?: string } | undefined)?.id;
+  if (!ownerId || ownerId === "admin") return { error: "Sign in first." } as const;
+  const member = await prisma.user.findUnique({
+    where: { id: memberId },
+    select: { id: true, status: true, tripId: true },
+  });
+  if (!member?.tripId) return { error: "Not your trip." } as const;
+  const trip = await prisma.trip.findFirst({ where: { id: member.tripId, ownerId }, select: { id: true } });
+  if (!trip) return { error: "Not your trip." } as const;
+  return { member, tripId: trip.id } as const;
+}
+
+/** Mark a member paid when their payments cover the bill (or back to owing when they don't). */
+async function syncPaidStatus(memberId: string) {
+  const member = await prisma.user.findUnique({ where: { id: memberId }, select: { status: true } });
+  const bill = await getMemberBill(memberId);
+  if (!member || !bill) return;
+  if (bill.remaining <= 0 && (member.status === "APPROVED" || member.status === "PENDING_PAYMENT")) {
+    await prisma.user.update({ where: { id: memberId }, data: { status: "CONFIRMED_PAID" } });
+  } else if (bill.remaining > 0 && member.status === "CONFIRMED_PAID") {
+    await prisma.user.update({ where: { id: memberId }, data: { status: "PENDING_PAYMENT" } });
+  }
+}
+
+/**
+ * The owner checks off money they received outside the app (Venmo, Cash App,
+ * cash, anything) — no receipt needed, it counts straight away.
+ */
+export async function recordPaymentForMember(memberId: string, amountInput: number, methodInput: string, noteInput?: string) {
+  const ctx = await ownerOfMember(memberId);
+  if ("error" in ctx) return ctx;
+  if (!["APPROVED", "PENDING_PAYMENT", "CONFIRMED_PAID"].includes(ctx.member.status)) {
+    return { error: "They're not on the trip." };
+  }
+  const amount = toCents(Number(amountInput));
+  if (!Number.isFinite(amount) || amount <= 0) return { error: "Enter the amount you received." };
+  const method = ["VENMO", "CASH_APP", "CASH", "OTHER"].includes(methodInput)
+    ? (methodInput as "VENMO" | "CASH_APP" | "CASH" | "OTHER")
+    : "OTHER";
+  const note = typeof noteInput === "string" ? noteInput.trim().slice(0, 500) || null : null;
+
+  await prisma.payment.create({
+    data: { userId: memberId, amount, method, note, status: "COMPLETED", reviewedAt: new Date() },
+  });
+  await syncPaidStatus(memberId);
+
+  revalidatePath(`/dashboard/my-trips/${ctx.tripId}`);
+  revalidatePath("/dashboard/payment");
+  return { success: true };
+}
+
+/** Undo a payment the owner confirmed or recorded by mistake. Card payments are refunded in Stripe instead. */
+export async function undoManualPayment(paymentId: string) {
+  const payment = await prisma.payment.findUnique({
+    where: { id: paymentId },
+    select: { userId: true, method: true, status: true },
+  });
+  if (!payment) return { error: "Payment not found." };
+  const ctx = await ownerOfMember(payment.userId);
+  if ("error" in ctx) return ctx;
+  if (payment.method === "STRIPE") return { error: "Card payments are refunded in Stripe." };
+  if (payment.status !== "COMPLETED") return { error: "Only confirmed payments can be undone." };
+
+  await prisma.payment.update({ where: { id: paymentId }, data: { status: "FAILED", reviewedAt: new Date() } });
+  await syncPaidStatus(payment.userId);
+
+  revalidatePath(`/dashboard/my-trips/${ctx.tripId}`);
   revalidatePath("/dashboard/payment");
   return { success: true };
 }
@@ -263,13 +346,7 @@ export async function reviewManualPayment(paymentId: string, approve: boolean) {
   });
   if (claimed.count === 0) return { error: "Already reviewed." };
 
-  if (approve) {
-    const member = await prisma.user.findUnique({ where: { id: payment.userId }, select: { status: true } });
-    const bill = await getMemberBill(payment.userId);
-    if (bill && bill.remaining <= 0 && (member?.status === "APPROVED" || member?.status === "PENDING_PAYMENT")) {
-      await prisma.user.update({ where: { id: payment.userId }, data: { status: "CONFIRMED_PAID" } });
-    }
-  }
+  if (approve) await syncPaidStatus(payment.userId);
 
   revalidatePath(`/dashboard/my-trips/${tripId}`);
   revalidatePath("/dashboard/payment");

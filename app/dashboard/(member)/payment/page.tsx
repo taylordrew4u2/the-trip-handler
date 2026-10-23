@@ -78,6 +78,7 @@ export default async function PaymentPage({
     remaining: bill.remaining,
     venmoHandle: trip.venmoHandle,
     cashAppHandle: trip.cashAppHandle,
+    cardEnabled: Boolean(process.env.STRIPE_SECRET_KEY),
     payments: payments.map((p) => ({ ...p, createdAt: p.createdAt.toISOString() })),
   };
 

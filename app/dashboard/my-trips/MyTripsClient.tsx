@@ -25,6 +25,8 @@ type TripData = {
   joinCode: string | null;
   isApplicationOpen: boolean;
   applicants: Applicant[];
+  /** Venmo / Cash App / other payments guests reported, waiting to be checked off. */
+  paymentsToReview: number;
 };
 
 function InviteLink({ token }: { token: string }) {
@@ -204,6 +206,16 @@ export function MyTripsClient({ trips }: { trips: TripData[] }) {
                     <Link href={`/dashboard/my-trips/${trip.id}`} className="inline-flex min-h-[44px] items-center font-medium text-indigo-700 underline underline-offset-4 hover:text-indigo-800">
                       Edit details
                     </Link>
+                    {trip.paymentsToReview > 0 && (
+                      <Link
+                        href={`/dashboard/my-trips/${trip.id}`}
+                        className="ml-1 inline-flex min-h-[44px] items-center"
+                      >
+                        <span className="rounded bg-amber-200 px-2 py-0.5 text-xs font-semibold text-amber-900">
+                          {trip.paymentsToReview} payment{trip.paymentsToReview === 1 ? "" : "s"} to check off
+                        </span>
+                      </Link>
+                    )}
                   </p>
                 </div>
                 <label className="flex items-center gap-2 min-h-[44px] text-sm sm:text-xs text-slate-600 cursor-pointer">

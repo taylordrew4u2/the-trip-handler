@@ -1,10 +1,10 @@
-import { safeUploadType, uploadAvatar } from "@/lib/blob";
+import { MAX_UPLOAD_BYTES, safeUploadType, saveUpload } from "@/lib/files";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
 const ALLOWED_TYPES = new Set(["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"]);
-const MAX_BYTES = 5 * 1024 * 1024;
+const MAX_BYTES = MAX_UPLOAD_BYTES;
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
@@ -20,7 +20,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Missing file" }, { status: 400 });
   }
   if (file.size > MAX_BYTES) {
-    return NextResponse.json({ error: "Avatar must be 5MB or less" }, { status: 400 });
+    return NextResponse.json({ error: "Photo is too big — try a smaller one" }, { status: 400 });
   }
   const type = safeUploadType(file);
   if (!type || !ALLOWED_TYPES.has(type)) {
@@ -28,7 +28,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const url = await uploadAvatar(file, user.id, type);
+    const url = await saveUpload(file, { kind: "avatar", contentType: type, uploaderId: user.id, tripId: null });
     return NextResponse.json({ url });
   } catch (err) {
     console.error("Avatar upload failed:", err);

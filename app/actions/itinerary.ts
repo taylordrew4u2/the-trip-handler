@@ -67,58 +67,6 @@ export async function deleteDay(id: string) {
   return { success: true };
 }
 
-export async function addLodgingPhoto(tripId: string, url: string, caption?: string) {
-  if (!(await requireAdmin())) return { error: "Admin only." };
-  if (!tripId || !url) return { error: "Missing trip or photo URL." };
-
-  const max = await prisma.lodgingPhoto.findFirst({
-    where: { tripId },
-    orderBy: { position: "desc" },
-  });
-
-  await prisma.lodgingPhoto.create({
-    data: {
-      tripId,
-      url,
-      caption: caption?.trim() || null,
-      position: (max?.position ?? -1) + 1,
-    },
-  });
-
-  revalidatePath("/admin/trip");
-  revalidatePath("/dashboard/itinerary");
-  return { success: true };
-}
-
-export async function updateLodgingPhotoCaption(id: string, caption: string) {
-  if (!(await requireAdmin())) return { error: "Admin only." };
-  await prisma.lodgingPhoto.update({
-    where: { id },
-    data: { caption: caption.trim() || null },
-  });
-  revalidatePath("/admin/trip");
-  revalidatePath("/dashboard/itinerary");
-  return { success: true };
-}
-
-export async function deleteLodgingPhoto(id: string) {
-  if (!(await requireAdmin())) return { error: "Admin only." };
-  // Best-effort delete the blob too — don't block if it fails.
-  const photo = await prisma.lodgingPhoto.findUnique({ where: { id } });
-  if (photo) {
-    try {
-      const { del } = await import("@vercel/blob");
-      await del(photo.url);
-    } catch (err) {
-      console.error("Failed to delete blob:", err);
-    }
-  }
-  await prisma.lodgingPhoto.delete({ where: { id } });
-  revalidatePath("/admin/trip");
-  revalidatePath("/dashboard/itinerary");
-  return { success: true };
-}
-
 // ---------- Itinerary items (admin only) ----------
 
 function readItemFields(formData: FormData) {

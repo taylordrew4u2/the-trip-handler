@@ -2,11 +2,6 @@ import { Resend } from "resend";
 
 export const resend = new Resend(process.env.RESEND_API_KEY ?? "RESEND_KEY_MISSING");
 
-if (!process.env.RESEND_API_KEY) {
-  // Without a key every email silently fails — make that visible in the logs.
-  console.warn("RESEND_API_KEY is not set: no emails will be sent.");
-}
-
 const FROM_ADDRESS = process.env.EMAIL_FROM ?? "onboarding@resend.dev";
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 

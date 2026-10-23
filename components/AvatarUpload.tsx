@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import { updateAvatar } from "@/app/actions/profile";
+import { compressImage } from "@/components/compressImage";
 
 interface AvatarUploadProps {
   userId: string;
@@ -24,7 +25,8 @@ export function AvatarUpload({ userId, currentUrl, name }: AvatarUploadProps) {
     setUploading(true);
 
     const formData = new FormData();
-    formData.append("file", file);
+    // Profile photos are shown small — shrink them before upload.
+    formData.append("file", await compressImage(file, 600));
 
     try {
       const res = await fetch("/api/upload-avatar", { method: "POST", body: formData });

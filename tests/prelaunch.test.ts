@@ -5,7 +5,7 @@ import { describe, it, expect, beforeEach, vi, type Mock } from "vitest";
 vi.mock("next-auth", () => ({ getServerSession: vi.fn() }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("@/lib/stripe", () => ({ getStripe: vi.fn() }));
-vi.mock("@/lib/blob", () => ({ deleteBlob: vi.fn(), uploadPaymentReceipt: vi.fn(), safeUploadType: () => "image/png" }));
+vi.mock("@/lib/files", () => ({ deleteUpload: vi.fn(), saveUpload: vi.fn(), safeUploadType: () => "image/png", MAX_UPLOAD_BYTES: 4194304 }));
 vi.mock("@/lib/resend", () => ({
   sendApprovalEmail: vi.fn(),
   sendRejectionEmail: vi.fn(),
@@ -145,5 +145,32 @@ describe("approving an applicant", () => {
     p.user.count.mockResolvedValue(3);
     p.user.updateMany.mockResolvedValue({ count: 0 });
     expect((await approveTripApplicant("u1")) as { error: string }).toHaveProperty("error");
+  });
+});
+
+describe("payments the owner checks off", () => {
+  it("records money the owner received and marks the member paid when covered", async () => {
+    const { recordPaymentForMember } = await import("@/app/actions/payments");
+    session.mockResolvedValue({ user: { id: "owner" } });
+    p.user.findUnique.mockResolvedValue({ id: "u1", status: "PENDING_PAYMENT", tripId: "t1" });
+    p.trip.findFirst.mockResolvedValue({ id: "t1" });
+    bill.mockResolvedValue({ remaining: 0 });
+    expect(await recordPaymentForMember("u1", 380, "CASH", "paid at dinner")).toEqual({ success: true });
+    expect(p.payment.create.mock.calls[0][0].data).toMatchObject({
+      userId: "u1",
+      amount: 380,
+      method: "CASH",
+      status: "COMPLETED",
+    });
+    expect(p.user.update).toHaveBeenCalledWith({ where: { id: "u1" }, data: { status: "CONFIRMED_PAID" } });
+  });
+
+  it("only the trip owner can record a payment", async () => {
+    const { recordPaymentForMember } = await import("@/app/actions/payments");
+    session.mockResolvedValue({ user: { id: "u1" } });
+    p.user.findUnique.mockResolvedValue({ id: "u1", status: "PENDING_PAYMENT", tripId: "t1" });
+    p.trip.findFirst.mockResolvedValue(null);
+    expect(await recordPaymentForMember("u1", 380, "CASH")).toEqual({ error: "Not your trip." });
+    expect(p.payment.create).not.toHaveBeenCalled();
   });
 });

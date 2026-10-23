@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { SLEEP_TAG_BY_VALUE } from "@/lib/sleep";
+import { isStoredFileUrl } from "@/lib/files";
 
 const GENDERS = new Set(["female", "male", "non-binary", "other"]);
 
@@ -32,7 +33,7 @@ export async function updateBio(userId: string, bio: string) {
 export async function updateAvatar(userId: string, avatarUrl: string) {
   const auth = await requireSelf(userId);
   if ("error" in auth) return auth;
-  if (typeof avatarUrl !== "string" || !/^https:\/\/[a-z0-9-]+\.public\.blob\.vercel-storage\.com\//i.test(avatarUrl)) {
+  if (typeof avatarUrl !== "string" || !isStoredFileUrl(avatarUrl)) {
     return { error: "Invalid image URL." };
   }
   await prisma.user.update({ where: { id: userId }, data: { avatarUrl } });

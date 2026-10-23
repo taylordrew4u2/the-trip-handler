@@ -90,7 +90,7 @@ export function SleepingClient({
   async function handleBump(bedId: string, occupantName: string) {
     if (
       !confirm(
-        `Take ${occupantName}'s single bed? They'll be moved out and emailed to pick another spot.`
+        `Take ${occupantName}'s single bed? They'll be moved out and will need to pick another spot.`
       )
     )
       return;
