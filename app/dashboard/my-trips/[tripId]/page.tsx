@@ -2,6 +2,8 @@ import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
+import { randomBytes } from "crypto";
 import { prisma } from "@/lib/db";
 import { TripEditForm } from "./TripEditForm";
 import { RosterSettingsPanel } from "./RosterSettingsPanel";
@@ -12,6 +14,7 @@ import { BedsPanel } from "./BedsPanel";
 import { PaymentSettingsPanel } from "./PaymentSettingsPanel";
 import { SectionsPanel } from "./SectionsPanel";
 import { JoinAsGuestButton } from "./JoinAsGuestButton";
+import { InvitePanel } from "./InvitePanel";
 import { LodgingPhotosPanel } from "./LodgingPhotosPanel";
 import { MemberPaymentsPanel, type MemberPaymentRow } from "./MemberPaymentsPanel";
 import { computeBill } from "@/lib/bill";
@@ -37,6 +40,14 @@ export default async function ManageTripPage({
     where: { id: tripId, ownerId: userId },
   });
   if (!trip) redirect("/dashboard/my-trips");
+  // Trips from before invite links existed get one the first time the owner looks.
+  const inviteToken = trip.inviteToken ?? randomBytes(12).toString("hex");
+  if (!trip.inviteToken) await prisma.trip.update({ where: { id: trip.id }, data: { inviteToken } });
+  const h = await headers();
+  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "";
+  const local = /^(localhost|127\.0\.0\.1)(:|$)/.test(host);
+  const origin = `${h.get("x-forwarded-proto") ?? (local ? "http" : "https")}://${host}`;
+  const waitingForApproval = await prisma.user.count({ where: { tripId: trip.id, status: "PENDING", guestForm: { isNot: null } } });
 
   // An owner who also joined their own trip can flip to what guests see.
   const me = await prisma.user.findUnique({ where: { id: userId }, select: { tripId: true, status: true } });
@@ -168,6 +179,15 @@ export default async function ManageTripPage({
           )}
         </div>
       </div>
+      <InvitePanel
+        origin={origin}
+        tripId={trip.id}
+        tripName={trip.name}
+        inviteToken={inviteToken}
+        joinCode={trip.joinCode}
+        isApplicationOpen={trip.isApplicationOpen}
+        waiting={waitingForApproval}
+      />
       <TripEditForm
         tripId={trip.id}
         initial={{

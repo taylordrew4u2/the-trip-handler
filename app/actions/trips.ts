@@ -125,6 +125,7 @@ export async function generateMyTripJoinCode(tripId: string) {
     try {
       await prisma.trip.update({ where: { id: tripId }, data: { joinCode } });
       revalidatePath("/dashboard/my-trips");
+      revalidatePath(`/dashboard/my-trips/${tripId}`);
       return { success: true, joinCode };
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") continue;
@@ -143,6 +144,7 @@ export async function clearMyTripJoinCode(tripId: string) {
 
   await prisma.trip.update({ where: { id: tripId }, data: { joinCode: null } });
   revalidatePath("/dashboard/my-trips");
+  revalidatePath(`/dashboard/my-trips/${tripId}`);
   return { success: true };
 }
 
@@ -181,6 +183,7 @@ export async function setMyTripApplicationOpen(tripId: string, open: boolean) {
     data: { isApplicationOpen: open },
   });
   revalidatePath("/dashboard/my-trips");
+  revalidatePath(`/dashboard/my-trips/${tripId}`);
   return { success: true };
 }
 
