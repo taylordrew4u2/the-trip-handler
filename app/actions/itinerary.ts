@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
-import { isAuthzError, requireApprovedActor } from "@/lib/authz";
+import { isAuthzError, requireApprovedActor, requireApprovedMemberOf } from "@/lib/authz";
 
 async function requireAdmin() {
   const session = await getServerSession(authOptions);
@@ -243,6 +243,17 @@ export async function createItineraryComment(itemId: string, body: string) {
   if ("error" in auth) return auth;
   const text = body.trim();
   if (!text) return { error: "Comment can't be empty." };
+
+  // The item id comes from the caller: only comment on your own trip's plan.
+  const item = await prisma.itineraryItem.findUnique({
+    where: { id: itemId },
+    select: { day: { select: { tripId: true } } },
+  });
+  if (!item) return { error: "That item no longer exists." };
+  if (!auth.isAdmin) {
+    const member = await requireApprovedMemberOf(item.day.tripId);
+    if (isAuthzError(member)) return { error: member.error };
+  }
 
   await prisma.itineraryComment.create({
     data: { itineraryItemId: itemId, userId: auth.id, body: text },

@@ -287,6 +287,9 @@ export async function updatePreferences(formData: FormData) {
 
   data.preferencesSubmittedAt = new Date();
 
+  const hasForm = await prisma.guestForm.findUnique({ where: { userId: sessionUser.id }, select: { id: true } });
+  if (!hasForm) return { error: "Fill in the guest form first, then come back to preferences." };
+
   type UpdateInput = Parameters<typeof prisma.guestForm.update>[0];
   const updateInput = data as UpdateInput["data"];
   await prisma.guestForm.update({

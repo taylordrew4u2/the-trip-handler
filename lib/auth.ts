@@ -24,9 +24,12 @@ export const authOptions: NextAuthOptions = {
         // OR/findFirst would be ambiguous); email always wins to keep auth
         // deterministic. Everyone is a regular member; trips are managed by
         // whoever creates them.
+        const identifier = credentials.identifier.trim();
         const user =
-          (await prisma.user.findUnique({ where: { email: credentials.identifier } })) ??
-          (await prisma.user.findUnique({ where: { username: credentials.identifier } }));
+          (await prisma.user.findUnique({ where: { email: identifier } })) ??
+          // Emails are case-insensitive: Bob@x.com and bob@x.com are one inbox.
+          (await prisma.user.findFirst({ where: { email: { equals: identifier, mode: "insensitive" } } })) ??
+          (await prisma.user.findUnique({ where: { username: identifier } }));
         if (!user) return null;
 
         const valid = await bcrypt.compare(credentials.password, user.password);
@@ -48,6 +51,18 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id;
         token.role = (user as { role?: string }).role ?? "PARTICIPANT";
         token.status = (user as { status?: string }).status;
+      } else if (token.id && token.id !== "admin") {
+        // Re-read status and role on every request. A token is a snapshot from
+        // sign-in, and approval, rejection or withdrawal happen after that —
+        // without this, an approved member keeps a "pending" menu for 30 days.
+        const fresh = await prisma.user.findUnique({
+          where: { id: token.id as string },
+          select: { status: true, role: true },
+        });
+        if (fresh) {
+          token.status = fresh.status;
+          token.role = fresh.role;
+        }
       }
       return token;
     },

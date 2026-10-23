@@ -56,7 +56,7 @@ export function PaymentClient({ view }: { view: PaymentView }) {
   const history = view.payments.filter((p) => !(p.method === "STRIPE" && p.status === "PENDING"));
   const awaitingReview = history.some((p) => p.method !== "STRIPE" && p.status === "PENDING");
 
-  if (success || view.isPaid) {
+  if (view.isPaid) {
     return (
       <div className="space-y-6">
         <div className="bg-white rounded-2xl border border-emerald-300 p-8 text-center">
@@ -69,6 +69,10 @@ export function PaymentClient({ view }: { view: PaymentView }) {
     );
   }
 
+  // Back from Stripe but not marked paid yet (e.g. the webhook is still on
+  // its way, or it was a partial balance): say so instead of "You're in".
+  const justPaid = Boolean(success);
+
   const lines = view.lineItems;
   const anySet = lines ? lines.some((l) => l.total != null) : view.share > 0;
   const allLocked = view.isLocked;
@@ -77,13 +81,17 @@ export function PaymentClient({ view }: { view: PaymentView }) {
   async function handlePay() {
     setLoading(true);
     setError("");
-    const result = await createCheckoutSession();
-    if (result.url) {
-      window.location.href = result.url;
-    } else {
-      setLoading(false);
+    try {
+      const result = await createCheckoutSession();
+      if (result.url) {
+        window.location.href = result.url;
+        return;
+      }
       setError(result.error ?? "Payment failed. Please try again.");
+    } catch {
+      setError("Couldn't reach the server. Check your connection and try again.");
     }
+    setLoading(false);
   }
 
   async function handleManual(e: React.FormEvent<HTMLFormElement>) {
@@ -125,6 +133,11 @@ export function PaymentClient({ view }: { view: PaymentView }) {
           )}
         </div>
 
+        {justPaid && !error && (
+          <div role="status" className="bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg px-3 py-2 text-sm">
+            Thanks — your card payment is being recorded. If the balance below hasn&apos;t updated, refresh in a minute.
+          </div>
+        )}
         {error && (
           <div role="alert" className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2 text-sm">
             {error}

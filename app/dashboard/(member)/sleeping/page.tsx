@@ -4,7 +4,6 @@ import { ApprovalRequired } from "@/components/ApprovalRequired";
 import { isAuthzError, requireApprovedMember } from "@/lib/authz";
 import { SleepingClient } from "./SleepingClient";
 import { SignOutButton } from "@/components/SignOutButton";
-import { ensureSleepingSetup } from "@/app/actions/sleeping";
 import { PageNote } from "@/components/PageNote";
 import { getUserTrip } from "@/lib/trip";
 
@@ -17,8 +16,6 @@ export default async function SleepingPage() {
   const member = await requireApprovedMember();
   if (isAuthzError(member)) return <ApprovalRequired what="Sleeping arrangements" />;
   const userId = member.id;
-
-  await ensureSleepingSetup();
 
   const trip = await getUserTrip(userId);
 

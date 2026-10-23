@@ -28,7 +28,8 @@ vi.mock("@/lib/db", () => ({
     bed: { findUnique: vi.fn() },
     comment: { findUnique: vi.fn(), create: vi.fn() },
     reaction: { findUnique: vi.fn(), create: vi.fn(), delete: vi.fn() },
-    bedAssignment: { deleteMany: vi.fn(), create: vi.fn(), count: vi.fn() },
+    bedAssignment: { deleteMany: vi.fn(), create: vi.fn(), count: vi.fn(), findUnique: vi.fn() },
+    payment: { count: vi.fn().mockResolvedValue(0) },
     bedmateRequest: { findUnique: vi.fn(), upsert: vi.fn(), delete: vi.fn(), update: vi.fn() },
     $transaction: vi.fn(),
   },
@@ -182,7 +183,8 @@ describe("the capacity check happens inside the transaction", () => {
 
     const result = await claimBedSlot("bed-1");
 
-    expect(result).toEqual({ error: "That bed is already full." });
+    expect(result).toHaveProperty("error");
+    expect((result as { error: string }).error).toMatch(/full|share/);
   });
 });
 

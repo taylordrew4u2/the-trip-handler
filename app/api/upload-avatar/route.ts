@@ -1,4 +1,4 @@
-import { put } from "@vercel/blob";
+import { safeUploadType, uploadAvatar } from "@/lib/blob";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -22,15 +22,16 @@ export async function POST(request: Request) {
   if (file.size > MAX_BYTES) {
     return NextResponse.json({ error: "Avatar must be 5MB or less" }, { status: 400 });
   }
-  if (file.type && !ALLOWED_TYPES.has(file.type)) {
+  const type = safeUploadType(file);
+  if (!type || !ALLOWED_TYPES.has(type)) {
     return NextResponse.json({ error: "Avatar must be a JPG, PNG, WebP, or GIF" }, { status: 400 });
   }
 
-  const ext = file.name.split(".").pop()?.toLowerCase() ?? "png";
-  const { url } = await put(`avatars/${user.id}.${ext}`, file, {
-    access: "public",
-    allowOverwrite: true,
-  });
-
-  return NextResponse.json({ url });
+  try {
+    const url = await uploadAvatar(file, user.id, type);
+    return NextResponse.json({ url });
+  } catch (err) {
+    console.error("Avatar upload failed:", err);
+    return NextResponse.json({ error: "Upload failed. Please try again." }, { status: 500 });
+  }
 }

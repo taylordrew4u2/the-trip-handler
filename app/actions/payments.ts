@@ -6,8 +6,9 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { getMemberBill } from "@/lib/bill";
-import { deleteBlob, uploadPaymentReceipt } from "@/lib/blob";
+import { deleteBlob, safeUploadType, uploadPaymentReceipt } from "@/lib/blob";
 import { toCents } from "@/lib/pricing";
+import { settleCheckoutSession } from "@/lib/checkout";
 
 async function participantId(): Promise<string | null> {
   const session = await getServerSession(authOptions);
@@ -25,16 +26,30 @@ export async function createCheckoutSession() {
 
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { id: true, email: true, trip: { select: { isLocked: true, finalPrice: true } } },
+    select: { id: true, email: true, status: true, trip: { select: { isLocked: true, finalPrice: true } } },
   });
   if (!user) return { error: "User not found" };
+  // Only approved members pay; pending, rejected or withdrawn people can't.
+  if (user.status !== "APPROVED" && user.status !== "PENDING_PAYMENT") {
+    return { error: user.status === "CONFIRMED_PAID" ? "You're already paid up." : "You need to be approved first." };
+  }
   if (!user.trip?.isLocked || user.trip.finalPrice == null) {
     return { error: "Trip isn't locked for payment yet." };
+  }
+
+  const pendingManual = await prisma.payment.count({
+    where: { userId, status: "PENDING", method: { not: "STRIPE" } },
+  });
+  if (pendingManual > 0) {
+    return { error: "You have a Venmo/Cash App payment waiting for the organizer to confirm. Wait for that first." };
   }
 
   const bill = await getMemberBill(user.id);
   if (!bill) return { error: "Trip isn't locked for payment yet." };
   if (bill.remaining <= 0) return { error: "You're already paid up." };
+  if (bill.remaining < 0.5) {
+    return { error: "The balance is under Stripe's $0.50 minimum — settle it with the organizer directly." };
+  }
 
   // Nothing paid yet: itemize share + deposit. Partly paid (e.g. some by
   // Venmo): charge the balance as one line.
@@ -81,30 +96,80 @@ export async function createCheckoutSession() {
         ];
 
   const stripe = getStripe();
-  const checkout = await stripe.checkout.sessions.create({
-    payment_method_types: ["card"],
-    line_items: lineItems,
-    mode: "payment",
-    success_url: `${appUrl}/dashboard/payment?success=true`,
-    cancel_url: `${appUrl}/dashboard/payment?cancelled=true`,
-    customer_email: user.email,
-    metadata: { userId: user.id },
-  });
 
-  await prisma.payment.create({
-    data: {
-      userId: user.id,
-      amount: bill.remaining,
-      stripeSessionId: checkout.id,
-      status: "PENDING",
-      method: "STRIPE",
-    },
+  // Close any checkout this member opened before, so two tabs (or a back
+  // button) can't both be paid.
+  const open = await prisma.payment.findMany({
+    where: { userId, method: "STRIPE", status: "PENDING", stripeSessionId: { not: null } },
+    select: { id: true, stripeSessionId: true },
   });
+  for (const p of open) {
+    try {
+      const prior = await stripe.checkout.sessions.retrieve(p.stripeSessionId!);
+      if (prior.status === "open") await stripe.checkout.sessions.expire(prior.id);
+      if (prior.status === "complete") {
+        // Paid but never recorded (webhook missed) — record it instead of charging again.
+        await settleCheckoutSession(prior);
+        return { error: "Your earlier card payment just went through. Refresh the page." };
+      }
+      await prisma.payment.update({ where: { id: p.id }, data: { status: "FAILED" } });
+    } catch (err) {
+      console.error("Couldn't close earlier checkout:", err);
+      return { error: "Couldn't start checkout. Please try again in a minute." };
+    }
+  }
+
+  let checkout;
+  try {
+    checkout = await stripe.checkout.sessions.create({
+      payment_method_types: ["card"],
+      line_items: lineItems,
+      mode: "payment",
+      success_url: `${appUrl}/dashboard/payment?success=true&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${appUrl}/dashboard/payment?cancelled=true`,
+      customer_email: user.email,
+      metadata: { userId: user.id },
+    });
+  } catch (err) {
+    console.error("Stripe checkout failed:", err);
+    return { error: "Couldn't start checkout. Please try again in a minute." };
+  }
+
+  try {
+    await prisma.payment.create({
+      data: {
+        userId: user.id,
+        amount: bill.remaining,
+        stripeSessionId: checkout.id,
+        status: "PENDING",
+        method: "STRIPE",
+      },
+    });
+  } catch (err) {
+    console.error("Couldn't record checkout; expiring it:", err);
+    await stripe.checkout.sessions.expire(checkout.id).catch(() => {});
+    return { error: "Couldn't start checkout. Please try again." };
+  }
 
   return { url: checkout.url };
 }
 
-const RECEIPT_TYPES = new Set(["application/pdf", "image/jpeg", "image/png", "image/webp", "image/gif", "image/heic"]);
+/**
+ * Called when a member returns from Stripe. Records the payment straight from
+ * Stripe so the page is right even if the webhook is slow or misconfigured.
+ */
+export async function reconcileCheckout(sessionId: string) {
+  const userId = await participantId();
+  if (!userId || !sessionId) return;
+  const row = await prisma.payment.findUnique({ where: { stripeSessionId: sessionId }, select: { userId: true } });
+  if (row?.userId !== userId) return;
+  try {
+    const session = await getStripe().checkout.sessions.retrieve(sessionId);
+    if (session.metadata?.userId === userId) await settleCheckoutSession(session);
+  } catch (err) {
+    console.error("reconcileCheckout failed:", err);
+  }
+}
 
 /**
  * A member reports a Venmo or Cash App payment they sent the owner, with a
@@ -124,14 +189,15 @@ export async function submitManualPayment(formData: FormData) {
   const file = receipt instanceof File && receipt.size > 0 ? receipt : null;
   if (!file) return { error: "Attach a screenshot of the payment." };
   if (file.size > 10 * 1024 * 1024) return { error: "Receipt must be 10MB or less." };
-  if (file.type && !RECEIPT_TYPES.has(file.type)) return { error: "Receipt must be a PDF or image." };
+  if (!safeUploadType(file, true)) return { error: "Receipt must be a photo (JPG, PNG, HEIC…) or a PDF." };
 
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: { status: true, trip: { select: { isLocked: true, venmoHandle: true, cashAppHandle: true } } },
   });
   if (!user?.trip) return { error: "You're not on a trip yet." };
-  if (!["APPROVED", "PENDING_PAYMENT", "CONFIRMED_PAID"].includes(user.status)) {
+  if (user.status === "CONFIRMED_PAID") return { error: "You're already paid up." };
+  if (user.status !== "APPROVED" && user.status !== "PENDING_PAYMENT") {
     return { error: "You need to be approved first." };
   }
   if (!user.trip.isLocked) return { error: "Trip isn't locked for payment yet." };
@@ -184,14 +250,17 @@ export async function reviewManualPayment(paymentId: string, approve: boolean) {
   if (payment.method === "STRIPE") return { error: "Card payments are confirmed by Stripe." };
   if (payment.status !== "PENDING") return { error: "Already reviewed." };
 
-  await prisma.payment.update({
-    where: { id: paymentId },
+  // Claim the review atomically so a double click can't count it twice.
+  const claimed = await prisma.payment.updateMany({
+    where: { id: paymentId, status: "PENDING" },
     data: { status: approve ? "COMPLETED" : "FAILED", reviewedAt: new Date() },
   });
+  if (claimed.count === 0) return { error: "Already reviewed." };
 
   if (approve) {
+    const member = await prisma.user.findUnique({ where: { id: payment.userId }, select: { status: true } });
     const bill = await getMemberBill(payment.userId);
-    if (bill && bill.remaining <= 0) {
+    if (bill && bill.remaining <= 0 && (member?.status === "APPROVED" || member?.status === "PENDING_PAYMENT")) {
       await prisma.user.update({ where: { id: payment.userId }, data: { status: "CONFIRMED_PAID" } });
     }
   }

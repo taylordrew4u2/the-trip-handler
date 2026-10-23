@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/db";
-import { deleteBlob, uploadReceipt } from "@/lib/blob";
+import { deleteBlob, safeUploadType, uploadReceipt } from "@/lib/blob";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
@@ -33,8 +33,7 @@ export async function addExpense(formData: FormData) {
     if (receiptFile.size > maxBytes) {
       return { error: "Receipt must be 10MB or less" };
     }
-    const allowedTypes = new Set(["application/pdf", "image/jpeg", "image/png", "image/webp", "image/gif"]);
-    if (receiptFile.type && !allowedTypes.has(receiptFile.type)) {
+    if (!safeUploadType(receiptFile, true)) {
       return { error: "Receipt must be a PDF or image" };
     }
   }

@@ -105,7 +105,7 @@ export function SleepingClient({
   if (beds.length === 0) {
     return (
       <div className="bg-white border border-slate-200 rounded-2xl p-8 text-center">
-        <p className="text-slate-600">Admin hasn&apos;t set up any beds yet. Check back later.</p>
+        <p className="text-slate-600">The organizer hasn&apos;t set up the beds yet. Check back later.</p>
       </div>
     );
   }
