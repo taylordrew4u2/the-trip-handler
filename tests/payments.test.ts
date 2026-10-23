@@ -3,10 +3,16 @@ import { describe, it, expect, beforeEach, vi, type Mock } from "vitest";
 vi.mock("next-auth", () => ({ getServerSession: vi.fn() }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("@/lib/stripe", () => ({ getStripe: vi.fn() }));
-vi.mock("@/lib/blob", () => ({ deleteBlob: vi.fn(), uploadPaymentReceipt: vi.fn() }));
+vi.mock("@/lib/files", () => ({ deleteUpload: vi.fn(), saveUpload: vi.fn(), safeUploadType: () => "image/png", MAX_UPLOAD_BYTES: 4194304 }));
 vi.mock("@/lib/db", () => ({
   prisma: {
-    payment: { findUnique: vi.fn(), update: vi.fn(), create: vi.fn(), delete: vi.fn() },
+    payment: {
+      findUnique: vi.fn(),
+      update: vi.fn(),
+      updateMany: vi.fn().mockResolvedValue({ count: 1 }),
+      create: vi.fn(),
+      delete: vi.fn(),
+    },
     trip: { findFirst: vi.fn() },
     user: { findUnique: vi.fn(), update: vi.fn() },
   },
@@ -18,7 +24,7 @@ import { reviewManualPayment, submitManualPayment } from "@/app/actions/payments
 
 const session = getServerSession as unknown as Mock;
 const p = prisma as unknown as {
-  payment: { findUnique: Mock; update: Mock; create: Mock };
+  payment: { findUnique: Mock; update: Mock; updateMany: Mock; create: Mock };
   trip: { findFirst: Mock };
   user: { findUnique: Mock; update: Mock };
 };
@@ -58,8 +64,9 @@ describe("reviewManualPayment", () => {
   it("marks a rejected transfer FAILED without touching the member", async () => {
     session.mockResolvedValue({ user: { id: "owner" } });
     p.trip.findFirst.mockResolvedValue({ id: "t1" });
+    p.payment.updateMany.mockResolvedValue({ count: 1 });
     expect(await reviewManualPayment("pay1", false)).toEqual({ success: true });
-    expect(p.payment.update).toHaveBeenCalledWith(
+    expect(p.payment.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({ data: expect.objectContaining({ status: "FAILED" }) }),
     );
     expect(p.user.update).not.toHaveBeenCalled();

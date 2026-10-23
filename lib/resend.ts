@@ -34,7 +34,7 @@ export async function notifyAdmin(event: AdminEvent): Promise<void> {
 
     const button =
       event.actionUrl && event.actionLabel
-        ? `<a href="${event.actionUrl}" style="background:#1c1917;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;display:inline-block;margin-top:16px;font-size:14px;">${event.actionLabel}</a>`
+        ? `<a href="${event.actionUrl}" style="background:#1c1917;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;display:inline-block;margin-top:16px;font-size:14px;">${escapeHtml(event.actionLabel)}</a>`
         : "";
 
     await resend.emails.send({
@@ -73,7 +73,7 @@ export async function sendApprovalEmail(email: string, name: string) {
     html: `
       <div style="font-family: ui-sans-serif, system-ui, sans-serif; max-width: 560px; margin: 0 auto; color: #1c1917;">
         <p style="font-size: 12px; text-transform: uppercase; letter-spacing: 2px; color: #888; margin: 0 0 8px;">The Trip Handler</p>
-        <h1 style="font-size: 22px; margin: 0 0 12px;">Hey ${name} — you&apos;re in.</h1>
+        <h1 style="font-size: 22px; margin: 0 0 12px;">Hey ${escapeHtml(name)} — you&apos;re in.</h1>
         <p style="font-size: 14px; line-height: 1.5; color: #444;">Admin approved your application. Next step: log in and finish your <strong>trip preferences</strong> (emergency contact, transportation, food, activities/workshop) so we can plan around you. You can see the roster, itinerary, contributions board, and meet everyone else who&apos;s coming.</p>
         <p style="font-size: 14px; line-height: 1.5; color: #444;">When the trip is locked you&apos;ll get another email asking you to pay (your trip share + the refundable security deposit).</p>
         <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard/preferences" style="background:#1c1917;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;display:inline-block;margin-top:16px;font-size:14px;">Open the preferences form</a>
@@ -91,7 +91,7 @@ export async function sendFormUnlockedEmail(email: string, name: string) {
       html: `
         <div style="font-family: ui-sans-serif, system-ui, sans-serif; max-width: 560px; margin: 0 auto; color: #1c1917;">
           <p style="font-size: 12px; text-transform: uppercase; letter-spacing: 2px; color: #888; margin: 0 0 8px;">The Trip Handler</p>
-          <h1 style="font-size: 22px; margin: 0 0 12px;">Hey ${name} — your guest form is unlocked</h1>
+          <h1 style="font-size: 22px; margin: 0 0 12px;">Hey ${escapeHtml(name)} — your guest form is unlocked</h1>
           <p style="font-size: 14px; line-height: 1.5; color: #444;">Admin granted your edit request. You can update your form and re-submit it. It&apos;ll lock again automatically once you save.</p>
           <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard/intake" style="background:#1c1917;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;display:inline-block;margin-top:16px;font-size:14px;">Edit your form</a>
         </div>
@@ -111,7 +111,7 @@ export async function sendRejectionEmail(email: string, name: string) {
       html: `
         <div style="font-family: ui-sans-serif, system-ui, sans-serif; max-width: 560px; margin: 0 auto; color: #1c1917;">
           <p style="font-size: 12px; text-transform: uppercase; letter-spacing: 2px; color: #888; margin: 0 0 8px;">The Trip Handler</p>
-          <h1 style="font-size: 22px; margin: 0 0 12px;">Hey ${name},</h1>
+          <h1 style="font-size: 22px; margin: 0 0 12px;">Hey ${escapeHtml(name)},</h1>
           <p style="font-size: 14px; line-height: 1.5; color: #444;">Thanks for applying to the trip. Unfortunately we&apos;re not able to fit you in this round. Reach out to admin directly if you have questions.</p>
         </div>
       `,
@@ -130,7 +130,7 @@ export async function sendBedBumpEmail(email: string, name: string, bedLabel: st
       html: `
         <div style="font-family: ui-sans-serif, system-ui, sans-serif; max-width: 560px; margin: 0 auto; color: #1c1917;">
           <p style="font-size: 12px; text-transform: uppercase; letter-spacing: 2px; color: #888; margin: 0 0 8px;">The Trip Handler</p>
-          <h1 style="font-size: 22px; margin: 0 0 12px;">Hey ${name},</h1>
+          <h1 style="font-size: 22px; margin: 0 0 12px;">Hey ${escapeHtml(name)},</h1>
           <p style="font-size: 14px; line-height: 1.5; color: #444;">
             A female member has claimed <strong>${escapeHtml(bedLabel)}</strong> (a single bed). Singles can be requested by
             female members, so you&apos;ve been moved out. No worries — head back to the dashboard and pick another bed.
@@ -153,7 +153,7 @@ export async function sendCancellationEmail(email: string, name: string) {
       html: `
         <div style="font-family: ui-sans-serif, system-ui, sans-serif; max-width: 560px; margin: 0 auto; color: #1c1917;">
           <p style="font-size: 12px; text-transform: uppercase; letter-spacing: 2px; color: #888; margin: 0 0 8px;">The Trip Handler</p>
-          <h1 style="font-size: 22px; margin: 0 0 12px;">Hey ${name},</h1>
+          <h1 style="font-size: 22px; margin: 0 0 12px;">Hey ${escapeHtml(name)},</h1>
           <p style="font-size: 14px; line-height: 1.5; color: #444;">Admin has cancelled your spot on the trip. Reach out directly if this was unexpected — there may be more context they want to share with you.</p>
         </div>
       `,
@@ -172,7 +172,7 @@ export async function sendTripLockedEmail(email: string, name: string, price: nu
     html: `
       <div style="font-family: ui-sans-serif, system-ui, sans-serif; max-width: 560px; margin: 0 auto; color: #1c1917;">
         <p style="font-size: 12px; text-transform: uppercase; letter-spacing: 2px; color: #888; margin: 0 0 8px;">The Trip Handler</p>
-        <h1 style="font-size: 22px; margin: 0 0 12px;">Hey ${name} — the trip is locked.</h1>
+        <h1 style="font-size: 22px; margin: 0 0 12px;">Hey ${escapeHtml(name)} — the trip is locked.</h1>
         <p style="font-size: 14px; line-height: 1.5; color: #444;">Your trip share is <strong>$${price.toFixed(2)}</strong>. The refundable $${deposit.toFixed(2)} security deposit is added at checkout, so the total today is <strong>$${total.toFixed(2)}</strong>.</p>
         <p style="font-size: 14px; line-height: 1.5; color: #444;">The deposit comes back to you after the trip if everyone follows the rules and there&apos;s no damage.</p>
         <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard/payment" style="background:#1c1917;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;display:inline-block;margin-top:16px;font-size:14px;">Pay $${total.toFixed(2)}</a>

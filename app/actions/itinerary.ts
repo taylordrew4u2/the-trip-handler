@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
-import { isAuthzError, requireApprovedActor } from "@/lib/authz";
+import { isAuthzError, requireApprovedActor, requireApprovedMemberOf } from "@/lib/authz";
 
 async function requireAdmin() {
   const session = await getServerSession(authOptions);
@@ -63,58 +63,6 @@ export async function deleteDay(id: string) {
   if (!(await requireAdmin())) return { error: "Admin only." };
   await prisma.day.delete({ where: { id } });
   revalidatePath("/admin/itinerary");
-  revalidatePath("/dashboard/itinerary");
-  return { success: true };
-}
-
-export async function addLodgingPhoto(tripId: string, url: string, caption?: string) {
-  if (!(await requireAdmin())) return { error: "Admin only." };
-  if (!tripId || !url) return { error: "Missing trip or photo URL." };
-
-  const max = await prisma.lodgingPhoto.findFirst({
-    where: { tripId },
-    orderBy: { position: "desc" },
-  });
-
-  await prisma.lodgingPhoto.create({
-    data: {
-      tripId,
-      url,
-      caption: caption?.trim() || null,
-      position: (max?.position ?? -1) + 1,
-    },
-  });
-
-  revalidatePath("/admin/trip");
-  revalidatePath("/dashboard/itinerary");
-  return { success: true };
-}
-
-export async function updateLodgingPhotoCaption(id: string, caption: string) {
-  if (!(await requireAdmin())) return { error: "Admin only." };
-  await prisma.lodgingPhoto.update({
-    where: { id },
-    data: { caption: caption.trim() || null },
-  });
-  revalidatePath("/admin/trip");
-  revalidatePath("/dashboard/itinerary");
-  return { success: true };
-}
-
-export async function deleteLodgingPhoto(id: string) {
-  if (!(await requireAdmin())) return { error: "Admin only." };
-  // Best-effort delete the blob too — don't block if it fails.
-  const photo = await prisma.lodgingPhoto.findUnique({ where: { id } });
-  if (photo) {
-    try {
-      const { del } = await import("@vercel/blob");
-      await del(photo.url);
-    } catch (err) {
-      console.error("Failed to delete blob:", err);
-    }
-  }
-  await prisma.lodgingPhoto.delete({ where: { id } });
-  revalidatePath("/admin/trip");
   revalidatePath("/dashboard/itinerary");
   return { success: true };
 }
@@ -243,6 +191,17 @@ export async function createItineraryComment(itemId: string, body: string) {
   if ("error" in auth) return auth;
   const text = body.trim();
   if (!text) return { error: "Comment can't be empty." };
+
+  // The item id comes from the caller: only comment on your own trip's plan.
+  const item = await prisma.itineraryItem.findUnique({
+    where: { id: itemId },
+    select: { day: { select: { tripId: true } } },
+  });
+  if (!item) return { error: "That item no longer exists." };
+  if (!auth.isAdmin) {
+    const member = await requireApprovedMemberOf(item.day.tripId);
+    if (isAuthzError(member)) return { error: member.error };
+  }
 
   await prisma.itineraryComment.create({
     data: { itineraryItemId: itemId, userId: auth.id, body: text },

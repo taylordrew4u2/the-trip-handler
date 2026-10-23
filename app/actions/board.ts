@@ -43,7 +43,6 @@ export async function deleteComment(commentId: string) {
 
   await prisma.comment.delete({ where: { id: commentId } });
   revalidatePath("/dashboard/board");
-  revalidatePath("/admin/board");
   return { success: true };
 }
 
@@ -75,13 +74,18 @@ export async function toggleReaction(commentId: string, emoji: string) {
   });
 
   if (existing) {
-    await prisma.reaction.delete({ where: { id: existing.id } });
+    // deleteMany: a double tap may have removed it already.
+    await prisma.reaction.deleteMany({ where: { id: existing.id } });
   } else {
-    await prisma.reaction.create({
-      data: { commentId, userId: user.id, emoji },
-    });
+    try {
+      await prisma.reaction.create({
+        data: { commentId, userId: user.id, emoji },
+      });
+    } catch (err) {
+      // A double tap already added it.
+      if ((err as { code?: string })?.code !== "P2002") throw err;
+    }
   }
   revalidatePath("/dashboard/board");
-  revalidatePath("/admin/board");
   return { success: true };
 }

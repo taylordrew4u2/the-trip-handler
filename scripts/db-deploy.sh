@@ -15,6 +15,19 @@
 # P3005, it does NOT mask genuine migration failures.
 set -uo pipefail
 
+# Migrations whose SQL is safe to re-run. If one of these is recorded as failed
+# (P3009/P3018), it's marked rolled back and applied again instead of blocking
+# every later deploy. Only list a migration here once its SQL is idempotent.
+RETRYABLE_MIGRATIONS=(20261023120000_stored_files)
+
+for name in "${RETRYABLE_MIGRATIONS[@]}"; do
+  status="$(npx prisma migrate status 2>&1 || true)"
+  if grep -q "$name" <<<"$status" && grep -qiE "failed|P3009" <<<"$status"; then
+    echo ">> $name is recorded as failed and is safe to re-run — marking it rolled back"
+    npx prisma migrate resolve --rolled-back "$name" || true
+  fi
+done
+
 if output="$(npx prisma migrate deploy 2>&1)"; then
   echo "$output"
 else

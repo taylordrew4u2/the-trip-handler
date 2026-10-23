@@ -5,15 +5,24 @@ import { ApprovalRequired } from "@/components/ApprovalRequired";
 import { isAuthzError, requireApprovedMember } from "@/lib/authz";
 import { PageNote } from "@/components/PageNote";
 import { getMemberBill } from "@/lib/bill";
+import { reconcileCheckout } from "@/app/actions/payments";
 import { hasFeature, hasMeals, toCents } from "@/lib/pricing";
 
-export default async function PaymentPage() {
+export default async function PaymentPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ session_id?: string }>;
+}) {
   await requireSection("payment");
   // Approval is read from the database, not the sign-in-time JWT, so a
   // member removed from the trip loses access on their next request.
   const member = await requireApprovedMember();
   if (isAuthzError(member)) return <ApprovalRequired what="Payment" />;
   const userId = member.id;
+
+  // Back from Stripe: record the payment now rather than waiting on the webhook.
+  const { session_id: sessionId } = await searchParams;
+  if (sessionId) await reconcileCheckout(sessionId);
 
   const [trip, user, payments, bill] = await Promise.all([
     prisma.trip.findUnique({ where: { id: member.tripId } }),
@@ -69,6 +78,7 @@ export default async function PaymentPage() {
     remaining: bill.remaining,
     venmoHandle: trip.venmoHandle,
     cashAppHandle: trip.cashAppHandle,
+    cardEnabled: Boolean(process.env.STRIPE_SECRET_KEY),
     payments: payments.map((p) => ({ ...p, createdAt: p.createdAt.toISOString() })),
   };
 

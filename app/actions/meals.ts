@@ -92,14 +92,21 @@ export async function ensureMealPlanSetup(tripId: string) {
         orderIndex: def.order,
         isOptional: def.optional,
       })),
+      // Two members opening Meals for the first time at once must not error.
+      skipDuplicates: true,
     });
   }
 
-  await prisma.mealPlanPhase.upsert({
-    where: { tripId },
-    create: { tripId, currentPhase: "suggestions_open", suggestionsOpenedAt: new Date() },
-    update: {},
-  });
+  try {
+    await prisma.mealPlanPhase.upsert({
+      where: { tripId },
+      create: { tripId, currentPhase: "suggestions_open", suggestionsOpenedAt: new Date() },
+      update: {},
+    });
+  } catch (err) {
+    // A concurrent first visit created it a moment ago — that's fine.
+    if ((err as { code?: string })?.code !== "P2002") throw err;
+  }
 }
 
 // ---------- Slot management (trip owner) ----------

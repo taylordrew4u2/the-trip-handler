@@ -123,7 +123,7 @@ export function ProfileForm({
         hint={
           <>
             Female members can request a single bed even if it&apos;s already taken (current occupant
-            gets bumped and emailed). Used only for that.
+            gets moved). Used only for that.
           </>
         }
       >

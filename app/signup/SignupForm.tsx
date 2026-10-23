@@ -55,7 +55,7 @@ export function SignupForm({ invite }: { invite?: InviteInfo | null }) {
           {invite ? (
             <>
               Sign in and complete the <strong>guest form</strong> — the trip&apos;s organizer
-              reviews this before approving you. We&apos;ll email you once you&apos;re in.
+              reviews this before approving you. Sign back in to check — your dashboard shows when you&apos;re in.
             </>
           ) : (
             <>

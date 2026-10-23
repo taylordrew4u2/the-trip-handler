@@ -5,7 +5,7 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 
 const SignupSchema = z.object({
-  name: z.string().min(2),
+  name: z.string().min(2).max(100),
   email: z.string().email(),
   password: z.string().min(6),
   username: z.string().optional(),
@@ -18,10 +18,11 @@ const SignupSchema = z.object({
 
 export async function signupAction(formData: FormData) {
   const raw = {
-    name: formData.get("name") as string,
-    email: formData.get("email") as string,
+    name: ((formData.get("name") as string) ?? "").trim(),
+    // One inbox, one account: store emails trimmed and lowercased.
+    email: ((formData.get("email") as string) ?? "").trim().toLowerCase(),
     password: formData.get("password") as string,
-    username: (formData.get("username") as string) || undefined,
+    username: ((formData.get("username") as string) ?? "").trim() || undefined,
     bio: (formData.get("bio") as string) || undefined,
     phone: (formData.get("phone") as string) || undefined,
     inviteToken: (formData.get("inviteToken") as string) || undefined,
@@ -42,7 +43,9 @@ export async function signupAction(formData: FormData) {
     tripId = trip.id;
   }
 
-  const existing = await prisma.user.findUnique({ where: { email: raw.email } });
+  const existing = await prisma.user.findFirst({
+    where: { email: { equals: raw.email, mode: "insensitive" } },
+  });
   if (existing) return { error: "Email already registered" };
 
   if (raw.username) {
@@ -51,7 +54,8 @@ export async function signupAction(formData: FormData) {
   }
 
   const hashed = await bcrypt.hash(raw.password, 10);
-  await prisma.user.create({
+  try {
+    await prisma.user.create({
     data: {
       name: raw.name,
       email: raw.email,
@@ -63,7 +67,12 @@ export async function signupAction(formData: FormData) {
       role: "PARTICIPANT",
       tripId,
     },
-  });
+    });
+  } catch (err) {
+    // Two sign-ups racing for the same email or username.
+    if ((err as { code?: string })?.code === "P2002") return { error: "Email or username already registered" };
+    throw err;
+  }
 
   return { success: true };
 }

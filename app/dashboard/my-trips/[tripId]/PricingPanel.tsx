@@ -121,7 +121,7 @@ export function PricingPanel({ tripId, pricing }: { tripId: string; pricing: Pri
             Trip locked — base per-person share is ${pricing.finalPrice?.toFixed(2)} (+ ${pricing.depositAmount.toFixed(2)} deposit).
           </p>
           <p className="text-xs text-green-700 mt-1">
-            Approved members have been moved to payment and emailed a checkout link.
+            Approved members can now see what they owe on their Payment page.
           </p>
           <button
             type="button"

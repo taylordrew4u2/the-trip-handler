@@ -4,6 +4,7 @@ import { useState } from "react";
 import { createCheckoutSession, submitManualPayment } from "@/app/actions/payments";
 import { useRouter, useSearchParams } from "next/navigation";
 import { formatAdjustment } from "@/lib/pricing";
+import { compressImage } from "@/components/compressImage";
 
 export type PaymentView = {
   tripName: string;
@@ -21,22 +22,24 @@ export type PaymentView = {
   remaining: number;
   venmoHandle: string | null;
   cashAppHandle: string | null;
+  /** Card checkout is only offered when Stripe is set up. */
+  cardEnabled: boolean;
   payments: {
     id: string;
     amount: number;
-    method: "STRIPE" | "VENMO" | "CASH_APP";
+    method: "STRIPE" | "VENMO" | "CASH_APP" | "CASH" | "OTHER";
     status: "PENDING" | "COMPLETED" | "REFUNDED" | "FAILED";
     receiptUrl: string | null;
     createdAt: string;
   }[];
 };
 
-const METHOD_LABEL = { STRIPE: "Card", VENMO: "Venmo", CASH_APP: "Cash App" } as const;
+const METHOD_LABEL = { STRIPE: "Card", VENMO: "Venmo", CASH_APP: "Cash App", CASH: "Cash", OTHER: "Other" } as const;
 const STATUS_LABEL = {
   PENDING: "Waiting on review",
   COMPLETED: "Confirmed",
   REFUNDED: "Refunded",
-  FAILED: "Not accepted",
+  FAILED: "Not counted",
 } as const;
 
 const money = (n: number) => `$${n.toFixed(2)}`;
@@ -48,7 +51,7 @@ export function PaymentClient({ view }: { view: PaymentView }) {
   const cancelled = searchParams.get("cancelled");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [method, setMethod] = useState<"VENMO" | "CASH_APP" | null>(null);
+  const [method, setMethod] = useState<"VENMO" | "CASH_APP" | "OTHER" | null>(null);
   const [sent, setSent] = useState(false);
 
   // Only card checkouts and owner-reviewed transfers show here; abandoned
@@ -56,7 +59,7 @@ export function PaymentClient({ view }: { view: PaymentView }) {
   const history = view.payments.filter((p) => !(p.method === "STRIPE" && p.status === "PENDING"));
   const awaitingReview = history.some((p) => p.method !== "STRIPE" && p.status === "PENDING");
 
-  if (success || view.isPaid) {
+  if (view.isPaid) {
     return (
       <div className="space-y-6">
         <div className="bg-white rounded-2xl border border-emerald-300 p-8 text-center">
@@ -69,6 +72,10 @@ export function PaymentClient({ view }: { view: PaymentView }) {
     );
   }
 
+  // Back from Stripe but not marked paid yet (e.g. the webhook is still on
+  // its way, or it was a partial balance): say so instead of "You're in".
+  const justPaid = Boolean(success);
+
   const lines = view.lineItems;
   const anySet = lines ? lines.some((l) => l.total != null) : view.share > 0;
   const allLocked = view.isLocked;
@@ -77,13 +84,17 @@ export function PaymentClient({ view }: { view: PaymentView }) {
   async function handlePay() {
     setLoading(true);
     setError("");
-    const result = await createCheckoutSession();
-    if (result.url) {
-      window.location.href = result.url;
-    } else {
-      setLoading(false);
+    try {
+      const result = await createCheckoutSession();
+      if (result.url) {
+        window.location.href = result.url;
+        return;
+      }
       setError(result.error ?? "Payment failed. Please try again.");
+    } catch {
+      setError("Couldn't reach the server. Check your connection and try again.");
     }
+    setLoading(false);
   }
 
   async function handleManual(e: React.FormEvent<HTMLFormElement>) {
@@ -93,7 +104,15 @@ export function PaymentClient({ view }: { view: PaymentView }) {
     setError("");
     const form = new FormData(e.currentTarget);
     form.set("method", method);
-    const result = await submitManualPayment(form);
+    // Phone screenshots can be several MB — shrink before sending.
+    const receipt = form.get("receipt");
+    if (receipt instanceof File && receipt.size > 0) form.set("receipt", await compressImage(receipt));
+    let result: Awaited<ReturnType<typeof submitManualPayment>>;
+    try {
+      result = await submitManualPayment(form);
+    } catch {
+      result = { error: "Couldn't send it — check your connection and try again." };
+    }
     setLoading(false);
     if (result && "error" in result && result.error) {
       setError(result.error);
@@ -125,6 +144,11 @@ export function PaymentClient({ view }: { view: PaymentView }) {
           )}
         </div>
 
+        {justPaid && !error && (
+          <div role="status" className="bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg px-3 py-2 text-sm">
+            Thanks — your card payment is being recorded. If the balance below hasn&apos;t updated, refresh in a minute.
+          </div>
+        )}
         {error && (
           <div role="alert" className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2 text-sm">
             {error}
@@ -206,26 +230,32 @@ export function PaymentClient({ view }: { view: PaymentView }) {
             </div>
             {sent && (
               <div role="status" className="text-sm bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg px-3 py-2">
-                Sent for review. Admin will confirm it once they see the money.
+                Sent. The organizer will check it off once they see the money.
               </div>
             )}
             {awaitingReview && !sent && (
               <div className="text-sm bg-slate-50 border border-slate-200 text-slate-700 rounded-lg px-3 py-2">
-                You have a payment waiting on admin review.
+                You have a payment waiting for the organizer to check off.
               </div>
             )}
-            <button
-              onClick={handlePay}
-              disabled={loading || view.remaining <= 0}
-              className="min-w-[44px] min-h-[44px] w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium text-sm transition-colors disabled:opacity-50"
-            >
-              {loading && !method ? "Loading checkout…" : `Pay ${money(view.remaining)} by card`}
-            </button>
-            <p className="text-xs text-center text-slate-600">Powered by Stripe · Secure payment</p>
+            {view.cardEnabled && (
+              <>
+                <button
+                  onClick={handlePay}
+                  disabled={loading || view.remaining <= 0}
+                  className="min-w-[44px] min-h-[44px] w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium text-sm transition-colors disabled:opacity-50"
+                >
+                  {loading && !method ? "Loading checkout…" : `Pay ${money(view.remaining)} by card`}
+                </button>
+                <p className="text-xs text-center text-slate-600">Powered by Stripe · Secure payment</p>
+              </>
+            )}
 
-            {offersManual && (
-              <div className="border-t border-slate-200 pt-5 space-y-3">
-                <p className="text-sm font-medium text-slate-900">Or pay with</p>
+            {view.remaining > 0 && (
+              <div className={`space-y-3 ${view.cardEnabled ? "border-t border-slate-200 pt-5" : ""}`}>
+                <p className="text-sm font-medium text-slate-900">
+                  {view.cardEnabled ? "Or pay with" : `Pay ${money(view.remaining)} with`}
+                </p>
                 <div className="flex flex-wrap gap-2">
                   {view.venmoHandle && (
                     <MethodButton active={method === "VENMO"} onClick={() => setMethod("VENMO")}>
@@ -237,35 +267,45 @@ export function PaymentClient({ view }: { view: PaymentView }) {
                       Cash App
                     </MethodButton>
                   )}
+                  <MethodButton active={method === "OTHER"} onClick={() => setMethod("OTHER")}>
+                    {offersManual ? "Other (cash, Zelle…)" : "I paid the organizer"}
+                  </MethodButton>
                 </div>
 
                 {method && (
                   <form onSubmit={handleManual} className="space-y-3 rounded-xl border border-slate-200 bg-slate-50/60 p-4">
-                    <p className="text-sm text-slate-700">
-                      1. Send <strong>{money(view.remaining)}</strong> to{" "}
-                      {method === "VENMO" ? (
-                        <a
-                          href={`https://venmo.com/u/${encodeURIComponent(view.venmoHandle ?? "")}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="font-semibold text-indigo-700 underline underline-offset-2"
-                        >
-                          @{view.venmoHandle}
-                        </a>
-                      ) : (
-                        <a
-                          href={`https://cash.app/$${encodeURIComponent(view.cashAppHandle ?? "")}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="font-semibold text-indigo-700 underline underline-offset-2"
-                        >
-                          ${view.cashAppHandle}
-                        </a>
-                      )}
-                      .
-                      <br />
-                      2. Upload a screenshot of the payment below. Admin confirms it by hand.
-                    </p>
+                    {method === "OTHER" ? (
+                      <p className="text-sm text-slate-700">
+                        Pay the organizer <strong>{money(view.remaining)}</strong> however you agreed, then tell them
+                        here. Add a screenshot if you have one. They&apos;ll check it off.
+                      </p>
+                    ) : (
+                      <p className="text-sm text-slate-700">
+                        1. Send <strong>{money(view.remaining)}</strong> to{" "}
+                        {method === "VENMO" ? (
+                          <a
+                            href={`https://venmo.com/u/${encodeURIComponent(view.venmoHandle ?? "")}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="font-semibold text-indigo-700 underline underline-offset-2"
+                          >
+                            @{view.venmoHandle}
+                          </a>
+                        ) : (
+                          <a
+                            href={`https://cash.app/$${encodeURIComponent(view.cashAppHandle ?? "")}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="font-semibold text-indigo-700 underline underline-offset-2"
+                          >
+                            ${view.cashAppHandle}
+                          </a>
+                        )}
+                        .
+                        <br />
+                        2. Upload a screenshot of the payment below. The organizer checks it off.
+                      </p>
+                    )}
                     <label className="block text-xs font-medium text-slate-700">
                       Amount sent
                       <input
@@ -280,20 +320,22 @@ export function PaymentClient({ view }: { view: PaymentView }) {
                       />
                     </label>
                     <label className="block text-xs font-medium text-slate-700">
-                      Receipt screenshot
+                      {method === "OTHER" ? "Receipt or screenshot (optional)" : "Receipt screenshot"}
                       <input
                         name="receipt"
                         type="file"
-                        required
+                        required={method !== "OTHER"}
                         accept="image/*,application/pdf"
                         className="mt-1 block w-full text-sm text-slate-700"
                       />
                     </label>
                     <label className="block text-xs font-medium text-slate-700">
-                      Note (optional)
+                      {method === "OTHER" ? "How did you pay?" : "Note (optional)"}
                       <input
                         name="note"
                         maxLength={500}
+                        required={method === "OTHER"}
+                        placeholder={method === "OTHER" ? "e.g. cash in person, Zelle" : undefined}
                         className="mt-1 block w-full px-3 min-h-[44px] rounded-xl border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:border-indigo-600"
                       />
                     </label>
@@ -302,7 +344,7 @@ export function PaymentClient({ view }: { view: PaymentView }) {
                       disabled={loading}
                       className="w-full min-h-[44px] rounded-lg bg-slate-900 text-white text-sm font-medium hover:bg-slate-800 disabled:opacity-50"
                     >
-                      {loading ? "Sending…" : "I sent it — submit for review"}
+                      {loading ? "Sending…" : "I paid — tell the organizer"}
                     </button>
                   </form>
                 )}
@@ -311,8 +353,8 @@ export function PaymentClient({ view }: { view: PaymentView }) {
           </>
         ) : (
           <p className="text-xs text-slate-600 leading-relaxed">
-            Numbers above are estimates while admin lines up the costs. Once each line is locked
-            the total is final and you&apos;ll get an email asking you to pay (your share + the refundable{" "}
+            Numbers above are estimates while the organizer lines up the costs. Once prices are locked the
+            total is final and this page will show how to pay (your share + the refundable{" "}
             {money(view.deposit)} deposit).
           </p>
         )}

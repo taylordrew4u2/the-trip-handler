@@ -11,6 +11,8 @@ import { ExpensesPanel } from "./ExpensesPanel";
 import { BedsPanel } from "./BedsPanel";
 import { PaymentSettingsPanel } from "./PaymentSettingsPanel";
 import { SectionsPanel } from "./SectionsPanel";
+import { JoinAsGuestButton } from "./JoinAsGuestButton";
+import { LodgingPhotosPanel } from "./LodgingPhotosPanel";
 import { MemberPaymentsPanel, type MemberPaymentRow } from "./MemberPaymentsPanel";
 import { computeBill } from "@/lib/bill";
 import { hasFeature, hasMeals } from "@/lib/pricing";
@@ -37,8 +39,14 @@ export default async function ManageTripPage({
   if (!trip) redirect("/dashboard/my-trips");
 
   // An owner who also joined their own trip can flip to what guests see.
-  const me = await prisma.user.findUnique({ where: { id: userId }, select: { tripId: true } });
-  const ownerIsGuest = me?.tripId === trip.id;
+  const me = await prisma.user.findUnique({ where: { id: userId }, select: { tripId: true, status: true } });
+  const ownerIsGuest = me?.tripId === trip.id && me.status !== "CANCELLED";
+
+  const lodgingPhotos = await prisma.lodgingPhoto.findMany({
+    where: { tripId },
+    orderBy: { position: "asc" },
+    select: { id: true, url: true, caption: true },
+  });
 
   const [contributions, expenses, beds, members] = await Promise.all([
     prisma.contribution.findMany({
@@ -141,6 +149,7 @@ export default async function ManageTripPage({
           <p className="text-slate-600 text-sm leading-6 mt-2">Edit the details people see on your invite page.</p>
         </div>
         <div className="flex flex-wrap gap-2">
+          {!ownerIsGuest && <JoinAsGuestButton tripId={trip.id} />}
           {ownerIsGuest && (
             <Link
               href="/dashboard"
@@ -207,6 +216,7 @@ export default async function ManageTripPage({
           showPersonalAdjustment: trip.showPersonalAdjustment,
         }}
       />
+      <LodgingPhotosPanel tripId={trip.id} photos={lodgingPhotos} />
       <BedsPanel tripId={trip.id} beds={bedData} />
       <MemberPaymentsPanel members={memberData} />
       <ContributionsPanel tripId={trip.id} items={contributionData} />

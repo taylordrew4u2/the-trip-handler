@@ -2,6 +2,7 @@ import { getStripe } from "@/lib/stripe";
 import { prisma } from "@/lib/db";
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
+import { settleCheckoutSession, settleRefund } from "@/lib/checkout";
 
 export async function POST(request: Request) {
   const body = await request.text();
@@ -25,24 +26,21 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Webhook signature invalid" }, { status: 400 });
   }
 
-  if (event.type === "checkout.session.completed") {
-    const session = event.data.object as Stripe.Checkout.Session;
-    const userId = session.metadata?.userId;
-
-    if (userId) {
+  switch (event.type) {
+    case "checkout.session.completed":
+    case "checkout.session.async_payment_succeeded":
+    case "checkout.session.expired":
+      await settleCheckoutSession(event.data.object as Stripe.Checkout.Session);
+      break;
+    case "checkout.session.async_payment_failed":
       await prisma.payment.updateMany({
-        where: { stripeSessionId: session.id },
-        data: {
-          status: "COMPLETED",
-          stripePaymentId: session.payment_intent as string,
-        },
+        where: { stripeSessionId: (event.data.object as Stripe.Checkout.Session).id, status: "PENDING" },
+        data: { status: "FAILED" },
       });
-
-      await prisma.user.update({
-        where: { id: userId },
-        data: { status: "CONFIRMED_PAID" },
-      });
-    }
+      break;
+    case "charge.refunded":
+      await settleRefund(event.data.object as Stripe.Charge);
+      break;
   }
 
   return NextResponse.json({ received: true });

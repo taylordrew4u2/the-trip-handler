@@ -23,6 +23,7 @@ export default async function MyTripsPage() {
           email: true,
           status: true,
           guestForm: { select: { editRequested: true } },
+          _count: { select: { payments: { where: { status: "PENDING", method: { not: "STRIPE" } } } } },
         },
       },
     },
@@ -34,8 +35,12 @@ export default async function MyTripsPage() {
     inviteToken: t.inviteToken,
     joinCode: t.joinCode,
     isApplicationOpen: t.isApplicationOpen,
-    applicants: t.users.map(({ guestForm, ...u }) => ({
-      ...u,
+    paymentsToReview: t.users.reduce((n, u) => n + u._count.payments, 0),
+    applicants: t.users.map(({ guestForm, id, name, email, status }) => ({
+      id,
+      name,
+      email,
+      status,
       hasForm: Boolean(guestForm),
       editRequested: guestForm?.editRequested ?? false,
     })),

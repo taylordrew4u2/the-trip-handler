@@ -260,6 +260,23 @@ enum PaymentMethod {
   STRIPE
   VENMO
   CASH_APP
+  CASH
+  OTHER
+}
+
+/// Uploaded photos and receipts, stored in the database so the app needs no
+/// paid file-storage service. Served (with permission checks) by /api/files/[id].
+model StoredFile {
+  id          String   @id @default(cuid())
+  kind        String // "avatar" | "lodging" | "payment-receipt" | "expense-receipt"
+  uploaderId  String?
+  tripId      String?
+  contentType String
+  size        Int
+  data        Bytes
+  createdAt   DateTime @default(now())
+
+  @@index([tripId])
 }
 
 enum PaymentStatus {

@@ -4,10 +4,11 @@ import { randomBytes } from "crypto";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { authOptions } from "@/lib/auth";
-import { deleteBlob } from "@/lib/blob";
+import { MAX_UPLOAD_BYTES, deleteUpload, safeUploadType, saveUpload } from "@/lib/files";
 import { sendApprovalEmail, sendRejectionEmail, sendTripLockedEmail } from "@/lib/resend";
 import { hasFeature, hasMeals, memberShare, tripCostTotal } from "@/lib/pricing";
 import { isSectionKey } from "@/lib/nav";
+import { getMemberBill } from "@/lib/bill";
 import { getServerSession } from "next-auth";
 import { revalidatePath } from "next/cache";
 
@@ -194,18 +195,52 @@ async function ownsApplicant(applicantId: string, userId: string) {
   return trip ? applicant : null;
 }
 
+const ON_TRIP = ["APPROVED", "PENDING_PAYMENT", "CONFIRMED_PAID"] as const;
+
 export async function approveTripApplicant(applicantId: string) {
   const userId = await currentUserId();
   if (!userId) return { error: "Sign in first." };
   const applicant = await ownsApplicant(applicantId, userId);
-  if (!applicant) return { error: "Not your applicant." };
+  if (!applicant?.tripId) return { error: "Not your applicant." };
+  const trip = await prisma.trip.findUnique({ where: { id: applicant.tripId } });
+  if (!trip) return { error: "Not your applicant." };
 
-  await prisma.user.update({
-    where: { id: applicant.id },
-    data: { status: "APPROVED" },
+  const form = await prisma.guestForm.findUnique({ where: { userId: applicant.id }, select: { id: true } });
+  if (!form) return { error: "They haven't filled in the guest form yet." };
+
+  const onTrip = await prisma.user.count({ where: { tripId: trip.id, status: { in: [...ON_TRIP] } } });
+  if (onTrip >= trip.rosterCapacity) {
+    return { error: `The trip is full (${trip.rosterCapacity} spots). Add spots before approving more people.` };
+  }
+
+  // Approved after prices were locked: they owe now, same as everyone else.
+  const nextStatus = trip.isLocked ? "PENDING_PAYMENT" : "APPROVED";
+  // Only a pending applicant can be approved — a stale page can't revive
+  // someone who withdrew, or knock a paid member back to "approved".
+  const claimed = await prisma.user.updateMany({
+    where: { id: applicant.id, tripId: trip.id, status: "PENDING" },
+    data: { status: nextStatus },
   });
-  await sendApprovalEmail(applicant.email, applicant.name);
+  if (claimed.count === 0) return { error: "They're no longer pending — refresh the page." };
+
+  try {
+    await sendApprovalEmail(applicant.email, applicant.name);
+  } catch (e) {
+    // The approval stands even if the email service hiccups.
+    console.error("Approval email failed:", e);
+  }
+  if (trip.isLocked) {
+    const bill = await getMemberBill(applicant.id);
+    if (bill) {
+      try {
+        await sendTripLockedEmail(applicant.email, applicant.name, bill.share, bill.deposit);
+      } catch (e) {
+        console.error("Email failed:", e);
+      }
+    }
+  }
   revalidatePath("/dashboard/my-trips");
+  revalidatePath(`/dashboard/my-trips/${trip.id}`);
   return { success: true };
 }
 
@@ -213,21 +248,74 @@ export async function rejectTripApplicant(applicantId: string) {
   const userId = await currentUserId();
   if (!userId) return { error: "Sign in first." };
   const applicant = await ownsApplicant(applicantId, userId);
-  if (!applicant) return { error: "Not your applicant." };
+  if (!applicant?.tripId) return { error: "Not your applicant." };
 
-  await prisma.user.update({
-    where: { id: applicant.id },
+  // Anyone who has paid needs a refund conversation, not a button.
+  const paid = await prisma.payment.count({ where: { userId: applicant.id, status: "COMPLETED" } });
+  if (paid > 0) return { error: "They've already paid. Refund them before removing them from the trip." };
+
+  const claimed = await prisma.user.updateMany({
+    where: { id: applicant.id, tripId: applicant.tripId, status: { in: ["PENDING", "APPROVED", "PENDING_PAYMENT"] } },
     data: { status: "CANCELLED", rejectedTripId: applicant.tripId },
   });
-  await sendRejectionEmail(applicant.email, applicant.name);
+  if (claimed.count === 0) return { error: "They're no longer on this trip — refresh the page." };
+  await releaseTripSpot(applicant.id);
+
+  try {
+    await sendRejectionEmail(applicant.email, applicant.name);
+  } catch (e) {
+    console.error("Rejection email failed:", e);
+  }
   revalidatePath("/dashboard/my-trips");
+  revalidatePath(`/dashboard/my-trips/${applicant.tripId}`);
+  return { success: true };
+}
+
+/** Free a bed and contributions held by someone leaving a trip, and drop their open share requests. */
+async function releaseTripSpot(memberId: string) {
+  await prisma.$transaction([
+    prisma.bedAssignment.deleteMany({ where: { userId: memberId } }),
+    prisma.bedmateRequest.deleteMany({
+      where: { status: "PENDING", OR: [{ fromUserId: memberId }, { toUserId: memberId }] },
+    }),
+    prisma.userContribution.deleteMany({ where: { userId: memberId } }),
+  ]);
+}
+
+/** The trip owner joins their own trip as a guest, so they can see what guests see. */
+export async function joinMyTripAsGuest(tripId: string) {
+  const userId = await currentUserId();
+  if (!userId) return { error: "Sign in first." };
+  const trip = await ownedTrip(tripId, userId);
+  if (!trip) return { error: "Not your trip." };
+  const me = await prisma.user.findUnique({ where: { id: userId }, select: { tripId: true, status: true } });
+  if (me?.tripId && me.tripId !== tripId && me.status !== "CANCELLED") {
+    return { error: "You're on another trip as a guest. Leave it first." };
+  }
+  if (me?.tripId !== tripId) await resetForNewTrip(userId);
+  await prisma.user.update({
+    where: { id: userId },
+    data: { tripId, status: trip.isLocked ? "PENDING_PAYMENT" : "APPROVED" },
+  });
+  revalidatePath("/dashboard", "layout");
   return { success: true };
 }
 
 /**
- * A signed-in member applies to a trip via its invite token. Sets their
- * tripId and resets them to PENDING so the owner can review.
+ * Moving to a different trip starts fresh: the old trip's guest form, private
+ * price, owner notes, bed and contributions don't follow the person.
  */
+async function resetForNewTrip(memberId: string) {
+  await releaseTripSpot(memberId);
+  await prisma.$transaction([
+    prisma.guestForm.deleteMany({ where: { userId: memberId } }),
+    prisma.user.update({
+      where: { id: memberId },
+      data: { priceAdjustment: 0, priceAdjustmentNote: null, adminNotes: null },
+    }),
+  ]);
+}
+
 export async function applyToTrip(token: string) {
   const userId = await currentUserId();
   if (!userId) return { error: "Sign in to apply." };
@@ -237,7 +325,7 @@ export async function applyToTrip(token: string) {
     return { error: "This invite isn't accepting applications." };
   }
   if (trip.ownerId === userId) {
-    return { error: "You own this trip — you can't apply to it." };
+    return { error: "You own this trip — use “Join as a guest” on its manage page instead." };
   }
 
   // A user's bed, payments, contributions, and votes are scoped to their
@@ -259,6 +347,15 @@ export async function applyToTrip(token: string) {
     return {
       error: "You're already on another trip. Withdraw from it before applying to a new one.",
     };
+  }
+
+  if (me?.tripId && me.tripId !== trip.id) {
+    // Money from the old trip can't be credited to this one.
+    const paid = await prisma.payment.count({ where: { userId, status: "COMPLETED" } });
+    if (paid > 0) {
+      return { error: "You paid for your previous trip. Ask that organizer for a refund before joining another." };
+    }
+    await resetForNewTrip(userId);
   }
 
   await prisma.user.update({
@@ -474,9 +571,19 @@ export async function unlockMyTrip(tripId: string) {
 export async function updateTripSections(tripId: string, disabled: string[]) {
   const userId = await currentUserId();
   if (!userId) return { error: "Sign in first." };
-  if (!(await ownedTrip(tripId, userId))) return { error: "Not your trip." };
+  const trip = await ownedTrip(tripId, userId);
+  if (!trip) return { error: "Not your trip." };
 
   const clean = Array.from(new Set(disabled.filter(isSectionKey)));
+  // Meals and transport are cost lines. Once prices are locked the share is
+  // fixed, so switching them would change what members see but not what they pay.
+  if (trip.isLocked) {
+    for (const key of ["meals", "transport"] as const) {
+      if (clean.includes(key) !== trip.disabledSections.includes(key)) {
+        return { error: `Prices are locked. Unlock the trip before turning ${key} on or off.` };
+      }
+    }
+  }
   await prisma.trip.update({ where: { id: tripId }, data: { disabledSections: clean } });
   // Turning meals or transport off can leave every remaining cost line locked.
   if (clean.includes("meals") || clean.includes("transport")) await finalizeTripIfReady(tripId);
@@ -587,6 +694,9 @@ export async function updateTripBedPrice(bedId: string, amount: number) {
   const bed = await prisma.bed.findUnique({ where: { id: bedId }, select: { tripId: true } });
   if (!bed || !(await ownedTrip(bed.tripId, userId))) return { error: "Not your trip." };
   if (!Number.isFinite(amount)) return { error: "Amount must be a number." };
+  if (await bedHasPaidOccupant(bedId)) {
+    return { error: "Someone in this bed has already paid. Move them first, or settle the difference with them." };
+  }
 
   await prisma.bed.update({
     where: { id: bedId },
@@ -685,7 +795,7 @@ export async function deleteTripExpense(expenseId: string) {
 
   if (expense.receiptUrl) {
     try {
-      await deleteBlob(expense.receiptUrl);
+      await deleteUpload(expense.receiptUrl);
     } catch (err) {
       console.error("Failed to delete receipt blob:", err);
     }
@@ -773,15 +883,69 @@ export async function addTripBed(
   return { success: true };
 }
 
+/** Whether anyone sleeping in this bed has a completed payment (their bill includes the bed). */
+async function bedHasPaidOccupant(bedId: string): Promise<boolean> {
+  const paid = await prisma.payment.count({
+    where: { status: "COMPLETED", user: { bedAssignment: { bedId } } },
+  });
+  return paid > 0;
+}
+
 export async function deleteTripBed(bedId: string) {
   const userId = await currentUserId();
   if (!userId) return { error: "Sign in first." };
   const bed = await prisma.bed.findUnique({ where: { id: bedId }, select: { tripId: true } });
   if (!bed || !(await ownedTrip(bed.tripId, userId))) return { error: "Not your trip." };
+  if (await bedHasPaidOccupant(bedId)) {
+    return { error: "Someone in this bed has already paid. Move them first, or settle the difference with them." };
+  }
 
+  await prisma.bedmateRequest.deleteMany({ where: { bedId } });
   await prisma.bedAssignment.deleteMany({ where: { bedId } });
   await prisma.bed.delete({ where: { id: bedId } });
   revalidatePath(`/dashboard/my-trips/${bed.tripId}`);
   revalidatePath("/dashboard/sleeping");
+  return { success: true };
+}
+
+// ---------- lodging photos (owner-scoped) ----------
+
+/** Add a photo of the place to a trip you own. Stored in the app's own database. */
+export async function addTripLodgingPhoto(tripId: string, formData: FormData) {
+  const userId = await currentUserId();
+  if (!userId) return { error: "Sign in first." };
+  if (!(await ownedTrip(tripId, userId))) return { error: "Not your trip." };
+
+  const photo = formData.get("photo");
+  const file = photo instanceof File && photo.size > 0 ? photo : null;
+  if (!file) return { error: "Pick a photo." };
+  const contentType = safeUploadType(file);
+  if (!contentType) return { error: "Photos must be JPG, PNG, WebP, GIF or HEIC." };
+  if (file.size > MAX_UPLOAD_BYTES) return { error: "That photo is too big — try a smaller one." };
+  const caption = String(formData.get("caption") ?? "").trim().slice(0, 200) || null;
+
+  const count = await prisma.lodgingPhoto.count({ where: { tripId } });
+  if (count >= 30) return { error: "That's the limit of 30 photos. Remove one first." };
+
+  const url = await saveUpload(file, { kind: "lodging", contentType, uploaderId: userId, tripId });
+  const last = await prisma.lodgingPhoto.findFirst({ where: { tripId }, orderBy: { position: "desc" } });
+  await prisma.lodgingPhoto.create({
+    data: { tripId, url, caption, position: (last?.position ?? -1) + 1 },
+  });
+  revalidatePath(`/dashboard/my-trips/${tripId}`);
+  revalidatePath("/dashboard/lodging");
+  return { success: true };
+}
+
+export async function deleteTripLodgingPhoto(photoId: string) {
+  const userId = await currentUserId();
+  if (!userId) return { error: "Sign in first." };
+  const photo = await prisma.lodgingPhoto.findUnique({ where: { id: photoId } });
+  if (!photo || !(await ownedTrip(photo.tripId, userId))) return { error: "Not your trip." };
+
+  await prisma.lodgingPhoto.delete({ where: { id: photoId } });
+  await deleteUpload(photo.url);
+  revalidatePath(`/dashboard/my-trips/${photo.tripId}`);
+  revalidatePath("/dashboard/lodging");
   return { success: true };
 }

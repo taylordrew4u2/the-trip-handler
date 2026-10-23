@@ -23,7 +23,7 @@ export function ApplyButton({ token, ownTrip }: { token: string; ownTrip: boolea
       <div className="text-center space-y-2">
         <p className="text-sm font-medium text-slate-950">You&apos;ve applied.</p>
         <p className="text-sm text-slate-600">
-          The organizer reviews applications and you&apos;ll hear back by email.
+          The organizer reviews applications — check your dashboard to see when you&apos;re approved.
         </p>
         <button
           onClick={() => router.push("/dashboard")}
