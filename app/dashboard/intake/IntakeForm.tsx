@@ -1,474 +1,82 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { submitGuestForm, requestFormEditAccess } from "@/app/actions/guestForm";
 import type { GuestForm } from "@prisma/client";
-import {
-  FieldHintProvider,
-  FieldIdProvider,
-  useFieldHintId,
-  useFieldId,
-  useId,
-} from "@/components/forms/field";
-import { SUBSTANCE_RULES, activeHouseRules } from "@/lib/guestForm";
+import { submitGuestForm, requestFormEditAccess } from "@/app/actions/guestForm";
+import { IntakeQuestions } from "@/components/IntakeQuestions";
+import { readIntakeSnapshot, type IntakeQuestion, type IntakeAnswers } from "@/lib/intakeQuestions";
 
-/** "a, b, and c" from the truthy items. */
-function listJoin(items: (string | false)[]): string {
-  const xs = items.filter((x): x is string => Boolean(x));
-  return xs.length <= 2 ? xs.join(" and ") : `${xs.slice(0, -1).join(", ")}, and ${xs[xs.length - 1]}`;
-}
-
-type Existing = GuestForm | null;
-
-function Section({ title, intro, children }: { title: string; intro?: string; children: React.ReactNode }) {
-  return (
-    <section className="min-w-0 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
-      <h2 className="font-serif text-2xl font-medium tracking-tight text-slate-950">{title}</h2>
-      {intro && <p className="text-sm text-slate-600 mt-2 leading-relaxed">{intro}</p>}
-      <div className="mt-6 grid gap-5">{children}</div>
-    </section>
-  );
-}
-
-function Field({ label, hint, children, required }: { label: string; hint?: string; children: React.ReactNode; required?: boolean }) {
-  // The id is minted here and read by the control below through context, so
-  // the label/input pair can never drift apart. See components/forms/field.tsx.
-  const id = useId();
-  const hintId = hint ? `${id}-hint` : undefined;
-  return (
-    <FieldIdProvider id={id}>
-      <div className="min-w-0">
-        <label htmlFor={id} className="block text-sm font-medium text-slate-800">
-          {label}{" "}
-          {/* The asterisk is decoration; `required` on the input is what a
-              screen reader announces. Reading "star" mid-label helps nobody. */}
-          {required && <span aria-hidden="true" className="text-red-600">*</span>}
-        </label>
-        {hint && <p id={hintId} className="text-xs text-slate-600 mt-0.5">{hint}</p>}
-        <div className="mt-2 min-w-0">
-          <FieldHintProvider id={hintId}>{children}</FieldHintProvider>
-        </div>
-      </div>
-    </FieldIdProvider>
-  );
-}
-
-const inputCls =
-  "min-h-12 w-full min-w-0 rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-600 focus:border-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-600/15";
-
-function TextInput({ name, defaultValue, placeholder, type = "text", required }: {
-  name: string; defaultValue?: string | null; placeholder?: string; type?: string; required?: boolean;
+export function IntakeForm({ defaultEmail, defaultName, defaultPhone, existing, isPending = false, questions }: {
+  defaultEmail: string; defaultName: string; defaultPhone: string; existing: GuestForm | null;
+  isPending?: boolean; questions: IntakeQuestion[];
 }) {
-  return (
-    <input
-      id={useFieldId()}
-      aria-describedby={useFieldHintId()}
-      name={name}
-      type={type}
-      defaultValue={defaultValue ?? ""}
-      placeholder={placeholder}
-      required={required}
-      className={inputCls}
-    />
-  );
-}
-
-function TextArea({ name, defaultValue, placeholder, rows = 3, required }: {
-  name: string; defaultValue?: string | null; placeholder?: string; rows?: number; required?: boolean;
-}) {
-  return (
-    <textarea
-      id={useFieldId()}
-      aria-describedby={useFieldHintId()}
-      name={name}
-      defaultValue={defaultValue ?? ""}
-      placeholder={placeholder}
-      rows={rows}
-      required={required}
-      className={`${inputCls} resize-none`}
-    />
-  );
-}
-
-/** A field the member can see but not change — their sign-in email. */
-function ReadOnlyInput({ type, value }: { type: string; value: string }) {
-  return (
-    <input
-      id={useFieldId()}
-      aria-describedby={useFieldHintId()}
-      type={type}
-      value={value}
-      readOnly
-      disabled
-      // Keep the disabled email readable while distinguishing it from editable controls.
-      className={`${inputCls} bg-slate-100 text-slate-600 cursor-not-allowed`}
-    />
-  );
-}
-
-function RadioGroup({ name, options, defaultValue, required }: {
-  name: string; options: { value: string; label: string }[]; defaultValue?: string | null; required?: boolean;
-}) {
-  return (
-    <div className="flex flex-wrap gap-2">
-      {options.map((opt, i) => (
-        <label key={opt.value} className="flex min-h-11 cursor-pointer items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 transition-colors has-checked:border-indigo-200 has-checked:bg-indigo-50">
-          <input
-            type="radio"
-            name={name}
-            value={opt.value}
-            defaultChecked={defaultValue === opt.value}
-            required={required && i === 0}
-            className="h-4 w-4 shrink-0 accent-indigo-600"
-          />
-          {opt.label}
-        </label>
-      ))}
-    </div>
-  );
-}
-
-function CheckboxGroup({ name, options, defaultValue }: {
-  name: string; options: { value: string; label: string }[]; defaultValue?: string[];
-}) {
-  const set = new Set(defaultValue ?? []);
-  return (
-    <div className="grid gap-2">
-      {options.map((opt) => (
-        <label key={opt.value} className="flex min-h-11 cursor-pointer items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm leading-6 text-slate-800 transition-colors has-checked:border-indigo-200 has-checked:bg-indigo-50">
-          <input type="checkbox" name={`${name}[]`} value={opt.value} defaultChecked={set.has(opt.value)} className="mt-1 h-4 w-4 shrink-0 accent-indigo-600" />
-          <span>{opt.label}</span>
-        </label>
-      ))}
-    </div>
-  );
-}
-
-const YES_NO = [
-  { value: "yes", label: "Yes" },
-  { value: "no", label: "No" },
-];
-const YES_NO_ASK = [
-  { value: "yes", label: "Yes" },
-  { value: "no", label: "No" },
-  { value: "ask", label: "Ask me first" },
-];
-
-export function IntakeForm({ defaultEmail, defaultName, defaultPhone, existing, isPending = false, deposit = 75, off = [] }: {
-  defaultEmail: string; defaultName: string; defaultPhone: string; existing: Existing; isPending?: boolean; deposit?: number; off?: string[];
-}) {
-  const dep = `$${Number.isInteger(deposit) ? deposit : deposit.toFixed(2)}`;
-  const houseRules = activeHouseRules(off);
-  const substanceRules = SUBSTANCE_RULES.filter((r) => !off.includes(r.key));
-  const covers = listJoin([
-    !off.includes("transport") && "travel (rental vans + gas)",
-    !off.includes("meals") && "meals during the trip",
-    "lodging",
-  ]);
   const router = useRouter();
-  const [submitting, setSubmitting] = useState(false);
+  const errorRef = useRef<HTMLDivElement>(null);
+  const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [savedAt, setSavedAt] = useState<string | null>(existing ? new Date(existing.updatedAt).toLocaleString() : null);
+  const [submitted, setSubmitted] = useState(false);
   const [editRequested, setEditRequested] = useState(existing?.editRequested ?? false);
-  const [requesting, setRequesting] = useState(false);
-  const locked = Boolean(existing?.locked);
-  const e = existing;
+  const locked = Boolean(existing?.locked) || submitted;
+  const snapshot = readIntakeSnapshot(existing?.intakeSnapshot);
+  const shownQuestions = locked && snapshot ? snapshot.questions.filter(q => !q.hidden) : questions;
+  const answers = {
+    fullName: defaultName, phoneNumber: defaultPhone,
+    ...Object.fromEntries(questions.map(q => [q.id, existing?.[q.id as keyof GuestForm] ?? (q.id === "fullName" ? defaultName : q.id === "phoneNumber" ? defaultPhone : null)])),
+    ...snapshot?.answers,
+  } as IntakeAnswers;
 
-  async function handleRequestEdit() {
-    setRequesting(true);
-    const result = await requestFormEditAccess();
-    setRequesting(false);
-    if (result?.error) {
-      setError(result.error);
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      return;
-    }
-    setEditRequested(true);
-    router.refresh();
+  async function showError(message: string) {
+    setError(message);
+    requestAnimationFrame(() => errorRef.current?.focus());
   }
 
-  async function handleSubmit(ev: React.FormEvent<HTMLFormElement>) {
-    ev.preventDefault();
-    setSubmitting(true);
+  async function requestEdit() {
+    setBusy(true);
     setError("");
-    const fd = new FormData(ev.currentTarget);
-    const result = await submitGuestForm(fd);
-    setSubmitting(false);
-    if (result?.error) {
-      setError(result.error);
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      return;
-    }
-    setSavedAt(new Date().toLocaleString());
-    if (isPending) {
-      // First submission while pending — bounce them to the dashboard which
-      // will show the "Form submitted, awaiting approval" wall.
-      router.push("/dashboard");
-    } else {
-      router.refresh();
-    }
+    try {
+      const result = await requestFormEditAccess();
+      if (result.error) await showError(result.error);
+      else { setEditRequested(true); router.refresh(); }
+    } catch { await showError("We could not request changes. Please try again."); }
+    finally { setBusy(false); }
   }
 
-  return (
-    <form onSubmit={handleSubmit} className="min-w-0">
-      {error && (
-        <div role="alert" className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          {error}
-        </div>
-      )}
-      {savedAt && !error && !locked && (
-        <div role="status" className="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-          Saved {savedAt}.
-        </div>
-      )}
-      {locked && (
-        <div className="mb-5 flex flex-col items-start gap-3 rounded-2xl border border-slate-200 bg-white p-5 sm:flex-row sm:items-center">
-          <div className="min-w-0 flex-1">
-            <p className="font-medium text-slate-950 text-sm">Form locked</p>
-            <p className="text-xs text-slate-600 mt-0.5">
-              {savedAt && <>Submitted {savedAt}. </>}
-              {editRequested
-                ? "Edit access requested — the organizer will review and unlock it for changes."
-                : "Submitted. To make changes, request edit access from the organizer."}
-            </p>
-          </div>
-          {!editRequested && (
-            <button
-              type="button"
-              onClick={handleRequestEdit}
-              disabled={requesting}
-              className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-xl border border-slate-300 px-4 text-sm font-medium text-slate-950 transition-colors hover:bg-slate-50 disabled:opacity-50"
-            >
-              {requesting ? "Sending…" : "Request edit access"}
-            </button>
-          )}
-          {editRequested && (
-            <span className="text-xs px-2 py-1 rounded bg-amber-200 text-amber-900 font-medium whitespace-nowrap">
-              Waiting on organizer
-            </span>
-          )}
-        </div>
-      )}
-      <fieldset disabled={locked} className={`min-w-0 space-y-5 ${locked ? "opacity-60" : ""}`}>
-
-      <Section title="Basic info">
-        <Field label="Full name" required><TextInput name="fullName" defaultValue={e?.fullName ?? defaultName} required /></Field>
-        <Field label="Stage / display name (or N/A)" required><TextInput name="stageName" defaultValue={e?.stageName} required placeholder="N/A if you don't use one" /></Field>
-        <Field label="Phone number" required><TextInput name="phoneNumber" type="tel" defaultValue={e?.phoneNumber ?? defaultPhone} required /></Field>
-        <Field label="Email">
-          <ReadOnlyInput type="email" value={defaultEmail} />
-        </Field>
-        <Field label="Pronouns" required><TextInput name="pronouns" defaultValue={e?.pronouns} required placeholder="e.g. she/her, they/them, N/A" /></Field>
-        {!off.includes("age21") && (
-          <Field label="Age confirmation" required>
-            <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-800 has-checked:border-indigo-200 has-checked:bg-indigo-50">
-              <input type="checkbox" name="age21Confirmed" defaultChecked={e?.age21Confirmed} required className="h-4 w-4 shrink-0 accent-indigo-600" />
-              I confirm I am 21 or older.
-            </label>
-          </Field>
-        )}
-      </Section>
-
-      {!off.includes("payment") && (
-        <Section
-          title="Budget"
-          intro={`The trip price covers ${covers}. Activity and shared-supply costs are split on top. Heads up: there's also a refundable ${dep} security deposit billed at payment time — that's separate from your trip share. Be honest with the cap — the organizer uses it to decide who gets approved.`}
-        >
-          <Field
-            label={`Max trip share you're willing to pay (per person, before the ${dep} deposit)`}
-            required
-            hint={`Examples: $500, $400-600, no hard cap. The ${dep} deposit is on top and refundable, so don't include it here.`}
-          >
-            <TextInput
-              name="maxBudget"
-              defaultValue={e?.maxBudget ?? ""}
-              required
-              placeholder="e.g. $500"
-            />
-          </Field>
-        </Section>
-      )}
-
-      {substanceRules.length > 0 && (
-        <Section
-          title="Trip rules"
-          intro="These are firm. Check each one — if any of them isn't for you, this isn't the trip."
-        >
-          {substanceRules.map((r) => (
-            <Field key={r.key} label="" required>
-              <label className="flex min-h-11 cursor-pointer items-start gap-3 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm leading-6 text-slate-800">
-                <input
-                  type="checkbox"
-                  name={r.field}
-                  defaultChecked={Boolean(e?.[r.field])}
-                  required
-                  className="mt-1 h-4 w-4 shrink-0 accent-indigo-600"
-                />
-                <span>{r.label}</span>
-              </label>
-            </Field>
-          ))}
-        </Section>
-      )}
-
-      {!off.includes("sleeping") && (
-        <Section
-          title="Bed sharing"
-          intro="Heads up — you'll probably have to share a bed. You'll be able to choose who you share with."
-        >
-          <Field label="Are you OK with that?" required>
-            <RadioGroup name="shareBed" defaultValue={e?.shareBed} options={YES_NO} required />
-          </Field>
-        </Section>
-      )}
-
-      <Section title="Medical / safety" intro="Only share what would be useful in an emergency or for planning the house. If something doesn't apply to you, just write “N/A”.">
-        <Field label="Any medical conditions we should know about in case of emergency?" required>
-          <TextArea name="medicalConditions" defaultValue={e?.medicalConditions} required placeholder="Write N/A if you don't have any" />
-        </Field>
-        <Field label="Any medications that need refrigeration?" required><RadioGroup name="refrigeratedMeds" defaultValue={e?.refrigeratedMeds} options={YES_NO} required /></Field>
-        <Field label="Do you carry an EpiPen, inhaler, or other emergency medical item?" required>
-          <RadioGroup name="emergencyMedItem" defaultValue={e?.emergencyMedItem} options={YES_NO} required />
-        </Field>
-        <Field label="Any mobility or accessibility needs?" required><TextArea name="mobilityNeeds" defaultValue={e?.mobilityNeeds} rows={2} required placeholder="N/A if none" /></Field>
-        <Field label="Anything you cannot or should not do?" hint="Hiking, swimming, drinking, late nights, stairs, etc." required>
-          <TextArea name="cannotDo" defaultValue={e?.cannotDo} rows={2} required placeholder="N/A if none" />
-        </Field>
-        <Field label="Anything that would make the trip safer, easier, or less annoying for you?" required>
-          <TextArea name="safetyNotes" defaultValue={e?.safetyNotes} required placeholder="N/A if nothing" />
-        </Field>
-      </Section>
-
-      {!off.includes("social") && (
-        <Section title="Content / social media" intro="We'll be making content for social media during the trip. This may include group videos, photos, sketches, recap clips, behind-the-scenes footage, and other planned content.">
-          <Field label="Instagram handle" required><TextInput name="instagram" defaultValue={e?.instagram} required placeholder="@handle or N/A" /></Field>
-          <Field label="TikTok handle" required><TextInput name="tiktok" defaultValue={e?.tiktok} required placeholder="@handle or N/A" /></Field>
-          <Field label="Any other handle you want promoted" required><TextInput name="otherHandles" defaultValue={e?.otherHandles} required placeholder="N/A if none" /></Field>
-          <Field label="Are you comfortable appearing in group photos?" required><RadioGroup name="comfortGroupPhotos" defaultValue={e?.comfortGroupPhotos} options={YES_NO_ASK} required /></Field>
-          <Field label="Are you comfortable appearing in group videos?" required><RadioGroup name="comfortGroupVideos" defaultValue={e?.comfortGroupVideos} options={YES_NO_ASK} required /></Field>
-          <Field label="Are you comfortable being tagged on social media?" required><RadioGroup name="comfortTagged" defaultValue={e?.comfortTagged} options={YES_NO_ASK} required /></Field>
-          <Field label="Are you comfortable being part of planned group content?" required>
-            <RadioGroup name="comfortPlannedContent" defaultValue={e?.comfortPlannedContent} options={[
-              { value: "yes", label: "Yes" },
-              { value: "no", label: "No" },
-              { value: "depends", label: "Depends on the idea" },
-            ]} required />
-          </Field>
-          <Field label="Content acknowledgements">
-            <CheckboxGroup name="contentAcks" defaultValue={e?.contentAcks} options={[
-              { value: "filmed", label: "I am okay being filmed during group activities." },
-              { value: "photographed", label: "I am okay being photographed during group activities." },
-              { value: "recap", label: "I am okay appearing in recap videos from the trip." },
-              { value: "promo", label: "I am okay appearing in promotional content for future trips." },
-              { value: "tagged", label: "I am okay being tagged in posts." },
-              { value: "approveClips", label: "I want to approve clips before they are posted." },
-              { value: "doNotFilm", label: "I do not want to be filmed or photographed." },
-            ]} />
-          </Field>
-        </Section>
-      )}
-
-      {!off.includes("material") && (
-        <Section title="Material / content protection" intro="This part matters. People can create together without taking or posting each other's unfinished work. All five required.">
-          <Field label="" required>
-            <CheckboxGroup name="jokeProtectionAcks" defaultValue={e?.jokeProtectionAcks} options={[
-              { value: "noPostMaterial", label: "No one may post my material without my permission." },
-              { value: "workshopPrivate", label: "Workshop footage is private unless I approve it being posted." },
-              { value: "groupOk", label: "Group/social content is okay, but my own material should not be posted without approval." },
-              { value: "noRepeat", label: "I understand other people's ideas, premises, unfinished work, and personal stories should not be repeated, posted, or used without permission." },
-              { value: "noPost", label: "I will not post another person's material without asking them first." },
-            ]} />
-          </Field>
-        </Section>
-      )}
-
-      {!off.includes("itinerary") && (
-        <Section title="Group activities" intro="Group activities, content creation, writing sessions, workshops, and other trip activities.">
-          <Field label="Which activities are you interested in?">
-            <CheckboxGroup name="activitiesInterested" defaultValue={e?.activitiesInterested} options={[
-              { value: "Writing sessions", label: "Writing sessions" },
-              { value: "Skill workshop", label: "Skill workshop" },
-              { value: "Talent show / showcase", label: "Talent show / showcase" },
-              { value: "Group games", label: "Group games" },
-              { value: "Group creative projects", label: "Group creative projects" },
-              { value: "Social media content", label: "Social media content" },
-              { value: "Podcast-style recordings", label: "Podcast-style recordings" },
-              { value: "Campfire hang", label: "Campfire hang" },
-              { value: "Board/card games", label: "Board/card games" },
-              { value: "Swimming", label: "Swimming" },
-              { value: "Hiking/walks", label: "Hiking/walks" },
-              { value: "Cooking together", label: "Cooking together" },
-              { value: "Quiet writing time", label: "Quiet writing time" },
-            ]} />
-            <div className="mt-2"><TextInput name="activitiesOtherText" defaultValue={e?.activitiesOtherText} placeholder="Other (or N/A)" required /></div>
-          </Field>
-          <Field label="Any activities you do not want to do?" required><TextArea name="activitiesOptOut" defaultValue={e?.activitiesOptOut} rows={2} required placeholder="N/A if you're up for anything" /></Field>
-          <Field label="Are you okay with structured activities, or do you prefer more free time?" required>
-            <RadioGroup name="structurePref" defaultValue={e?.structurePref} options={[
-              { value: "structure", label: "I like structure" },
-              { value: "mix", label: "I want a mix" },
-              { value: "freeTime", label: "I prefer mostly free time" },
-            ]} required />
-          </Field>
-        </Section>
-      )}
-
-      {!off.includes("payment") && (
-        <Section
-          title="Security deposit"
-          intro={`Everyone pays a ${dep} security deposit before the trip. If everyone follows the rules and the house comes out clean, you get it back. If you damage the house or break a rule, your deposit is forfeit and you're on the hook for any cost beyond it. The host's name is on the rental — they shouldn't be paying for someone else's mess. All four required.`}
-        >
-          <Field label="" required>
-            <CheckboxGroup name="securityDepositAcks" defaultValue={e?.securityDepositAcks} options={[
-              { value: "payDeposit", label: `I will send a ${dep} security deposit before the trip.` },
-              { value: "returned", label: "I understand the deposit is returned after the trip if everyone follows the rules and there's no damage." },
-              { value: "forfeitAndCharged", label: "If I break a rule or damage something, I forfeit my deposit and I'm responsible for any additional cost beyond it." },
-              { value: "hostNotLiable", label: "The person whose name is on the rental is not personally liable for damage I cause — that's on me." },
-            ]} />
-          </Field>
-        </Section>
-      )}
-
-      <Section title="House rules" intro={`All ${houseRules.length} required.`}>
-        <Field label="" required>
-          <CheckboxGroup
-            name="houseRulesAcks"
-            defaultValue={e?.houseRulesAcks}
-            options={houseRules.map((r) => ({ value: r.value, label: r.label }))}
-          />
-        </Field>
-      </Section>
-
-      <Section title="Final notes">
-        <Field label="Anything else we should know before planning the trip?" required>
-          <TextArea name="finalNotes" defaultValue={e?.finalNotes} required placeholder="N/A if nothing comes to mind" />
-        </Field>
-        <Field label="What would make this trip actually fun for you?" required>
-          <TextArea name="whatWouldMakeFun" defaultValue={e?.whatWouldMakeFun} required placeholder="N/A if not sure" />
-        </Field>
-      </Section>
-
+  return <div className="space-y-5">
+    <div className="rounded-2xl border border-indigo-200 bg-indigo-50 p-5 text-sm leading-6 text-indigo-950">
+      <p><strong>Before you start:</strong> answer the required questions, then choose Submit for review. The organizer decides who joins.</p>
+      <p className="mt-2">Your answers go to the trip organizer. They are not shown on the group roster. Answers are saved when you submit; keep this page open until you finish.</p>
+      <p className="mt-2">Signed in as <span className="break-all">{defaultEmail}</span>. <Link href="/help#guest-form" className="inline-flex min-h-11 items-center font-semibold underline underline-offset-4">Help with this form</Link></p>
+    </div>
+    {error && <div ref={errorRef} tabIndex={-1} role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{error}</div>}
+    {locked && <div className="rounded-2xl border border-slate-200 bg-white p-5 text-sm leading-6">
+      <p className="font-semibold text-slate-950">Your form has been submitted</p>
+      <p className="text-slate-600">{editRequested ? "The organizer has your request to make changes. You can edit after they unlock the form." : "You can read your answers below. To change them, ask the organizer to unlock your form."}</p>
+      {!editRequested && <button type="button" disabled={busy} onClick={requestEdit} className="mt-3 min-h-11 rounded-xl border border-slate-300 px-4 font-medium disabled:opacity-50">{busy ? "Sending…" : "Request changes"}</button>}
+      <Link href="/dashboard" className="ml-3 inline-flex min-h-11 items-center text-indigo-700 underline">Back to dashboard</Link>
+    </div>}
+    <form onSubmit={async e => {
+      e.preventDefault();
+      const data = new FormData(e.currentTarget);
+      setBusy(true); setError("");
+      try {
+        const result = await submitGuestForm(data);
+        if (result.error) { await showError(result.error); return; }
+        setSubmitted(true);
+        if (isPending) router.push("/dashboard");
+        else router.refresh();
+      } catch { await showError("Your form was not saved. Please try again. Your answers are still on this page."); }
+      finally { setBusy(false); }
+    }}>
+      <fieldset disabled={locked || busy} className="min-w-0">
+        <legend className="sr-only">Guest form questions</legend>
+        <IntakeQuestions questions={shownQuestions} answers={answers} />
       </fieldset>
-
-      {!locked && (
-        <div className="mt-5 flex flex-col-reverse gap-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-7">
-          <p className="text-xs text-slate-600">Required fields marked with <span className="text-red-600">*</span>.</p>
-          <button
-            type="submit"
-            disabled={submitting}
-            className="inline-flex min-h-12 items-center justify-center rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-indigo-700 disabled:opacity-50"
-          >
-            {submitting
-              ? "Saving…"
-              : existing
-                ? "Update form"
-                : isPending
-                  ? "Submit for approval"
-                  : "Submit form"}
-          </button>
-        </div>
-      )}
+      {!locked && <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-5 text-sm text-slate-600">
+        <p>Review your answers before submitting. After you submit, the organizer can unlock your form if you need to make changes.</p>
+        <button type="submit" disabled={busy} className="mt-3 min-h-12 rounded-xl bg-indigo-600 px-5 py-3 font-semibold text-white disabled:opacity-50">{busy ? "Submitting…" : "Submit for review"}</button>
+      </div>}
     </form>
-  );
+  </div>;
 }

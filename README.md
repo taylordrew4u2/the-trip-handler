@@ -559,3 +559,29 @@ and open placeholders, independently of the cost split and price locks. It does
 not automatically reject applicants or remove approved members. All approved
 members stay visible if the number of spots is reduced below the current roster.
 Searching the roster does not change its filled/open counts.
+
+## Editable intake questions and help
+
+Open a trip’s management page and select **Edit intake questions**. The owner can
+edit question and choice wording, add help text, mark questions required or
+optional, hide questions, reorder them, and add custom questions. Preview the
+form and select **Save questions** to publish it for that trip. Name and phone
+number remain visible and required. Trip section switches still apply.
+
+Use `{deposit}` in question text, help, or choice labels to show the current
+security deposit amount. New questions support short or long text, single
+choice, agreement checkboxes, and multiple choice. Required multiple choice
+asks for at least one answer; required rule groups require every agreement.
+
+Each submission stores a snapshot of the visible questions and answers. The
+organizer’s review page and the guest’s locked form use that snapshot. Removed
+questions and their previous answers stay available in the organizer’s review
+when an unlocked form is resubmitted. Forms submitted before this feature keep
+their existing database answers; exact historical wording is unavailable for
+those older submissions. Editing a template never unlocks a submitted form.
+
+**Help & FAQ** is available at `/help` without signing in, and is linked from
+intake, the member menu, organizer navigation, and getting started. It includes
+search, step-by-step guides, and FAQs covering joining, approvals, form edits,
+pricing, deposits, transfers, roster settings, and organizer tools. Forms save
+on submission; unsaved draft answers are not persisted.

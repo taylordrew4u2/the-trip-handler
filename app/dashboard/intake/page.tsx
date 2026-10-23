@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
+import { intakeQuestions, fillIntakeAmounts, visibleQuestions } from "@/lib/intakeQuestions";
 import { IntakeForm } from "./IntakeForm";
 
 export default async function IntakePage() {
@@ -11,7 +12,7 @@ export default async function IntakePage() {
   if (!userId || userId === "admin") redirect("/login");
 
   const [user, existing] = await Promise.all([
-    prisma.user.findUnique({ where: { id: userId }, include: { trip: { select: { depositAmount: true, disabledSections: true } } } }),
+    prisma.user.findUnique({ where: { id: userId }, include: { trip: { select: { depositAmount: true, disabledSections: true, intakeQuestions: true } } } }),
     prisma.guestForm.findUnique({ where: { userId } }),
   ]);
 
@@ -53,11 +54,10 @@ export default async function IntakePage() {
         <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-600">
           {isPending ? (
             <>
-              The organizer needs this filled out before approving you. We use it to plan {planning} without
-              texting everyone individually 400 times. <strong>Submit this and you&apos;ll be reviewed for approval.</strong>
+              The organizer needs this filled out before approving you. We use it to plan {planning} and understand what you need. <strong>Submitting sends your form to the organizer. They will decide whether to approve your application.</strong>
             </>
           ) : (
-            <>Fill this out so we can plan {planning} without texting everyone individually 400 times.</>
+            <>Fill this out so we can plan {planning} and understand what you need.</>
           )}
         </p>
       </div>
@@ -70,13 +70,13 @@ export default async function IntakePage() {
         </div>
       ) : (
       <IntakeForm
+        key={existing?.updatedAt.toISOString() ?? "new"}
         defaultEmail={user.email}
         defaultName={user.name}
         defaultPhone={user.phone ?? ""}
         existing={existing}
         isPending={isPending}
-        deposit={user.trip?.depositAmount ?? 75}
-        off={user.trip?.disabledSections ?? []}
+        questions={visibleQuestions(fillIntakeAmounts(intakeQuestions(user.trip?.intakeQuestions, off), user.trip?.depositAmount), off)}
       />
       )}
     </div>

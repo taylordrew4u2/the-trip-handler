@@ -9,7 +9,7 @@ export default function LoginPage() {
     <AuthShell
       eyebrow="Members"
       title="Welcome back."
-      description="For the friend who accidentally became the adult in charge of making the plan. Sign in to pick up where your group left off."
+      description="Sign in to join a trip, review your next steps, or manage a trip you organize."
     >
       <LoginForm />
       <p className="mt-6 text-center text-sm text-slate-600">

@@ -10,6 +10,7 @@ import {
   formatAnswer,
   type GuestField,
 } from "@/lib/guestForm";
+import { readIntakeSnapshot } from "@/lib/intakeQuestions";
 import { UnlockFormButton } from "./UnlockFormButton";
 
 export const dynamic = "force-dynamic";
@@ -40,6 +41,7 @@ export default async function ApplicantAnswersPage({
 
   const form = applicant.guestForm as Record<string, unknown> | null;
   const off = trip.disabledSections;
+  const snapshot = readIntakeSnapshot(form?.intakeSnapshot);
 
   return (
     <div className="space-y-6 max-w-3xl">
@@ -74,7 +76,21 @@ export default async function ApplicantAnswersPage({
             </p>
             {Boolean(form.locked) && <UnlockFormButton userId={applicant.id} requested={Boolean(form.editRequested)} />}
           </div>
-          <Answers title="Guest form" fields={activeFields(INTAKE_FIELDS, off)} form={form} />
+          {snapshot ? (
+            <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
+              <h2 className="font-serif text-2xl font-medium text-slate-950">Guest form answers</h2>
+              <p className="mt-2 text-sm text-slate-600">Questions are shown as they were when this person answered them.</p>
+              <dl className="mt-4 divide-y divide-slate-100">{snapshot.questions.map(q => {
+                const raw = snapshot.answers[q.id];
+                const values = Array.isArray(raw) ? raw : typeof raw === "string" ? [raw] : [];
+                const formatted = q.options.length && values.length ? values.map(v => q.options.find(o => o.value === v)?.label ?? v).join(", ") : formatAnswer(raw);
+                return <div key={q.id} className="grid gap-1 py-3 sm:grid-cols-[14rem_1fr] sm:gap-4">
+                  <dt className="text-sm text-slate-600">{q.label}{q.hidden && " (earlier question)"}</dt>
+                  <dd className="whitespace-pre-wrap break-words text-sm text-slate-900">{formatted}</dd>
+                </div>;
+              })}</dl>
+            </section>
+          ) : <Answers title="Guest form" fields={activeFields(INTAKE_FIELDS, off)} form={form} />}
           {form.preferencesSubmittedAt ? (
             <Answers title="Preferences" fields={activeFields(PREFERENCE_FIELDS, off)} form={form} />
           ) : (

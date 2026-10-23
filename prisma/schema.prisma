@@ -81,6 +81,7 @@ model Trip {
   // Number of shares chosen by the trip owner, independent of roster capacity.
   costShareDivisor  Int            @default(10)
   rosterCapacity    Int            @default(13)
+  intakeQuestions   Json?
   finalPrice        Float?
   housingPrice      Float?
   housingLocked     Boolean        @default(false)
@@ -420,6 +421,9 @@ model GuestForm {
   user      User     @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  // Exact question wording and answers at the time of submission.
+  intakeSnapshot Json?
 
   // Form is locked after first submission — admin must grant edit access
   // before the user can re-submit.

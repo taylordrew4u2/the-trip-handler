@@ -21,9 +21,9 @@ export default async function StartPage() {
   return (
     <div className="min-h-dvh bg-[#f6f7fb] text-slate-900">
       <header className="border-b border-slate-200 bg-white pt-safe">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 gutter">
+        <div className="mx-auto flex min-h-16 flex-wrap py-2 max-w-6xl items-center justify-between gap-3 gutter">
           <Link href="/" aria-label="The Trip Handler home" className="flex min-h-11 min-w-0 items-center"><Brand /></Link>
-          <SignOutLink />
+          <div className="flex items-center gap-3 text-sm"><Link href="/help" className="inline-flex min-h-11 items-center text-indigo-700 underline">Help &amp; FAQ</Link><SignOutLink /></div>
         </div>
       </header>
 

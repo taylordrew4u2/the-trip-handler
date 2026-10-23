@@ -83,6 +83,7 @@ export const NAV_GROUPS: readonly NavGroup[] = [
       { href: "/dashboard/preferences", label: "Preferences", gated: true, section: "preferences" },
       { href: "/dashboard/payment", label: "Payment", gated: true, section: "payment" },
       { href: "/dashboard/profile", label: "Profile" },
+      { href: "/help", label: "Help & FAQ" },
     ],
   },
 ];

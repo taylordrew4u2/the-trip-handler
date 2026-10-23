@@ -6,7 +6,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { notifyAdmin, sendFormUnlockedEmail } from "@/lib/resend";
 import { isAuthzError, requireApprovedMember } from "@/lib/authz";
-import { intakeError, readIntake } from "@/lib/guestForm";
+import { INTAKE_FIELDS } from "@/lib/guestForm";
+import { intakeQuestions, fillIntakeAmounts, defaultIntakeQuestions, visibleQuestions, readQuestionAnswers, readIntakeSnapshot } from "@/lib/intakeQuestions";
 
 /** Who hears about guest-form activity: the trip's owner, else the site admin inbox. */
 async function tripOwnerEmail(tripId: string | null): Promise<string | undefined> {
@@ -28,7 +29,7 @@ export async function submitGuestForm(formData: FormData) {
 
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    include: { trip: { select: { id: true, disabledSections: true } } },
+    include: { trip: { select: { id: true, disabledSections: true, depositAmount: true, intakeQuestions: true } } },
   });
   if (!user) return { error: "User not found." };
   // The form is an application to a specific trip.
@@ -42,14 +43,25 @@ export async function submitGuestForm(formData: FormData) {
 
   // Only the questions this trip asks are read; everything else in the
   // request (ids, lock flags, preference answers) is ignored.
-  const data = readIntake(formData, off);
-  const problem = intakeError(data, off);
+  const questions = visibleQuestions(fillIntakeAmounts(intakeQuestions(user.trip.intakeQuestions, off), user.trip.depositAmount), off);
+  // Requirements come from the saved template, never from the browser.
+  const parsed = readQuestionAnswers(formData, questions);
+  const data = parsed.answers;
+  const problem = parsed.error;
   if (problem) return { error: problem };
   if (!data.fullName || !data.phoneNumber) return { error: "Please fill in your name and phone number." };
 
-  // Lock the form after every successful submit so the user can't keep
-  // changing things without the organizer's approval.
-  const dataWithLock = { ...data, locked: true, editRequested: false };
+  const previous = readIntakeSnapshot(existing?.intakeSnapshot);
+  const oldAnswers = Object.fromEntries(INTAKE_FIELDS.map(f => [f.name, existing?.[f.name as keyof typeof existing] ?? null]));
+  const earlierQuestions = previous?.questions ?? (existing ? visibleQuestions(fillIntakeAmounts(defaultIntakeQuestions(off), user.trip.depositAmount), off) : []);
+  const archived = earlierQuestions.filter(q => !questions.some(current => current.id === q.id));
+  const snapshot = {
+    questions: [...questions, ...archived.map(q => ({ ...q, hidden: true }))],
+    answers: { ...oldAnswers, ...previous?.answers, ...data },
+  };
+  // Custom answers live in the snapshot; only known fields become database columns.
+  const builtIn = Object.fromEntries(Object.entries(data).filter(([key]) => INTAKE_FIELDS.some(f => f.name === key)));
+  const dataWithLock = { ...builtIn, intakeSnapshot: JSON.parse(JSON.stringify(snapshot)), locked: true, editRequested: false };
   type UpsertInput = Parameters<typeof prisma.guestForm.upsert>[0];
   await prisma.guestForm.upsert({
     where: { userId },
