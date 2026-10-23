@@ -31,7 +31,7 @@ export function IntakeEditor({ tripId, initial, defaults, off, deposit }: { trip
       <p><strong>How to edit:</strong> open a question below, change its wording, and choose whether it is required or hidden. Use Add question for anything else you need to ask.</p>
       <p className="mt-2">Name and phone number stay required so applications can be identified. Use {"{deposit}"} in text to show the trip’s current deposit amount. Questions for a section you turned off will stay hidden. <Link href="/help#organizers" className="inline-flex min-h-11 items-center font-semibold underline">Organizer help</Link></p>
     </div>
-    <div className="sticky top-16 z-20 flex flex-wrap items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+    <div className="sticky top-32 md:top-16 z-20 flex flex-wrap items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
       <button type="button" disabled={pending || !dirty} onClick={() => {
         const validated = validateIntakeQuestions(questions);
         if (validated.error) { setError(validated.error); return; }
