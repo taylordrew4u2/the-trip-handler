@@ -13,7 +13,7 @@ export default async function LodgingPage() {
   const userId = (session?.user as { id?: string } | undefined)?.id ?? "";
   const trip = userId ? await getUserTrip(userId) : null;
   const photos = trip
-    ? await prisma.lodgingPhoto.findMany({ where: { tripId: trip.id }, orderBy: { position: "asc" } })
+    ? await prisma.lodgingPhoto.findMany({ where: { tripId: trip.id }, orderBy: [{ position: "asc" }, { createdAt: "asc" }] })
     : [];
 
   return (

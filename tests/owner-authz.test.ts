@@ -23,6 +23,8 @@ vi.mock("@/lib/db", () => ({
     groceryItem: { findUnique: vi.fn() },
     mealSlot: { findUnique: vi.fn() },
     mealPlanPhase: { upsert: vi.fn() },
+    lodgingPhoto: { findUnique: vi.fn(), findMany: vi.fn(), update: vi.fn(), delete: vi.fn() },
+    $transaction: vi.fn(),
   },
 }));
 
@@ -45,6 +47,9 @@ import {
   updateMemberPriceAdjustment,
   updateTripBedPrice,
   updateTripSections,
+  updateTripLodgingPhotoCaption,
+  moveTripLodgingPhoto,
+  deleteTripLodgingPhoto,
 } from "@/app/actions/trips";
 
 const session = getServerSession as unknown as Mock;
@@ -54,6 +59,8 @@ const p = prisma as unknown as {
   expense: { findUnique: Mock };
   bed: { findUnique: Mock };
   user: { findUnique: Mock; update: Mock };
+  lodgingPhoto: { findUnique: Mock; update: Mock };
+  $transaction: Mock;
 };
 
 beforeEach(() => {
@@ -65,6 +72,7 @@ beforeEach(() => {
   p.expense.findUnique.mockResolvedValue({ tripId: "t1", receiptUrl: null });
   p.bed.findUnique.mockResolvedValue({ tripId: "t1" });
   p.user.findUnique.mockResolvedValue({ tripId: "t1", status: "PENDING_PAYMENT" });
+  p.lodgingPhoto.findUnique.mockResolvedValue({ id: "ph1", tripId: "t1", url: "/api/files/x" });
 });
 
 describe("owner actions reject non-owners", () => {
@@ -88,6 +96,9 @@ describe("owner actions reject non-owners", () => {
     ["updateMemberPriceAdjustment", () => updateMemberPriceAdjustment("u1", -50, "friend")],
     ["updateTripBedPrice", () => updateTripBedPrice("b1", 25)],
     ["updateTripSections", () => updateTripSections("t1", ["meals"])],
+    ["updateTripLodgingPhotoCaption", () => updateTripLodgingPhotoCaption("ph1", "Porch")],
+    ["moveTripLodgingPhoto", () => moveTripLodgingPhoto("ph1", "earlier")],
+    ["deleteTripLodgingPhoto", () => deleteTripLodgingPhoto("ph1")],
   ];
 
   it.each(cases)("%s returns 'Not your trip'", async (_name, run) => {
@@ -101,6 +112,13 @@ it("a non-owner can't read or write a member's private price", async () => {
   expect(p.user.update).not.toHaveBeenCalled();
 });
 
+it("a non-owner can't caption or reorder lodging photos", async () => {
+  await updateTripLodgingPhotoCaption("ph1", "Porch");
+  await moveTripLodgingPhoto("ph1", "later");
+  expect(p.lodgingPhoto.update).not.toHaveBeenCalled();
+  expect(p.$transaction).not.toHaveBeenCalled();
+});
+
 describe("owner actions require a session", () => {
   beforeEach(() => session.mockResolvedValue(null));
 
@@ -112,5 +130,23 @@ describe("owner actions require a session", () => {
     expect(await addTripBed("t1", { label: "x", type: "DOUBLE", womenOnly: false, count: 1 })).toEqual({
       error: "Sign in first.",
     });
+  });
+});
+
+describe("lodging photo order", () => {
+  it("swaps a photo with its neighbor and renumbers every photo", async () => {
+    session.mockResolvedValue({ user: { id: "owner" } });
+    p.trip.findFirst.mockResolvedValue({ id: "t1", ownerId: "owner" });
+    p.lodgingPhoto.findUnique.mockResolvedValue({ id: "b", tripId: "t1" });
+    (prisma as unknown as { lodgingPhoto: { findMany: Mock } }).lodgingPhoto.findMany.mockResolvedValue([{ id: "a" }, { id: "b" }, { id: "c" }]);
+    p.lodgingPhoto.update.mockImplementation((args: unknown) => args);
+    p.$transaction.mockResolvedValue([]);
+
+    expect(await moveTripLodgingPhoto("b", "earlier")).toEqual({ success: true });
+    expect(p.$transaction.mock.calls[0][0]).toEqual([
+      { where: { id: "b" }, data: { position: 0 } },
+      { where: { id: "a" }, data: { position: 1 } },
+      { where: { id: "c" }, data: { position: 2 } },
+    ]);
   });
 });

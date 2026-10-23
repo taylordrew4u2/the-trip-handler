@@ -44,7 +44,7 @@ export default async function ManageTripPage({
 
   const lodgingPhotos = await prisma.lodgingPhoto.findMany({
     where: { tripId },
-    orderBy: { position: "asc" },
+    orderBy: [{ position: "asc" }, { createdAt: "asc" }],
     select: { id: true, url: true, caption: true },
   });
 

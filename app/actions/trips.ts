@@ -937,6 +937,37 @@ export async function addTripLodgingPhoto(tripId: string, formData: FormData) {
   return { success: true };
 }
 
+export async function updateTripLodgingPhotoCaption(photoId: string, caption: string) {
+  const userId = await currentUserId();
+  if (!userId) return { error: "Sign in first." };
+  const photo = await prisma.lodgingPhoto.findUnique({ where: { id: photoId } });
+  if (!photo || !(await ownedTrip(photo.tripId, userId))) return { error: "Not your trip." };
+
+  await prisma.lodgingPhoto.update({ where: { id: photoId }, data: { caption: String(caption ?? "").trim().slice(0, 200) || null } });
+  revalidatePath(`/dashboard/my-trips/${photo.tripId}`);
+  revalidatePath("/dashboard/lodging");
+  return { success: true };
+}
+
+/** Swap a photo with its neighbor; the first photo is the one guests see first. */
+export async function moveTripLodgingPhoto(photoId: string, direction: "earlier" | "later") {
+  const userId = await currentUserId();
+  if (!userId) return { error: "Sign in first." };
+  const photo = await prisma.lodgingPhoto.findUnique({ where: { id: photoId } });
+  if (!photo || !(await ownedTrip(photo.tripId, userId))) return { error: "Not your trip." };
+
+  const photos = await prisma.lodgingPhoto.findMany({ where: { tripId: photo.tripId }, orderBy: [{ position: "asc" }, { createdAt: "asc" }], select: { id: true } });
+  const index = photos.findIndex((p) => p.id === photoId);
+  const target = direction === "earlier" ? index - 1 : index + 1;
+  if (index < 0 || target < 0 || target >= photos.length) return { success: true };
+  [photos[index], photos[target]] = [photos[target], photos[index]];
+  // Rewrite every position so older duplicates can't keep two photos tied.
+  await prisma.$transaction(photos.map((p, position) => prisma.lodgingPhoto.update({ where: { id: p.id }, data: { position } })));
+  revalidatePath(`/dashboard/my-trips/${photo.tripId}`);
+  revalidatePath("/dashboard/lodging");
+  return { success: true };
+}
+
 export async function deleteTripLodgingPhoto(photoId: string) {
   const userId = await currentUserId();
   if (!userId) return { error: "Sign in first." };
