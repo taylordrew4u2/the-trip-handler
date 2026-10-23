@@ -54,7 +54,7 @@ export default async function RosterPage() {
           {totalApproved} approved · {totalPaid} confirmed &amp; paid
         </p>
       </div>
-      <RosterClientView initialUsers={users} />
+      <RosterClientView initialUsers={users} capacity={trip?.rosterCapacity ?? 13} />
     </div>
   );
 }

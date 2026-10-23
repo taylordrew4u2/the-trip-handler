@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { RosterCard } from "@/components/RosterCard";
 import { SearchSort } from "@/components/SearchSort";
 import { UserStatus } from "@prisma/client";
-import { TRIP_CAPACITY } from "@/lib/pricing";
 
 type RosterUser = {
   id: string;
@@ -20,11 +19,11 @@ type RosterUser = {
   }[];
 };
 
-export function RosterClientView({ initialUsers }: { initialUsers: RosterUser[] }) {
+export function RosterClientView({ initialUsers, capacity }: { initialUsers: RosterUser[]; capacity: number }) {
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("name");
-  const [users] = useState(initialUsers);
+  const users = initialUsers;
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -50,19 +49,23 @@ export function RosterClientView({ initialUsers }: { initialUsers: RosterUser[] 
       return 0;
     });
 
-  // Render TRIP_CAPACITY fixed slots. Approved users fill from the top; the
-  // rest render as "Open" placeholders so people can see what's left.
-  const slots = Array.from({ length: TRIP_CAPACITY }, (_, i) => filtered[i] ?? null);
-  const filledCount = filtered.length;
+  // Search changes the visible cards, never the number of filled/open spots.
+  // Always retain every approved member, even if capacity was reduced.
+  const filledCount = users.length;
+  const openCount = Math.max(0, capacity - filledCount);
+  const slots: (RosterUser | null)[] = [
+    ...filtered,
+    ...Array.from({ length: search.trim() ? 0 : openCount }, () => null),
+  ];
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <p className="text-sm text-slate-700 tabular-nums">
           <span className="font-medium">{filledCount}</span>
-          <span className="text-slate-600"> / {TRIP_CAPACITY} slots filled</span>
-          {filledCount < TRIP_CAPACITY && (
-            <span className="text-slate-600"> · {TRIP_CAPACITY - filledCount} open</span>
+          <span className="text-slate-600"> / {capacity} slots filled</span>
+          {filledCount < capacity && (
+            <span className="text-slate-600"> · {capacity - filledCount} open</span>
           )}
         </p>
         <SearchSort search={search} onSearchChange={setSearch} sort={sort} onSortChange={setSort} />
@@ -87,7 +90,7 @@ export function RosterClientView({ initialUsers }: { initialUsers: RosterUser[] 
       </div>
 
       {filtered.length === 0 && (
-        <p className="text-center text-slate-600 py-4 text-sm">No campers approved yet.</p>
+        <p className="text-center text-slate-600 py-4 text-sm">{search.trim() ? "No matching campers." : "No campers approved yet."}</p>
       )}
     </div>
   );

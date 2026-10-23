@@ -1,11 +1,5 @@
 export const SECURITY_DEPOSIT_USD = 75;
 
-/**
- * Hard cap on the trip — the roster is rendered as TRIP_CAPACITY slots,
- * filling in with approved users and showing "Open" for empty slots.
- */
-export const TRIP_CAPACITY = 13;
-
 /** Round to whole cents. */
 export function toCents(n: number): number {
   return Math.round(n * 100) / 100;

@@ -109,3 +109,39 @@ test.describe("sleeping", () => {
     expect(failures, "server action errored while claiming a bed").toEqual([]);
   });
 });
+
+test.describe("roster spots", () => {
+  test("owner can save roster spots without changing the cost split", async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== ONLY_PROJECT, `mutating flows run once, on ${ONLY_PROJECT}`);
+    await signIn(page, "organizer");
+    await page.goto("/dashboard/my-trips");
+    await page.getByRole("link", { name: /manage trip/i }).first().click();
+    const input = page.getByLabel("Number of roster spots");
+    const original = await input.inputValue();
+    const split = await page.getByLabel("Split costs between").inputValue();
+    try {
+      await input.fill(original === "20" ? "21" : "20");
+      await page.getByRole("button", { name: "Save roster spots", exact: true }).click();
+      await expect(page.getByRole("status").filter({ hasText: "Roster spots saved." })).toBeVisible();
+      await page.reload();
+      await expect(input).toHaveValue(original === "20" ? "21" : "20");
+      await expect(page.getByLabel("Split costs between")).toHaveValue(split);
+    } finally {
+      await input.fill(original);
+      await page.getByRole("button", { name: "Save roster spots", exact: true }).click();
+      await expect(page.getByRole("status").filter({ hasText: "Roster spots saved." })).toBeVisible();
+    }
+  });
+
+  test("search preserves the filled and open roster counts", async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== ONLY_PROJECT, `flows run once, on ${ONLY_PROJECT}`);
+    await signIn(page, "member");
+    await page.goto("/dashboard/roster");
+    const count = page.locator("p").filter({ hasText: /slots filled/ });
+    const original = await count.textContent();
+    await page.getByPlaceholder("Search campers…").fill("no-matching-camper-xyz");
+    await expect(count).toHaveText(original ?? "");
+    await expect(page.getByText("No matching campers.", { exact: true })).toBeVisible();
+    await expect(page.getByText("Open", { exact: true })).toHaveCount(0);
+  });
+});

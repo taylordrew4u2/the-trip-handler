@@ -285,6 +285,23 @@ const PRICE_FIELDS: Record<
   meals: { amount: "mealsPrice", locked: "mealsLocked" },
 };
 
+/** Set the roster size independently of pricing. Existing members stay visible. */
+export async function updateMyTripRosterCapacity(tripId: string, capacity: number) {
+  const userId = await currentUserId();
+  if (!userId) return { error: "Sign in first." };
+  if (!(await ownedTrip(tripId, userId))) return { error: "Not your trip." };
+  if (!Number.isInteger(capacity) || capacity < 1 || capacity > 1000) {
+    return { error: "Roster spots must be a whole number from 1 to 1,000." };
+  }
+  await prisma.trip.update({
+    where: { id: tripId, ownerId: userId },
+    data: { rosterCapacity: capacity },
+  });
+  revalidatePath(`/dashboard/my-trips/${tripId}`);
+  revalidatePath("/dashboard/roster");
+  return { success: true };
+}
+
 /** Set how many ways costs are split on a trip you own. */
 export async function updateMyTripCostShareDivisor(tripId: string, divisor: number) {
   const userId = await currentUserId();

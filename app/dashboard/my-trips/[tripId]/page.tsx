@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { TripEditForm } from "./TripEditForm";
+import { RosterSettingsPanel } from "./RosterSettingsPanel";
 import { PricingPanel } from "./PricingPanel";
 import { ContributionsPanel } from "./ContributionsPanel";
 import { ExpensesPanel } from "./ExpensesPanel";
@@ -172,6 +173,7 @@ export default async function ManageTripPage({
         }}
       />
       <SectionsPanel tripId={trip.id} disabled={trip.disabledSections} />
+      <RosterSettingsPanel tripId={trip.id} capacity={trip.rosterCapacity} />
       <PricingPanel
         tripId={trip.id}
         pricing={{
