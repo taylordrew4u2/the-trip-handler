@@ -115,7 +115,7 @@ test.describe("roster spots", () => {
     test.skip(testInfo.project.name !== ONLY_PROJECT, `mutating flows run once, on ${ONLY_PROJECT}`);
     await signIn(page, "organizer");
     await page.goto("/dashboard/my-trips");
-    await page.getByRole("link", { name: /manage trip/i }).first().click();
+    await page.getByRole("link", { name: /edit details/i }).first().click();
     const input = page.getByLabel("Number of roster spots");
     const original = await input.inputValue();
     const split = await page.getByLabel("Split costs between").inputValue();
