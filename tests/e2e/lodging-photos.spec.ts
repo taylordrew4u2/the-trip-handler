@@ -26,6 +26,14 @@ test("owner uploads several lodging photos at once, captions and reorders them",
     await page.waitForURL(/\/dashboard/);
     await page.goto(`/dashboard/my-trips/${trip.id}`);
 
+    // The invite panel sits at the top: a full link (backfilled for this token-less trip) and a trip code on demand.
+    await expect(page.getByRole("heading", { name: "Add people to this trip" })).toBeVisible();
+    await expect(page.locator("section[aria-labelledby=invite-heading] code").first()).toContainText("http://127.0.0.1:3222/join/");
+    await expect(page.getByRole("link", { name: "Text it" })).toHaveAttribute("href", /^sms:/);
+    await page.getByRole("button", { name: "Create a trip code" }).click();
+    await expect(page.getByRole("button", { name: "Copy code" })).toBeVisible();
+    await expect.poll(async () => (await db.trip.findUnique({ where: { id: trip.id } }))?.joinCode).toMatch(/^[A-Z2-9]{6,8}$/);
+
     // Picking files uploads them right away — no separate button.
     await page.getByLabel("Choose lodging photos").setInputFiles([
       { name: "kitchen.png", mimeType: "image/png", buffer: RED },
