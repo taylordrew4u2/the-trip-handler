@@ -277,7 +277,12 @@ export async function bumpFromSingle(bedId: string) {
     throw err;
   }
 
-  await sendBedBumpEmail(occupant.user.email, occupant.user.name, bed.label);
+  try {
+    await sendBedBumpEmail(occupant.user.email, occupant.user.name, bed.label);
+  } catch (e) {
+    // The move already happened; a failed email shouldn't look like it didn't.
+    console.error("Bed bump email failed:", e);
+  }
 
   revalidatePath("/dashboard/sleeping");
   return { success: true };

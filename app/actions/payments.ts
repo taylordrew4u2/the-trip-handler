@@ -95,7 +95,13 @@ export async function createCheckoutSession() {
           },
         ];
 
-  const stripe = getStripe();
+  let stripe: ReturnType<typeof getStripe>;
+  try {
+    stripe = getStripe();
+  } catch (err) {
+    console.error("Stripe isn't configured:", err);
+    return { error: "Card payments aren't set up yet. Use Venmo/Cash App or ask the organizer." };
+  }
 
   // Close any checkout this member opened before, so two tabs (or a back
   // button) can't both be paid.

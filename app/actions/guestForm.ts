@@ -150,7 +150,13 @@ export async function unlockGuestForm(userId: string) {
   if (applicant?.trip) revalidatePath(`/dashboard/my-trips/${applicant.trip.id}/applicants/${userId}`);
 
   const u = await prisma.user.findUnique({ where: { id: userId }, select: { name: true, email: true } });
-  if (u) await sendFormUnlockedEmail(u.email, u.name);
+  if (u) {
+    try {
+      await sendFormUnlockedEmail(u.email, u.name);
+    } catch (e) {
+      console.error("Form-unlocked email failed:", e);
+    }
+  }
 
   return { success: true };
 }

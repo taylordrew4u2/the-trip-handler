@@ -223,7 +223,12 @@ export async function approveTripApplicant(applicantId: string) {
   });
   if (claimed.count === 0) return { error: "They're no longer pending — refresh the page." };
 
-  await sendApprovalEmail(applicant.email, applicant.name);
+  try {
+    await sendApprovalEmail(applicant.email, applicant.name);
+  } catch (e) {
+    // The approval stands even if the email service hiccups.
+    console.error("Approval email failed:", e);
+  }
   if (trip.isLocked) {
     const bill = await getMemberBill(applicant.id);
     if (bill) {
@@ -256,7 +261,11 @@ export async function rejectTripApplicant(applicantId: string) {
   if (claimed.count === 0) return { error: "They're no longer on this trip — refresh the page." };
   await releaseTripSpot(applicant.id);
 
-  await sendRejectionEmail(applicant.email, applicant.name);
+  try {
+    await sendRejectionEmail(applicant.email, applicant.name);
+  } catch (e) {
+    console.error("Rejection email failed:", e);
+  }
   revalidatePath("/dashboard/my-trips");
   revalidatePath(`/dashboard/my-trips/${applicant.tripId}`);
   return { success: true };
