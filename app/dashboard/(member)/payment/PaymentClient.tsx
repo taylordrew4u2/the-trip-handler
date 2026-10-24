@@ -5,6 +5,7 @@ import { createCheckoutSession, submitManualPayment } from "@/app/actions/paymen
 import { useRouter, useSearchParams } from "next/navigation";
 import { formatAdjustment } from "@/lib/pricing";
 import { compressImage } from "@/components/compressImage";
+import { PaymentMethodsSummary } from "@/components/PaymentMethodsSummary";
 
 export type PaymentView = {
   tripName: string;
@@ -104,27 +105,34 @@ export function PaymentClient({ view }: { view: PaymentView }) {
     setError("");
     const form = new FormData(e.currentTarget);
     form.set("method", method);
-    // Phone screenshots can be several MB — shrink before sending.
-    const receipt = form.get("receipt");
-    if (receipt instanceof File && receipt.size > 0) form.set("receipt", await compressImage(receipt));
-    let result: Awaited<ReturnType<typeof submitManualPayment>>;
     try {
-      result = await submitManualPayment(form);
+      // Keep image preparation inside the same error boundary as the upload.
+      // Otherwise a failed conversion leaves the form stuck on “Sending…”.
+      const receipt = form.get("receipt");
+      if (receipt instanceof File && receipt.size > 0) form.set("receipt", await compressImage(receipt));
+      const result = await submitManualPayment(form);
+      if (result && "error" in result && result.error) {
+        setError(result.error);
+        return;
+      }
+      setSent(true);
+      setMethod(null);
+      router.refresh();
     } catch {
-      result = { error: "Couldn't send it — check your connection and try again." };
+      setError("Couldn't send it — check your connection and try again.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
-    if (result && "error" in result && result.error) {
-      setError(result.error);
-      return;
-    }
-    setSent(true);
-    setMethod(null);
-    router.refresh();
   }
 
   return (
     <div className="space-y-6">
+      <PaymentMethodsSummary
+        isLocked={view.isLocked}
+        cardEnabled={view.cardEnabled}
+        venmoHandle={view.venmoHandle}
+        cashAppHandle={view.cashAppHandle}
+      />
       <div className="min-w-0 bg-white rounded-2xl border border-slate-200 p-5 shadow-sm sm:p-6 md:p-8 space-y-6">
         <div>
           <p className="text-xs uppercase tracking-[0.2em] text-slate-600 mb-1">
@@ -354,7 +362,7 @@ export function PaymentClient({ view }: { view: PaymentView }) {
         ) : (
           <p className="text-xs text-slate-600 leading-relaxed">
             Numbers above are estimates while the organizer lines up the costs. Once prices are locked the
-            total is final and this page will show how to pay (your share + the refundable{" "}
+            total is final and the payment controls will unlock (your share + the refundable{" "}
             {money(view.deposit)} deposit).
           </p>
         )}
