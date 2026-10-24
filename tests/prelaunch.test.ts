@@ -107,6 +107,17 @@ describe("starting a card checkout", () => {
 });
 
 describe("profile saves", () => {
+  it("saves clearing optional profile fields instead of silently keeping old values", async () => {
+    session.mockResolvedValue({ user: { id: "u1" } });
+    expect(await updateProfile("u1", { name: "Ann", username: "", phone: "", bio: "", gender: "", sleepNote: "", sleepTags: [] })).toEqual({ success: true });
+    expect(p.user.update).toHaveBeenCalledWith({ where: { id: "u1" }, data: { name: "Ann", username: null, phone: null, bio: null, gender: null, sleepNote: null, sleepTags: [] } });
+  });
+  it("preserves handles with punctuation already accepted at signup", async () => {
+    session.mockResolvedValue({ user: { id: "u1" } });
+    expect(await updateProfile("u1", { name: "Ann", username: "@ann.drew" })).toEqual({ success: true });
+    expect(p.user.update).toHaveBeenCalledWith({ where: { id: "u1" }, data: { name: "Ann", username: "@ann.drew" } });
+  });
+
   it("ignores status, role, trip and price fields", async () => {
     session.mockResolvedValue({ user: { id: "u1" } });
     const sneaky = { name: "Ann", status: "CONFIRMED_PAID", role: "ADMIN", priceAdjustment: -500, tripId: "t9" };
