@@ -135,6 +135,7 @@ export default async function DashboardPage() {
           { href: "/dashboard/roster", label: "Roster", detail: "Meet everyone coming along.", show: user?.status !== "PENDING" },
           { href: "/dashboard/meals", label: "Meals", detail: "Vote, cook, and share the prep.", show: user?.status !== "PENDING" },
           { href: "/dashboard/sleeping", label: "Sleeping", detail: "Choose a bed and settle in.", show: user?.status !== "PENDING" },
+          { href: "/dashboard/board", label: "Board", detail: "Post updates and talk with the group.", show: user?.status !== "PENDING" },
           { href: "/dashboard/contributions", label: "Contributions", detail: "Claim something to bring.", show: user?.status !== "PENDING" },
         ]
           .filter((item) => item.show && !trip?.disabledSections.includes(item.href.split("/").pop() ?? ""))

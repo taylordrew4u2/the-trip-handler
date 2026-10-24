@@ -79,6 +79,9 @@ beforeEach(() => {
     user: { id: "me", role: "PARTICIPANT", status: "APPROVED" },
   });
   p.$transaction.mockResolvedValue(undefined);
+  (prisma.bedAssignment.findUnique as Mock).mockImplementation(async (args: { select?: unknown }) =>
+    args.select ? null : { bedId: "bed-1" },
+  );
 });
 
 function expectNoWrites() {
@@ -174,6 +177,7 @@ describe("the capacity check happens inside the transaction", () => {
     p.$transaction.mockImplementation(async (fn: (tx: unknown) => Promise<void>) =>
       fn({
         bedAssignment: {
+          findUnique: vi.fn().mockResolvedValue(null),
           count: vi.fn().mockResolvedValue(2),
           deleteMany: vi.fn(),
           create: vi.fn(),
