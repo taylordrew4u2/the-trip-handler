@@ -176,33 +176,37 @@ export async function claimBedSlot(bedId: string) {
   const priceError = await paidBedChangeError(auth.id, bed.priceAdjustment);
   if (priceError) return { error: priceError };
 
-  try {
-    // Counting the occupants and then inserting is a race: two members tapping
-    // the same last slot can both read "one free" and both insert, putting
-    // three people in a double. Doing the count and the insert inside one
-    // serializable transaction makes the loser fail rather than overfill.
-    await prisma.$transaction(
-      async (tx) => {
-        const taken = await tx.bedAssignment.count({ where: { bedId } });
-        // Claiming is for empty beds. A half-full double is shared only when
-        // the person in it accepts a request — never by surprise.
-        if (taken > 0) {
-          throw new BedError(
-            bed.type === "DOUBLE" ? "Someone's in this bed now — ask to share it instead." : "That bed is already full.",
-          );
-        }
-        // Leaving any previous bed is part of the same transaction, so a
-        // failure here can never strand someone with no bed at all.
-        await tx.bedAssignment.deleteMany({ where: { userId: auth.id } });
-        await tx.bedAssignment.create({ data: { bedId, userId: auth.id } });
-      },
-      { isolationLevel: "Serializable" },
-    );
-  } catch (err) {
-    const raced = bedRaceError(err);
-    if (raced) return raced;
-    throw err;
+  // Serializable transactions can legitimately abort during simultaneous claims.
+  // Retry serialization conflicts briefly, but never retry a full or restricted bed.
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      await prisma.$transaction(
+        async (tx) => {
+          const existing = await tx.bedAssignment.findUnique({ where: { userId: auth.id } });
+          if (existing?.bedId === bedId) return; // An already-saved claim is idempotent.
+          const taken = await tx.bedAssignment.count({ where: { bedId } });
+          if (taken > 0) {
+            throw new BedError(
+              bed.type === "DOUBLE" ? "Someone's in this bed now — ask to share it instead." : "That bed is already full.",
+            );
+          }
+          await tx.bedAssignment.deleteMany({ where: { userId: auth.id } });
+          await tx.bedAssignment.create({ data: { bedId, userId: auth.id } });
+        },
+        { isolationLevel: "Serializable" },
+      );
+      break;
+    } catch (err) {
+      if ((err as { code?: string })?.code === "P2034" && attempt < 2) continue;
+      const raced = bedRaceError(err);
+      if (raced) return raced;
+      throw err;
+    }
   }
+
+  // Report success only when the database actually contains the assignment.
+  const saved = await prisma.bedAssignment.findUnique({ where: { userId: auth.id } });
+  if (saved?.bedId !== bedId) return { error: "The bed claim wasn't saved. Please try again." };
 
   revalidatePath("/dashboard/sleeping");
   return { success: true };

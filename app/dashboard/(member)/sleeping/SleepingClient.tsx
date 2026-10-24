@@ -63,12 +63,14 @@ export function SleepingClient({
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
 
   const isFemale = myGender === "female";
   const genderUnset = myGender === null;
 
   async function run<T>(label: string, fn: () => Promise<T>) {
     setError("");
+    setNotice("");
     setBusy(label);
     try {
       const r = (await fn()) as { error?: string } | undefined;
@@ -76,7 +78,10 @@ export function SleepingClient({
         setError(r.error);
         return;
       }
+      setNotice("Saved. Your sleeping arrangements are updated.");
       router.refresh();
+    } catch {
+      setError("Could not save the change. Please try again.");
     } finally {
       setBusy(null);
     }
@@ -125,8 +130,9 @@ export function SleepingClient({
 
   return (
     <div className="min-w-0 space-y-6">
+      {notice && <p role="status" className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">{notice}</p>}
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2 text-sm">
+        <div role="alert" className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2 text-sm">
           {error}
         </div>
       )}
