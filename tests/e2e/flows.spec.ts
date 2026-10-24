@@ -39,6 +39,8 @@ test.describe("board", () => {
     // The composer is only cleared on success, so this fails if the action
     // errored — without it the assertion above can pass on a broken post.
     await expect(composer).toHaveValue("");
+    await page.reload();
+    await expect(page.getByText(message, { exact: true })).toBeVisible();
   });
 
   test("a member can add and remove a reaction", async ({ page }) => {
@@ -100,6 +102,13 @@ test.describe("sleeping", () => {
     await claim.click();
 
     const leave = page.getByRole("button", { name: /leave|give up/i }).first();
+    await expect(leave).toBeVisible();
+
+    // Read the assignment again from the database, not only the action response.
+    await page.reload();
+    await expect(leave).toBeVisible();
+    await page.goto("/dashboard/board");
+    await page.goto("/dashboard/sleeping");
     await expect(leave).toBeVisible();
 
     // Put the seed data back the way it was so the test is repeatable.
