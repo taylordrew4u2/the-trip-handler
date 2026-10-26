@@ -34,20 +34,20 @@ export default async function IntakePage() {
   return (
     <div className="min-w-0">
       {!user.tripId && (
-        <div className="mb-6 flex flex-col gap-2 rounded-2xl border border-indigo-200 bg-indigo-50 px-5 py-4 text-sm sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+        <div className="mb-6 flex flex-col gap-2 rounded-2xl border border-teal-200 bg-teal-50 px-5 py-4 text-sm sm:flex-row sm:items-center sm:justify-between sm:gap-3">
           <span className="text-slate-600">
             Just here to organize a trip of your own?
           </span>
           <Link
             href="/dashboard/my-trips"
-            className="inline-flex min-h-11 items-center font-semibold text-indigo-700 underline decoration-indigo-200 underline-offset-4 hover:decoration-indigo-600"
+            className="inline-flex min-h-11 items-center font-semibold text-teal-800 underline decoration-teal-200 underline-offset-4 hover:decoration-teal-700"
           >
             Host your own trip →
           </Link>
         </div>
       )}
       <div className="mb-8">
-        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-indigo-700">
+        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-teal-800">
           {isPending ? "Required before approval" : "Guest form"}
         </p>
         <h1 className="font-serif text-3xl font-medium tracking-tight text-slate-950 sm:text-4xl">Guest Form</h1>
@@ -64,7 +64,7 @@ export default async function IntakePage() {
       {!user.tripId ? (
         <div className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-600">
           This form is your application to a trip, so join one first with an invite link or join code.{" "}
-          <Link href="/dashboard/start" className="font-semibold text-indigo-700 underline underline-offset-4">
+          <Link href="/dashboard/start" className="font-semibold text-teal-800 underline underline-offset-4">
             Find a trip →
           </Link>
         </div>

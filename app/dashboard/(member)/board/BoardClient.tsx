@@ -93,7 +93,7 @@ export function BoardClient({
           rows={3}
           maxLength={MAX_LEN}
           placeholder={placeholder}
-          className="w-full min-h-[44px] px-3 py-2.5 rounded-lg border border-slate-300 text-base resize-none focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600/20 placeholder:text-slate-600"
+          className="w-full min-h-[44px] px-3 py-2.5 rounded-lg border border-slate-300 text-base resize-none focus:outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20 placeholder:text-slate-600"
         />
         <div className="flex flex-wrap items-center justify-between gap-3 mt-3">
           <p className={`text-xs ${remaining < 100 ? "text-amber-700" : "text-slate-600"}`}>
@@ -102,7 +102,7 @@ export function BoardClient({
           <button
             type="submit"
             disabled={submitting || !body.trim()}
-            className="min-w-[44px] inline-flex items-center justify-center shrink-0 px-4 min-h-[44px] bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 active:bg-indigo-800 disabled:opacity-50"
+            className="min-w-[44px] inline-flex items-center justify-center shrink-0 px-4 min-h-[44px] bg-teal-700 text-white rounded-lg text-sm font-medium hover:bg-teal-800 active:bg-teal-900 disabled:opacity-50"
           >
             {submitting ? "Sending…" : postLabel}
           </button>
@@ -126,7 +126,7 @@ export function BoardClient({
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={c.user.avatarUrl} alt={c.user.name} className="w-10 h-10 shrink-0 rounded-full object-cover" />
                   ) : (
-                    <div className="w-10 h-10 shrink-0 rounded-full bg-indigo-50 text-indigo-700 flex items-center justify-center text-sm font-semibold">
+                    <div className="w-10 h-10 shrink-0 rounded-full bg-teal-50 text-teal-800 flex items-center justify-center text-sm font-semibold">
                       {initials}
                     </div>
                   )}
@@ -162,7 +162,7 @@ export function BoardClient({
                             aria-label={`${mine ? "Remove" : "Add"} ${emoji} reaction`}
                             className={`inline-flex min-w-[44px] items-center justify-center gap-1 px-2 min-h-[44px] rounded-full border text-sm transition-colors ${
                               mine
-                                ? "border-indigo-600 bg-indigo-600 text-white"
+                                ? "border-teal-700 bg-teal-700 text-white"
                                 : "border-slate-200 bg-white text-slate-600 hover:border-slate-400"
                             }`}
                           >

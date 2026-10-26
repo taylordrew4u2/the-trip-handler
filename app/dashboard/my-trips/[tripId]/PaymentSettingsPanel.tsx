@@ -13,7 +13,7 @@ type Settings = {
 };
 
 const inputCls =
-  "mt-1 block w-full min-w-0 px-3 min-h-[44px] rounded-xl border border-slate-300 text-sm text-slate-900 placeholder:text-slate-600 focus:outline-none focus:border-indigo-600";
+  "mt-1 block w-full min-w-0 px-3 min-h-[44px] rounded-xl border border-slate-300 text-sm text-slate-900 placeholder:text-slate-600 focus:outline-none focus:border-teal-700";
 
 export function PaymentSettingsPanel({ tripId, settings }: { tripId: string; settings: Settings }) {
   const [deposit, setDeposit] = useState(settings.depositAmount.toString());
@@ -100,7 +100,7 @@ export function PaymentSettingsPanel({ tripId, settings }: { tripId: string; set
         <button
           type="submit"
           disabled={isPending}
-          className="sm:col-span-3 inline-flex items-center justify-center px-4 min-h-[44px] rounded-xl bg-indigo-600 transition-colors hover:bg-indigo-700 text-white text-sm font-medium disabled:opacity-50"
+          className="sm:col-span-3 inline-flex items-center justify-center px-4 min-h-[44px] rounded-xl bg-teal-700 transition-colors hover:bg-teal-800 text-white text-sm font-medium disabled:opacity-50"
         >
           Save payment settings
         </button>
@@ -154,7 +154,7 @@ function Toggle({
         checked={checked}
         disabled={disabled}
         onChange={onChange}
-        className="accent-indigo-600 w-4 h-4 mt-1"
+        className="accent-teal-700 w-4 h-4 mt-1"
       />
       <span>
         <span className="block text-sm text-slate-900">{label}</span>

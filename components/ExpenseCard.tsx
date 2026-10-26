@@ -22,7 +22,7 @@ export function ExpenseCard({ expense, isAdmin, onApprove, onDelete }: ExpenseCa
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <h3 className="font-semibold text-slate-900 break-words">{expense.title}</h3>
-            <span className="text-xs px-2 py-0.5 rounded-lg bg-indigo-50 text-indigo-700">
+            <span className="text-xs px-2 py-0.5 rounded-lg bg-teal-50 text-teal-800">
               {expense.category}
             </span>
             {expense.approved ? (
@@ -53,7 +53,7 @@ export function ExpenseCard({ expense, isAdmin, onApprove, onDelete }: ExpenseCa
               {!expense.approved && onApprove && (
                 <button
                   onClick={() => onApprove(expense.id)}
-                  className="min-w-[44px] inline-flex items-center justify-center text-xs px-3 min-h-[44px] bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 active:bg-indigo-800"
+                  className="min-w-[44px] inline-flex items-center justify-center text-xs px-3 min-h-[44px] bg-teal-700 text-white rounded-lg hover:bg-teal-800 active:bg-teal-900"
                 >
                   Approve
                 </button>

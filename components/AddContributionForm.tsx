@@ -39,7 +39,7 @@ export function AddContributionForm({
     return (
       <button
         onClick={() => setOpen(true)}
-        className="min-w-[44px] inline-flex items-center justify-center px-4 min-h-[44px] bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 active:bg-indigo-800"
+        className="min-w-[44px] inline-flex items-center justify-center px-4 min-h-[44px] bg-teal-700 text-white rounded-lg text-sm font-medium hover:bg-teal-800 active:bg-teal-900"
       >
         + Add what you&apos;re bringing
       </button>
@@ -58,7 +58,7 @@ export function AddContributionForm({
               id={`${formId}-title`}
               name="title"
               required
-              className="w-full min-h-[44px] px-3 py-2.5 rounded-lg border border-slate-300 text-sm focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600/20"
+              className="w-full min-h-[44px] px-3 py-2.5 rounded-lg border border-slate-300 text-sm focus:outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20"
               placeholder="e.g. Bluetooth speaker"
             />
           </div>
@@ -67,7 +67,7 @@ export function AddContributionForm({
             <input
               id={`${formId}-category`}
               name="category"
-              className="w-full min-h-[44px] px-3 py-2.5 rounded-lg border border-slate-300 text-sm focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600/20"
+              className="w-full min-h-[44px] px-3 py-2.5 rounded-lg border border-slate-300 text-sm focus:outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20"
               placeholder="e.g. Gear"
             />
           </div>
@@ -77,7 +77,7 @@ export function AddContributionForm({
           <input
             id={`${formId}-description`}
             name="description"
-            className="w-full min-h-[44px] px-3 py-2.5 rounded-lg border border-slate-300 text-sm focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600/20"
+            className="w-full min-h-[44px] px-3 py-2.5 rounded-lg border border-slate-300 text-sm focus:outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20"
             placeholder="Optional details"
           />
         </div>
@@ -85,7 +85,7 @@ export function AddContributionForm({
           <button
             type="submit"
             disabled={submitting}
-            className="min-w-[44px] min-h-[44px] px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50"
+            className="min-w-[44px] min-h-[44px] px-4 py-2 bg-teal-700 text-white rounded-lg text-sm font-medium hover:bg-teal-800 disabled:opacity-50"
           >
             {submitting ? "Adding…" : "Add it"}
           </button>

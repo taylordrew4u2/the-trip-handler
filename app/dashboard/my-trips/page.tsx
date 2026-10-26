@@ -55,7 +55,7 @@ export default async function MyTripsPage() {
             Create a trip, share its invite link or join code, and approve who comes.
           </p>
         </div>
-        <span className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-indigo-100 bg-indigo-50 px-4 text-sm font-medium text-indigo-700">
+        <span className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-teal-100 bg-teal-50 px-4 text-sm font-medium text-teal-800">
           <span className="font-semibold">{trips.length}</span> trip{trips.length === 1 ? "" : "s"} created
         </span>
       </div>

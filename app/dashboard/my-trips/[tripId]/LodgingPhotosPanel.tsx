@@ -104,11 +104,11 @@ export function LodgingPhotosPanel({ tripId, photos }: { tripId: string; photos:
           setDragging(false);
           if (!busy) void upload(Array.from(e.dataTransfer.files));
         }}
-        className={`relative flex min-h-32 cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed px-4 py-6 text-center transition-colors has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-indigo-600 ${
-          dragging ? "border-indigo-500 bg-indigo-50" : "border-slate-300 bg-slate-50/60 hover:bg-slate-50"
+        className={`relative flex min-h-32 cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed px-4 py-6 text-center transition-colors has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-teal-700 ${
+          dragging ? "border-teal-600 bg-teal-50" : "border-slate-300 bg-slate-50/60 hover:bg-slate-50"
         } ${busy || room <= 0 ? "pointer-events-none opacity-60" : ""}`}
       >
-        <span className="text-base font-semibold text-indigo-700">
+        <span className="text-base font-semibold text-teal-800">
           {progress
             ? `Uploading ${Math.min(progress.done + 1, progress.total)} of ${progress.total}…`
             : room <= 0
@@ -121,7 +121,7 @@ export function LodgingPhotosPanel({ tripId, photos }: { tripId: string; photos:
         {progress && (
           <span className="mt-2 h-2 w-full max-w-xs overflow-hidden rounded-full bg-slate-200" aria-hidden>
             <span
-              className="block h-full bg-indigo-600 transition-all"
+              className="block h-full bg-teal-700 transition-all"
               style={{ width: `${(progress.done / progress.total) * 100}%` }}
             />
           </span>

@@ -42,7 +42,7 @@ export function ExpensesPanel({
             Approve what participants submit. {pending > 0 && `${pending} awaiting review.`}
           </p>
         </div>
-        <p className="rounded-xl border border-indigo-100 bg-indigo-50 px-4 py-3 text-sm text-slate-700 shrink-0">
+        <p className="rounded-xl border border-teal-100 bg-teal-50 px-4 py-3 text-sm text-slate-700 shrink-0">
           Approved total <span className="font-semibold text-slate-950">${totalExpenses.toFixed(2)}</span>
         </p>
       </div>
@@ -86,7 +86,7 @@ export function ExpensesPanel({
                     type="button"
                     disabled={isPending}
                     onClick={() => run(() => approveTripExpense(e.id))}
-                    className="inline-flex items-center justify-center shrink-0 px-3 min-h-[44px] rounded-xl bg-indigo-600 transition-colors hover:bg-indigo-700 active:bg-indigo-800 text-white text-xs font-medium disabled:opacity-50"
+                    className="inline-flex items-center justify-center shrink-0 px-3 min-h-[44px] rounded-xl bg-teal-700 transition-colors hover:bg-teal-800 active:bg-teal-900 text-white text-xs font-medium disabled:opacity-50"
                   >
                     Approve
                   </button>

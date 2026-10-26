@@ -23,7 +23,7 @@ export function UnlockFormButton({ userId, requested }: { userId: string; reques
           })
         }
         className={`inline-flex min-h-[44px] items-center justify-center rounded-xl px-4 text-sm font-medium disabled:opacity-50 ${
-          requested ? "bg-indigo-600 text-white hover:bg-indigo-700" : "border border-slate-300 text-slate-700 hover:bg-slate-50"
+          requested ? "bg-teal-700 text-white hover:bg-teal-800" : "border border-slate-300 text-slate-700 hover:bg-slate-50"
         }`}
       >
         {isPending ? "Unlocking…" : "Unlock for edits"}

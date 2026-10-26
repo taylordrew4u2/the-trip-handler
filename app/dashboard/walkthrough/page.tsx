@@ -60,7 +60,7 @@ export default function WalkthroughPage() {
   const isLast = index === STEPS.length - 1;
 
   return (
-    <div className="min-h-dvh bg-[#f6f7fb] flex flex-col">
+    <div className="min-h-dvh bg-[#faf8f3] flex flex-col">
       <header className="border-b border-slate-200 bg-white pt-safe">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 gutter">
           <Link href="/" aria-label="The Trip Handler home" className="flex min-h-11 min-w-0 items-center"><Brand /></Link>
@@ -70,14 +70,14 @@ export default function WalkthroughPage() {
         </div>
       </header>
 
-      <div className="mx-auto px-5 pt-3 text-sm"><Link href="/help" className="inline-flex min-h-11 items-center text-indigo-700 underline">Open Help &amp; FAQ</Link></div>
+      <div className="mx-auto px-5 pt-3 text-sm"><Link href="/help" className="inline-flex min-h-11 items-center text-teal-800 underline">Open Help &amp; FAQ</Link></div>
       <main className="flex-1 flex items-center justify-center gutter py-8 md:py-10 pb-safe">
         <div className="w-full min-w-0 max-w-2xl">
           <p className="mb-5 text-center text-sm font-medium text-slate-600">A quick tour of your trip, from the first invite to the final payment.</p>
           <div className="flex min-h-[23rem] flex-col rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8 md:p-10">
             <div className="mb-7 flex items-center justify-between gap-4">
-              <span aria-hidden="true" className="grid size-12 shrink-0 place-items-center rounded-2xl bg-indigo-50 text-sm font-semibold text-indigo-700">{String(index + 1).padStart(2, "0")}</span>
-              <p className="text-xs font-semibold uppercase tracking-[0.15em] text-indigo-700">{step.tag}</p>
+              <span aria-hidden="true" className="grid size-12 shrink-0 place-items-center rounded-2xl bg-teal-50 text-sm font-semibold text-teal-800">{String(index + 1).padStart(2, "0")}</span>
+              <p className="text-xs font-semibold uppercase tracking-[0.15em] text-teal-800">{step.tag}</p>
             </div>
             <h1 className="font-serif text-3xl font-medium leading-tight tracking-tight text-slate-950 text-balance sm:text-4xl">
               {step.title}
@@ -90,7 +90,7 @@ export default function WalkthroughPage() {
                 <span
                   key={i}
                   className={`h-1.5 flex-1 rounded-full transition-colors ${
-                    i <= index ? "bg-indigo-600" : "bg-slate-200"
+                    i <= index ? "bg-teal-700" : "bg-slate-200"
                   }`}
                 />
               ))}
@@ -122,7 +122,7 @@ export default function WalkthroughPage() {
                 </Link>
                 <Link
                   href="/dashboard/my-trips"
-                  className="inline-flex items-center justify-center px-3 sm:px-4 min-h-[44px] rounded-xl bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-sm font-medium whitespace-nowrap"
+                  className="inline-flex items-center justify-center px-3 sm:px-4 min-h-[44px] rounded-xl bg-teal-700 hover:bg-teal-800 active:bg-teal-900 text-white text-sm font-medium whitespace-nowrap"
                 >
                   Create a trip →
                 </Link>
@@ -131,7 +131,7 @@ export default function WalkthroughPage() {
               <button
                 type="button"
                 onClick={() => setIndex((i) => Math.min(STEPS.length - 1, i + 1))}
-                className="inline-flex items-center justify-center px-4 min-h-[44px] rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium"
+                className="inline-flex items-center justify-center px-4 min-h-[44px] rounded-xl bg-teal-700 hover:bg-teal-800 text-white text-sm font-medium"
               >
                 Next →
               </button>

@@ -51,19 +51,19 @@ export function ContributionsPanel({ tripId, items }: { tripId: string; items: I
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Item to bring"
-          className="min-w-0 px-3 min-h-[44px] rounded-xl border border-slate-300 text-sm text-slate-900 placeholder:text-slate-600 focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600"
+          className="min-w-0 px-3 min-h-[44px] rounded-xl border border-slate-300 text-sm text-slate-900 placeholder:text-slate-600 focus:outline-none focus:border-teal-700 focus:ring-1 focus:ring-teal-700"
         />
         <input
           aria-label="Category"
           value={category}
           onChange={(e) => setCategory(e.target.value)}
           placeholder="Category"
-          className="min-w-0 px-3 min-h-[44px] rounded-xl border border-slate-300 text-sm text-slate-900 placeholder:text-slate-600 focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600"
+          className="min-w-0 px-3 min-h-[44px] rounded-xl border border-slate-300 text-sm text-slate-900 placeholder:text-slate-600 focus:outline-none focus:border-teal-700 focus:ring-1 focus:ring-teal-700"
         />
         <button
           type="submit"
           disabled={isPending || !title.trim()}
-          className="inline-flex items-center justify-center px-4 min-h-[44px] rounded-xl bg-indigo-600 transition-colors hover:bg-indigo-700 active:bg-indigo-800 text-white text-sm font-medium disabled:opacity-50"
+          className="inline-flex items-center justify-center px-4 min-h-[44px] rounded-xl bg-teal-700 transition-colors hover:bg-teal-800 active:bg-teal-900 text-white text-sm font-medium disabled:opacity-50"
         >
           Add
         </button>

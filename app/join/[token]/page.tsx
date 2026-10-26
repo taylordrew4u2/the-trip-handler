@@ -30,7 +30,7 @@ export default async function JoinPage({ params }: { params: Promise<{ token: st
       >
         <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm sm:p-8">
           <p className="mb-6 text-sm leading-6 text-slate-600">Sign in to see the trips you&apos;re already part of.</p>
-          <Link href="/login" className="inline-flex min-h-12 items-center justify-center rounded-xl bg-indigo-600 px-6 text-sm font-semibold text-white transition-colors hover:bg-indigo-700">
+          <Link href="/login" className="inline-flex min-h-12 items-center justify-center rounded-xl bg-teal-700 px-6 text-sm font-semibold text-white transition-colors hover:bg-teal-800">
             Sign in
           </Link>
         </div>
@@ -48,7 +48,7 @@ export default async function JoinPage({ params }: { params: Promise<{ token: st
       title={trip.name}
       description={
         <>
-          <p className="text-sm font-medium text-indigo-700">
+          <p className="text-sm font-medium text-teal-800">
             {[trip.destination, dateLabel(trip.startDate, trip.endDate)].filter(Boolean).join(" · ")}
           </p>
           {trip.description && (

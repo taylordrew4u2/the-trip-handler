@@ -87,7 +87,7 @@ function SwitchList({
                 disabled={disabled}
                 onChange={() => onToggle(item.section)}
                 aria-label={`Turn ${item.label} ${on ? "off" : "on"}`}
-                className="accent-indigo-600 w-4 h-4"
+                className="accent-teal-700 w-4 h-4"
               />
             </label>
           </li>

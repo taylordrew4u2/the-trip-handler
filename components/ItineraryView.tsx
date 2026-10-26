@@ -92,7 +92,7 @@ function DaySection({
   return (
     <section className="min-w-0">
       <header className="mb-4">
-        <p className="inline-flex rounded-full bg-indigo-50 px-3 py-1 text-xs font-medium uppercase tracking-[0.12em] text-indigo-700">
+        <p className="inline-flex rounded-full bg-teal-50 px-3 py-1 text-xs font-medium uppercase tracking-[0.12em] text-teal-800">
           Day {day.dayNumber}
           {dateStr && ` · ${dateStr}`}
         </p>
@@ -248,7 +248,7 @@ function CommentsThread({
           onChange={(e) => setDraft(e.target.value)}
           rows={2}
           placeholder="Add a comment…"
-          className="w-full min-h-[44px] px-3 py-2.5 rounded-lg border border-slate-300 bg-white text-sm focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600/20 resize-none"
+          className="w-full min-h-[44px] px-3 py-2.5 rounded-lg border border-slate-300 bg-white text-sm focus:outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20 resize-none"
           disabled={busy}
         />
         {error && <p className="text-xs text-red-600">{error}</p>}
@@ -256,7 +256,7 @@ function CommentsThread({
           <button
             type="submit"
             disabled={busy || !draft.trim()}
-            className="min-w-[44px] inline-flex items-center justify-center text-xs px-3 min-h-[44px] bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-40"
+            className="min-w-[44px] inline-flex items-center justify-center text-xs px-3 min-h-[44px] bg-teal-700 text-white rounded-lg font-medium hover:bg-teal-800 disabled:opacity-40"
           >
             {busy ? "Posting…" : "Post comment"}
           </button>
@@ -352,14 +352,14 @@ function CommentRow({
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             rows={2}
-            className="w-full px-2 py-1.5 rounded-lg border border-slate-300 bg-white text-sm focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600/20 resize-none"
+            className="w-full px-2 py-1.5 rounded-lg border border-slate-300 bg-white text-sm focus:outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20 resize-none"
           />
           {error && <p className="text-xs text-red-600">{error}</p>}
           <div className="flex gap-2">
             <button
               onClick={save}
               disabled={busy || !draft.trim()}
-              className="min-w-[44px] min-h-[44px] text-xs px-2 py-1 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-40"
+              className="min-w-[44px] min-h-[44px] text-xs px-2 py-1 bg-teal-700 text-white rounded-lg hover:bg-teal-800 disabled:opacity-40"
             >
               Save
             </button>

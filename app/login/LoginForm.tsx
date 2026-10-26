@@ -58,7 +58,7 @@ export function LoginForm() {
             autoCorrect="off"
             spellCheck={false}
             enterKeyHint="next"
-            className="min-h-12 w-full min-w-0 rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-600 focus:border-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-600/15"
+            className="min-h-12 w-full min-w-0 rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-600 focus:border-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-700/15"
             placeholder="you@example.com"
           />
         </div>
@@ -72,14 +72,14 @@ export function LoginForm() {
             required
             autoComplete="current-password"
             enterKeyHint="go"
-            className="min-h-12 w-full min-w-0 rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-600 focus:border-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-600/15"
+            className="min-h-12 w-full min-w-0 rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-600 focus:border-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-700/15"
             placeholder="••••••••"
           />
         </div>
         <button
           type="submit"
           disabled={loading}
-          className="inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700 active:bg-indigo-800 disabled:opacity-50"
+          className="inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-teal-700 px-4 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-teal-800 active:bg-teal-900 disabled:opacity-50"
         >
           {loading ? "Signing in…" : "Sign in"}
         </button>

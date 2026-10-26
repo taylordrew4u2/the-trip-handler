@@ -10,8 +10,8 @@ export default function manifest(): MetadataRoute.Manifest {
       "Plan group trips end to end — invites, lodging, meals, itinerary, expenses, and payments.",
     start_url: "/",
     display: "standalone",
-    background_color: "#fafaf9",
-    theme_color: "#1c1917",
+    background_color: "#faf8f3",
+    theme_color: "#faf8f3",
     icons: [
       { src: "/icon", sizes: "512x512", type: "image/png", purpose: "any" },
       { src: "/apple-icon", sizes: "180x180", type: "image/png" },

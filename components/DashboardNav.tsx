@@ -88,8 +88,8 @@ export function DashboardNav({
                   const active = isActiveNavItem(item, pathname);
                   return (
                     <li key={item.href}>
-                      <Link href={item.href} aria-current={active ? "page" : undefined} className={`flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-medium transition-colors ${active ? "bg-indigo-50 text-indigo-700" : "text-slate-700 hover:bg-slate-50 hover:text-slate-950"}`}>
-                        <span aria-hidden="true" className={`h-5 w-1 rounded-full ${active ? "bg-indigo-600" : "bg-slate-200"}`} />
+                      <Link href={item.href} aria-current={active ? "page" : undefined} className={`flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-medium transition-colors ${active ? "bg-teal-50 text-teal-800" : "text-slate-700 hover:bg-slate-50 hover:text-slate-950"}`}>
+                        <span aria-hidden="true" className={`h-5 w-1 rounded-full ${active ? "bg-teal-700" : "bg-slate-200"}`} />
                         {item.label}
                       </Link>
                     </li>
@@ -114,7 +114,7 @@ export function DashboardNav({
                       const active = isActiveNavItem(item, pathname);
                       return (
                         <li key={item.href}>
-                          <Link href={item.href} aria-current={active ? "page" : undefined} className={`flex min-h-11 items-center rounded-xl px-3 text-sm font-medium transition-colors ${active ? "bg-indigo-50 text-indigo-700" : "text-slate-700 hover:bg-slate-50 active:bg-slate-100"}`}>
+                          <Link href={item.href} aria-current={active ? "page" : undefined} className={`flex min-h-11 items-center rounded-xl px-3 text-sm font-medium transition-colors ${active ? "bg-teal-50 text-teal-800" : "text-slate-700 hover:bg-slate-50 active:bg-slate-100"}`}>
                             {item.label}
                           </Link>
                         </li>

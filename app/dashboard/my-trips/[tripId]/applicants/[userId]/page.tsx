@@ -48,7 +48,7 @@ export default async function ApplicantAnswersPage({
       <div>
         <Link
           href="/dashboard/my-trips"
-          className="inline-flex items-center min-h-[44px] -ml-1 px-1 text-sm font-medium text-slate-600 hover:text-indigo-700"
+          className="inline-flex items-center min-h-[44px] -ml-1 px-1 text-sm font-medium text-slate-600 hover:text-teal-800"
         >
           ← My trips
         </Link>

@@ -44,7 +44,7 @@ export function RosterSettingsPanel({ tripId, capacity }: { tripId: string; capa
           />
         </label>
         <button type="submit" disabled={pending}
-          className="min-h-[44px] rounded-xl bg-indigo-600 px-4 text-sm font-medium text-white disabled:opacity-50">
+          className="min-h-[44px] rounded-xl bg-teal-700 px-4 text-sm font-medium text-white disabled:opacity-50">
           {pending ? "Saving…" : "Save roster spots"}
         </button>
       </form>

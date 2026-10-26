@@ -19,17 +19,17 @@ export default async function StartPage() {
       : null;
 
   return (
-    <div className="min-h-dvh bg-[#f6f7fb] text-slate-900">
+    <div className="min-h-dvh bg-[#faf8f3] text-slate-900">
       <header className="border-b border-slate-200 bg-white pt-safe">
         <div className="mx-auto flex min-h-16 flex-wrap py-2 max-w-6xl items-center justify-between gap-3 gutter">
           <Link href="/" aria-label="The Trip Handler home" className="flex min-h-11 min-w-0 items-center"><Brand /></Link>
-          <div className="flex items-center gap-3 text-sm"><Link href="/help" className="inline-flex min-h-11 items-center text-indigo-700 underline">Help &amp; FAQ</Link><SignOutLink /></div>
+          <div className="flex items-center gap-3 text-sm"><Link href="/help" className="inline-flex min-h-11 items-center text-teal-800 underline">Help &amp; FAQ</Link><SignOutLink /></div>
         </div>
       </header>
 
       <main className="mx-auto max-w-4xl gutter py-10 md:py-16">
         <div className="mb-8 md:mb-10">
-          <p className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-indigo-700">
+          <p className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-teal-800">
             {firstName ? `Welcome, ${firstName}` : "Welcome"}
           </p>
           <h1 className="font-serif text-4xl font-medium leading-tight tracking-tight text-slate-950 text-balance md:text-5xl">
@@ -45,9 +45,9 @@ export default async function StartPage() {
           {/* Create a trip */}
           <Link
             href="/dashboard/my-trips"
-            className="group min-w-0 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:border-indigo-300 hover:shadow-md active:border-indigo-600 sm:p-7"
+            className="group min-w-0 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:border-teal-300 hover:shadow-md active:border-teal-700 sm:p-7"
           >
-            <span className="mb-6 grid size-12 place-items-center rounded-2xl bg-indigo-50 text-xl text-indigo-700" aria-hidden>
+            <span className="mb-6 grid size-12 place-items-center rounded-2xl bg-teal-50 text-xl text-teal-800" aria-hidden>
               ✦
             </span>
             <div className="min-w-0">
@@ -56,7 +56,7 @@ export default async function StartPage() {
                 You&apos;re the one making the plan. Name a trip, get a shareable link and code, and
                 approve who comes.
               </p>
-              <p className="mt-6 text-sm font-semibold text-indigo-700 group-hover:underline">
+              <p className="mt-6 text-sm font-semibold text-teal-800 group-hover:underline">
                 Start a trip →
               </p>
             </div>
@@ -65,9 +65,9 @@ export default async function StartPage() {
           {/* Walkthrough */}
           <Link
             href="/dashboard/walkthrough"
-            className="group min-w-0 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:border-indigo-300 hover:shadow-md active:border-indigo-600 sm:p-7"
+            className="group min-w-0 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:border-teal-300 hover:shadow-md active:border-teal-700 sm:p-7"
           >
-            <span className="mb-6 grid size-12 place-items-center rounded-2xl bg-indigo-50 text-xl text-indigo-700" aria-hidden>
+            <span className="mb-6 grid size-12 place-items-center rounded-2xl bg-teal-50 text-xl text-teal-800" aria-hidden>
               ☞
             </span>
             <div className="min-w-0">
@@ -76,7 +76,7 @@ export default async function StartPage() {
                 New here? A quick tour of everything the app handles — intake, approvals, lodging,
                 meals, pricing, and payment.
               </p>
-              <p className="mt-6 text-sm font-semibold text-indigo-700 group-hover:underline">
+              <p className="mt-6 text-sm font-semibold text-teal-800 group-hover:underline">
                 See how it works →
               </p>
             </div>
@@ -85,7 +85,7 @@ export default async function StartPage() {
           {/* Find a trip by code */}
           <div className="min-w-0 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:col-span-2 sm:p-7">
             <div className="flex items-start gap-3 sm:gap-4">
-              <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-indigo-50 text-2xl text-indigo-700" aria-hidden>
+              <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-teal-50 text-2xl text-teal-800" aria-hidden>
                 ⌕
               </span>
               <div className="min-w-0 flex-1">
