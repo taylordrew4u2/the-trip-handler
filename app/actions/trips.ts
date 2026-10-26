@@ -292,10 +292,23 @@ export async function joinMyTripAsGuest(tripId: string) {
   const trip = await ownedTrip(tripId, userId);
   if (!trip) return { error: "Not your trip." };
   const me = await prisma.user.findUnique({ where: { id: userId }, select: { tripId: true, status: true } });
-  if (me?.tripId && me.tripId !== tripId && me.status !== "CANCELLED") {
+  if (!me) return { error: "Account not found." };
+  // A repeated click or a stale management tab must not downgrade a paid guest.
+  if (me.tripId === tripId && me.status !== "CANCELLED") {
+    revalidatePath("/dashboard", "layout");
+    return { success: true };
+  }
+  if (me.tripId && me.tripId !== tripId && me.status !== "CANCELLED") {
     return { error: "You're on another trip as a guest. Leave it first." };
   }
-  if (me?.tripId !== tripId) await resetForNewTrip(userId);
+  if (me.tripId !== tripId) {
+    // Bills follow the member row, so old-trip money cannot follow them here.
+    const paid = await prisma.payment.count({ where: { userId, status: "COMPLETED" } });
+    if (paid > 0) {
+      return { error: "You paid for your previous trip. Ask that organizer for a refund before joining another." };
+    }
+    await resetForNewTrip(userId);
+  }
   await prisma.user.update({
     where: { id: userId },
     data: { tripId, status: trip.isLocked ? "PENDING_PAYMENT" : "APPROVED" },

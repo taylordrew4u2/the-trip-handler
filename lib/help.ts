@@ -50,7 +50,7 @@ export const HELP_SECTIONS = [
       { question: "Can I add or remove questions?", answer: "Yes. Add a short answer, long answer, single choice, agreement checkbox, or multiple choice question. New questions can be removed; existing questions can be hidden or restored. Use Move up or Move down to change their order, then Save questions." },
       { question: "Will edits change answers already submitted?", answer: "No. Each new submission saves its question wording and answers together. Changing the form does not rewrite a submitted answer or reopen a locked form. Older forms submitted before the editor was introduced keep their existing answers." },
       { question: "How do I unlock someone’s form?", answer: "Open their application’s answers page and use the unlock button. They can then make changes and resubmit. Editing the questions for your trip does not unlock individual forms." },
-      { question: "Does the roster automatically stop approvals when full?", answer: "No. Roster spots control the displayed total and open places. You still choose who to approve. If you reduce the number below the current group size, approved members remain visible." },
+      { question: "Does the roster automatically stop approvals when full?", answer: "Yes. Once the approved group reaches the number of roster spots, you must add more spots before approving another guest. You still choose who to approve. Reducing the number does not remove existing guests. Roster spots and the cost split remain separate." },
       { question: "How do I change the cost split?", answer: "Use Split costs between in Pricing and save it before locking costs. Unlock the trip first if prices are already locked. Changing roster spots does not change the split." },
     ],
   },

@@ -55,6 +55,7 @@ const paidSession = (over: Partial<Stripe.Checkout.Session> = {}) =>
 beforeEach(() => {
   vi.clearAllMocks();
   process.env.NEXT_PUBLIC_APP_URL = "https://example.com";
+  p.payment.updateMany.mockResolvedValue({ count: 1 });
 });
 
 describe("recording a card payment", () => {
@@ -62,7 +63,12 @@ describe("recording a card payment", () => {
     p.user.findUnique.mockResolvedValue({ status: "PENDING_PAYMENT" });
     bill.mockResolvedValue({ remaining: 0 });
     await settleCheckoutSession(paidSession());
-    expect(p.payment.upsert.mock.calls[0][0].update.amount).toBe(500);
+    expect(p.payment.upsert.mock.calls[0][0].create.amount).toBe(500);
+    expect(p.payment.upsert.mock.calls[0][0].update).toEqual({});
+    expect(p.payment.updateMany).toHaveBeenCalledWith({
+      where: { stripeSessionId: "cs_1", userId: "u1", status: { not: "REFUNDED" } },
+      data: { amount: 500, stripePaymentId: "pi_1", status: "COMPLETED" },
+    });
     expect(p.user.update).toHaveBeenCalledWith({ where: { id: "u1" }, data: { status: "CONFIRMED_PAID" } });
   });
 
@@ -78,6 +84,13 @@ describe("recording a card payment", () => {
     bill.mockResolvedValue({ remaining: 0 });
     await settleCheckoutSession(paidSession());
     expect(p.user.update).not.toHaveBeenCalled();
+  });
+
+  it("does not re-confirm a refunded payment on a replay or concurrent refund", async () => {
+    p.payment.updateMany.mockResolvedValue({ count: 0 });
+    await settleCheckoutSession(paidSession());
+    expect(p.user.update).not.toHaveBeenCalled();
+    expect(bill).not.toHaveBeenCalled();
   });
 
   it("marks an expired checkout failed and records nothing", async () => {
