@@ -54,7 +54,7 @@ function InviteLink({ token }: { token: string }) {
         type="button"
         onClick={copy}
         aria-live="polite"
-        className="inline-flex items-center justify-center px-3 min-h-[44px] rounded-xl bg-indigo-600 transition-colors hover:bg-indigo-700 active:bg-indigo-800 text-white text-sm sm:text-xs font-medium whitespace-nowrap"
+        className="inline-flex items-center justify-center px-3 min-h-[44px] rounded-xl bg-teal-700 transition-colors hover:bg-teal-800 active:bg-teal-900 text-white text-sm sm:text-xs font-medium whitespace-nowrap"
       >
         {copied ? "Copied" : "Copy link"}
       </button>
@@ -99,14 +99,14 @@ function JoinCode({
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <code className="inline-flex max-w-full items-center min-h-[44px] break-all text-base font-mono tracking-widest bg-indigo-50 border border-indigo-100 rounded-xl px-3 text-indigo-700">
+      <code className="inline-flex max-w-full items-center min-h-[44px] break-all text-base font-mono tracking-widest bg-teal-50 border border-teal-100 rounded-xl px-3 text-teal-800">
         {code}
       </code>
       <button
         type="button"
         onClick={copy}
         aria-live="polite"
-        className="inline-flex items-center justify-center px-3 min-h-[44px] rounded-xl bg-indigo-600 transition-colors hover:bg-indigo-700 active:bg-indigo-800 text-white text-sm sm:text-xs font-medium whitespace-nowrap"
+        className="inline-flex items-center justify-center px-3 min-h-[44px] rounded-xl bg-teal-700 transition-colors hover:bg-teal-800 active:bg-teal-900 text-white text-sm sm:text-xs font-medium whitespace-nowrap"
       >
         {copied ? "Copied" : "Copy code"}
       </button>
@@ -177,12 +177,12 @@ export function MyTripsClient({ trips }: { trips: TripData[] }) {
             placeholder="e.g. Cabin weekend in Tahoe"
             enterKeyHint="go"
             autoComplete="off"
-            className="flex-1 min-w-0 px-3 min-h-[44px] rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-600 focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 text-sm"
+            className="flex-1 min-w-0 px-3 min-h-[44px] rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-600 focus:outline-none focus:border-teal-700 focus:ring-1 focus:ring-teal-700 text-sm"
           />
           <button
             type="submit"
             disabled={isPending || !name.trim()}
-            className="inline-flex items-center justify-center px-4 min-h-[44px] rounded-xl bg-indigo-600 transition-colors hover:bg-indigo-700 active:bg-indigo-800 text-white text-sm font-medium disabled:opacity-50 whitespace-nowrap"
+            className="inline-flex items-center justify-center px-4 min-h-[44px] rounded-xl bg-teal-700 transition-colors hover:bg-teal-800 active:bg-teal-900 text-white text-sm font-medium disabled:opacity-50 whitespace-nowrap"
           >
             {isPending ? "Creating…" : "Create trip"}
           </button>
@@ -203,7 +203,7 @@ export function MyTripsClient({ trips }: { trips: TripData[] }) {
                   <p className="text-xs text-slate-600 mt-1 flex flex-wrap items-center gap-x-1">
                     {trip.applicants.length} applicant{trip.applicants.length === 1 ? "" : "s"}
                     {" · "}
-                    <Link href={`/dashboard/my-trips/${trip.id}`} className="inline-flex min-h-[44px] items-center font-medium text-indigo-700 underline underline-offset-4 hover:text-indigo-800">
+                    <Link href={`/dashboard/my-trips/${trip.id}`} className="inline-flex min-h-[44px] items-center font-medium text-teal-800 underline underline-offset-4 hover:text-teal-900">
                       Edit details
                     </Link>
                     {trip.paymentsToReview > 0 && (
@@ -226,7 +226,7 @@ export function MyTripsClient({ trips }: { trips: TripData[] }) {
                     onChange={(e) =>
                       run(() => setMyTripApplicationOpen(trip.id, e.target.checked))
                     }
-                    className="accent-indigo-600 w-4 h-4"
+                    className="accent-teal-700 w-4 h-4"
                   />
                   Accepting applications
                 </label>
@@ -296,7 +296,7 @@ export function MyTripsClient({ trips }: { trips: TripData[] }) {
                                 type="button"
                                 disabled={isPending}
                                 onClick={() => run(() => approveTripApplicant(a.id))}
-                                className="flex-1 sm:flex-none inline-flex items-center justify-center px-3 min-h-[44px] rounded-xl bg-indigo-600 transition-colors hover:bg-indigo-700 active:bg-indigo-800 text-white text-xs font-medium disabled:opacity-50"
+                                className="flex-1 sm:flex-none inline-flex items-center justify-center px-3 min-h-[44px] rounded-xl bg-teal-700 transition-colors hover:bg-teal-800 active:bg-teal-900 text-white text-xs font-medium disabled:opacity-50"
                               >
                                 Approve
                               </button>

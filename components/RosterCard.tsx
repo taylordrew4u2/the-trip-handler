@@ -35,7 +35,7 @@ export function RosterCard({ user }: RosterCardProps) {
               className="w-12 h-12 sm:w-14 sm:h-14 rounded-full object-cover border border-slate-300"
             />
           ) : (
-            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-indigo-50 text-indigo-700 flex items-center justify-center font-semibold text-base sm:text-lg border border-indigo-100">
+            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-teal-50 text-teal-800 flex items-center justify-center font-semibold text-base sm:text-lg border border-teal-100">
               {initials}
             </div>
           )}
@@ -54,7 +54,7 @@ export function RosterCard({ user }: RosterCardProps) {
               {user.contributions.map((uc, i) => (
                 <span
                   key={i}
-                  className="inline-flex max-w-full items-center break-words px-2.5 py-1 rounded-lg text-xs bg-indigo-50 text-indigo-700"
+                  className="inline-flex max-w-full items-center break-words px-2.5 py-1 rounded-lg text-xs bg-teal-50 text-teal-800"
                 >
                   {uc.contribution.title}
                 </span>

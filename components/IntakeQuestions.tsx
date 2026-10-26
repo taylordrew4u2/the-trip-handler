@@ -3,7 +3,7 @@
 import { useId } from "react";
 import type { IntakeQuestion, IntakeAnswers } from "@/lib/intakeQuestions";
 
-const control = "min-h-12 w-full min-w-0 rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-600/15";
+const control = "min-h-12 w-full min-w-0 rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-700/15";
 
 export function IntakeQuestionField({ question: q, value }: { question: IntakeQuestion; value?: IntakeAnswers[string] }) {
   const id = useId();
@@ -20,7 +20,7 @@ export function IntakeQuestionField({ question: q, value }: { question: IntakeQu
           <input type={q.type === "radio" ? "radio" : "checkbox"} name={q.type === "checks" ? `${q.id}[]` : q.id}
             value={option.value} defaultChecked={q.type === "radio" ? value === option.value : selected.includes(option.value)}
             required={q.type === "radio" ? q.required && i === 0 : q.required && ["jokeProtectionAcks", "securityDepositAcks", "houseRulesAcks"].includes(q.id)}
-            className="mt-1 h-4 w-4 shrink-0 accent-indigo-600" />
+            className="mt-1 h-4 w-4 shrink-0 accent-teal-700" />
           <span>{option.label}</span>
         </label>)}
       </div>
@@ -28,7 +28,7 @@ export function IntakeQuestionField({ question: q, value }: { question: IntakeQu
   }
   if (q.type === "checkbox") return <div>
     <label htmlFor={id} className="flex min-h-11 items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm leading-6 text-slate-800">
-      <input id={id} aria-describedby={help} type="checkbox" name={q.id} defaultChecked={value === true} required={q.required} className="mt-1 h-4 w-4 shrink-0 accent-indigo-600" />
+      <input id={id} aria-describedby={help} type="checkbox" name={q.id} defaultChecked={value === true} required={q.required} className="mt-1 h-4 w-4 shrink-0 accent-teal-700" />
       <span>{label}</span>
     </label>{hint}
   </div>;

@@ -35,7 +35,7 @@ export default async function MemberLayout({ children }: { children: React.React
 
   if (sessionUser.status === "CANCELLED") {
     return (
-      <div className="min-h-dvh bg-[#f6f7fb] flex items-center justify-center gutter py-10">
+      <div className="min-h-dvh bg-[#faf8f3] flex items-center justify-center gutter py-10">
         <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 max-w-md text-center">
           <p className="text-xs uppercase tracking-[0.2em] text-slate-600 mb-3">Cancelled</p>
           <h2 className="font-serif text-2xl font-medium text-slate-900 mb-3">You&apos;re not on the trip</h2>
@@ -45,7 +45,7 @@ export default async function MemberLayout({ children }: { children: React.React
           </p>
           <a
             href="/dashboard/start"
-            className="inline-flex items-center justify-center mt-6 px-4 min-h-[44px] bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium"
+            className="inline-flex items-center justify-center mt-6 px-4 min-h-[44px] bg-teal-700 hover:bg-teal-800 text-white rounded-lg text-sm font-medium"
           >
             Find another trip →
           </a>
@@ -60,18 +60,18 @@ export default async function MemberLayout({ children }: { children: React.React
   const ownerTripId = membership.trip?.ownerId === sessionUser.id ? membership.tripId : null;
 
   return (
-    <div className="min-h-dvh bg-[#f6f7fb]">
+    <div className="min-h-dvh bg-[#faf8f3]">
       <DashboardNav status={sessionUser.status ?? null} disabledSections={membership.trip?.disabledSections ?? []} />
       <div className="2xl:pl-60">
       <main className="max-w-6xl mx-auto gutter py-8 md:py-10">
         {ownerTripId && (
-          <div className="mb-6 flex flex-col gap-2 rounded-2xl border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
-            <span className="text-indigo-900">
+          <div className="mb-6 flex flex-col gap-2 rounded-2xl border border-teal-200 bg-teal-50 px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+            <span className="text-teal-950">
               <strong>Guest view.</strong> You&apos;re seeing exactly what your guests see.
             </span>
             <a
               href={`/dashboard/my-trips/${ownerTripId}`}
-              className="inline-flex items-center justify-center min-h-[44px] rounded-xl bg-indigo-600 px-4 font-medium text-white hover:bg-indigo-700"
+              className="inline-flex items-center justify-center min-h-[44px] rounded-xl bg-teal-700 px-4 font-medium text-white hover:bg-teal-800"
             >
               Back to managing →
             </a>

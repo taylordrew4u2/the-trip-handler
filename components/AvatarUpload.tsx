@@ -44,7 +44,7 @@ export function AvatarUpload({ userId, currentUrl, name }: AvatarUploadProps) {
       <button
         aria-label={`Change profile photo for ${name}`}
         onClick={() => fileRef.current?.click()}
-        className="min-w-[44px] min-h-[44px] relative group rounded-full focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-indigo-600"
+        className="min-w-[44px] min-h-[44px] relative group rounded-full focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-teal-700"
         type="button"
       >
         {preview ? (
@@ -55,7 +55,7 @@ export function AvatarUpload({ userId, currentUrl, name }: AvatarUploadProps) {
             className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-sm ring-1 ring-slate-200"
           />
         ) : (
-          <div className="w-24 h-24 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-700 font-semibold text-2xl border-4 border-white shadow-sm ring-1 ring-slate-200">
+          <div className="w-24 h-24 rounded-full bg-teal-50 flex items-center justify-center text-teal-800 font-semibold text-2xl border-4 border-white shadow-sm ring-1 ring-slate-200">
             {initials}
           </div>
         )}

@@ -44,7 +44,7 @@ export function IntakeEditor({ tripId, initial, defaults, off, deposit }: { trip
   const librarySections = [...new Set(library.map(q => q.section))];
 
   return <div className="space-y-5">
-    <div className="rounded-2xl border border-indigo-200 bg-indigo-50 p-5 text-sm leading-6 text-indigo-950">
+    <div className="rounded-2xl border border-teal-200 bg-teal-50 p-5 text-sm leading-6 text-teal-950">
       <p><strong>How it works:</strong> your form only asks what you add. Pick questions from the suggestions below or write your own. For choice questions, set how many choices there are and word each one.</p>
       <p className="mt-2">Name and phone number always stay on the form so applications can be identified. Use {"{deposit}"} in text to show the trip’s current deposit amount. <Link href="/help#organizers" className="inline-flex min-h-11 items-center font-semibold underline">Organizer help</Link></p>
     </div>
@@ -60,7 +60,7 @@ export function IntakeEditor({ tripId, initial, defaults, off, deposit }: { trip
             else { setSaved(true); setDirty(false); }
           } catch { setError("Your questions were not saved. Please try again."); }
         });
-      }} className="min-h-11 rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white disabled:opacity-50">{pending ? "Saving…" : "Save questions"}</button>
+      }} className="min-h-11 rounded-xl bg-teal-700 px-4 text-sm font-semibold text-white disabled:opacity-50">{pending ? "Saving…" : "Save questions"}</button>
       <button type="button" onClick={() => setPreview(!preview)} className={button}>{preview ? "Back to editing" : "Preview guest form"}</button>
       <span className="text-sm text-slate-600">{visibleQuestions(questions, off).length} questions on the form · {dirty ? "Unsaved changes" : "No unsaved changes"}</span>
       {saved && <p role="status" className="w-full text-sm text-green-800">Questions saved. New submissions will use these questions.</p>}

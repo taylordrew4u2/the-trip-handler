@@ -154,7 +154,7 @@ function MemberRow({
           onChange={(e) => setAdj(e.target.value)}
           placeholder="± $"
           disabled={disabled || isPaid}
-          className="min-w-0 px-3 min-h-[44px] rounded-xl border border-slate-300 text-sm text-slate-900 bg-white placeholder:text-slate-600 focus:outline-none focus:border-indigo-600 disabled:bg-slate-100"
+          className="min-w-0 px-3 min-h-[44px] rounded-xl border border-slate-300 text-sm text-slate-900 bg-white placeholder:text-slate-600 focus:outline-none focus:border-teal-700 disabled:bg-slate-100"
         />
         <input
           aria-label={`Reason (only you see this) for ${m.name}`}
@@ -163,7 +163,7 @@ function MemberRow({
           placeholder="Reason — only you see this"
           maxLength={200}
           disabled={disabled || isPaid}
-          className="min-w-0 px-3 min-h-[44px] rounded-xl border border-slate-300 text-sm text-slate-900 bg-white placeholder:text-slate-600 focus:outline-none focus:border-indigo-600 disabled:bg-slate-100"
+          className="min-w-0 px-3 min-h-[44px] rounded-xl border border-slate-300 text-sm text-slate-900 bg-white placeholder:text-slate-600 focus:outline-none focus:border-teal-700 disabled:bg-slate-100"
         />
         <button
           type="submit"
@@ -191,7 +191,7 @@ function MemberRow({
                     href={p.receiptUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="ml-2 text-xs font-medium text-indigo-700 underline underline-offset-2"
+                    className="ml-2 text-xs font-medium text-teal-800 underline underline-offset-2"
                   >
                     View receipt
                   </a>

@@ -9,7 +9,7 @@ export function AuthShell({ eyebrow, title, description, children }: {
   children: ReactNode;
 }) {
   return (
-    <div className="min-h-dvh bg-[#f6f7fb] text-slate-900 pb-safe">
+    <div className="min-h-dvh bg-[#faf8f3] text-slate-900 pb-safe">
       <header className="border-b border-slate-200/80 bg-white pt-safe">
         <div className="mx-auto flex min-h-16 max-w-6xl items-center justify-between gap-3 gutter">
           <Link href="/" className="flex min-h-11 min-w-0 items-center" aria-label="The Trip Handler home">
@@ -23,7 +23,7 @@ export function AuthShell({ eyebrow, title, description, children }: {
 
       <main className="mx-auto grid w-full max-w-6xl gap-8 gutter py-10 sm:py-14 lg:grid-cols-[1fr_0.9fr] lg:items-center lg:gap-20 lg:py-20">
         <div className="min-w-0">
-          <p className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-indigo-700">{eyebrow}</p>
+          <p className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-teal-800">{eyebrow}</p>
           <h1 className="max-w-xl break-words font-serif text-4xl font-medium leading-[1.1] tracking-tight text-slate-950 text-balance sm:text-5xl">{title}</h1>
           <div className="mt-5 max-w-lg text-sm leading-7 text-slate-600 sm:text-base">{description}</div>
 
@@ -34,7 +34,7 @@ export function AuthShell({ eyebrow, title, description, children }: {
               ["03", "Clear costs", "A simple view of everyone's trip share."],
             ].map(([number, label, detail]) => (
               <div key={number} className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4">
-                <span aria-hidden="true" className="grid size-10 shrink-0 place-items-center rounded-xl bg-indigo-50 text-xs font-semibold text-indigo-700">{number}</span>
+                <span aria-hidden="true" className="grid size-10 shrink-0 place-items-center rounded-xl bg-teal-50 text-xs font-semibold text-teal-800">{number}</span>
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-slate-900">{label}</p>
                   <p className="mt-0.5 text-sm text-slate-600">{detail}</p>

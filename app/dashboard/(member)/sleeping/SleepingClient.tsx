@@ -145,7 +145,7 @@ export function SleepingClient({
         {takenSlots > 0 && (
           <div className="flex-1 max-w-xs h-2 bg-slate-200 rounded-full overflow-hidden">
             <div
-              className="h-full bg-indigo-600 rounded-full transition-all"
+              className="h-full bg-teal-700 rounded-full transition-all"
               style={{ width: `${(takenSlots / totalSlots) * 100}%` }}
             />
           </div>
@@ -155,7 +155,7 @@ export function SleepingClient({
       {genderUnset && (
         <p className="text-xs text-slate-600">
           Tip: set your{" "}
-          <a href="/dashboard/profile" className="inline-flex min-h-[44px] items-center underline underline-offset-2 hover:text-indigo-700">
+          <a href="/dashboard/profile" className="inline-flex min-h-[44px] items-center underline underline-offset-2 hover:text-teal-800">
             profile gender
           </a>{" "}
           to female if you want to be able to claim a single bed from its current occupant.
@@ -180,7 +180,7 @@ export function SleepingClient({
                 <button
                   onClick={() => run("acc-" + r.id, () => respondToBedmateRequest(r.id, true))}
                   disabled={busy !== null}
-                  className="min-w-[44px] inline-flex items-center justify-center text-xs px-3 min-h-[44px] bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50"
+                  className="min-w-[44px] inline-flex items-center justify-center text-xs px-3 min-h-[44px] bg-teal-700 text-white rounded-lg font-medium hover:bg-teal-800 disabled:opacity-50"
                 >
                   Accept
                 </button>
@@ -251,7 +251,7 @@ export function SleepingClient({
         <section key={room} className={`bg-white border rounded-2xl overflow-hidden ${roomFull ? "border-slate-200" : "border-slate-200"}`}>
           <div className="px-5 pt-4 pb-3 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2">
             <h3 className="font-semibold text-slate-900 break-words">{room}</h3>
-            <span className={`text-xs px-2 py-0.5 rounded tabular-nums ${roomFull ? "bg-slate-100 text-slate-600" : "bg-indigo-50 text-indigo-700"}`}>
+            <span className={`text-xs px-2 py-0.5 rounded tabular-nums ${roomFull ? "bg-slate-100 text-slate-600" : "bg-teal-50 text-teal-800"}`}>
               {roomTaken}/{roomCapacity}
             </span>
           </div>
@@ -277,7 +277,7 @@ export function SleepingClient({
                     <div className="min-w-0">
                       <p className="font-semibold text-slate-900 break-words">{bed.label}</p>
                       <div className="flex flex-wrap items-center gap-2 mt-1">
-                        <span className="text-xs px-2 py-0.5 rounded bg-indigo-50 text-indigo-700">
+                        <span className="text-xs px-2 py-0.5 rounded bg-teal-50 text-teal-800">
                           {bed.type === "DOUBLE" ? "Double · 2 slots" : "Single · 1 slot"}
                         </span>
                         {bed.womenOnly && (
@@ -285,7 +285,7 @@ export function SleepingClient({
                             Women only
                           </span>
                         )}
-                        <span className="text-xs px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 tabular-nums">
+                        <span className="text-xs px-2 py-0.5 rounded bg-teal-50 text-teal-800 tabular-nums">
                           {taken}/{capacity} taken
                         </span>
                         {bed.priceAdjustment ? (
@@ -328,7 +328,7 @@ export function SleepingClient({
                         <button
                           onClick={() => handleClaim(bed.id, bed.womenOnly)}
                           disabled={full || busy !== null}
-                          className="min-w-[44px] inline-flex items-center justify-center text-xs px-3 min-h-[44px] bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 disabled:bg-slate-300 disabled:cursor-not-allowed"
+                          className="min-w-[44px] inline-flex items-center justify-center text-xs px-3 min-h-[44px] bg-teal-700 text-white rounded-lg font-medium hover:bg-teal-800 disabled:bg-slate-300 disabled:cursor-not-allowed"
                         >
                           {busy === bed.id ? "Claiming…" : full ? "Full" : myBedId ? "Move here" : "Claim"}
                         </button>
@@ -382,7 +382,7 @@ function SleepBadges({ tags, note }: { tags: string[]; note: string | null }) {
           {tags.map((t) => {
             const def = SLEEP_TAG_BY_VALUE.get(t);
             return (
-              <li key={t} className="text-xs px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700">
+              <li key={t} className="text-xs px-2 py-0.5 rounded-full bg-teal-50 text-teal-800">
                 {def ? `${def.emoji} ${def.label}` : t}
               </li>
             );

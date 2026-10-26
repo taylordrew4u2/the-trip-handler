@@ -35,7 +35,7 @@ export function ContributionItem({ item, currentUserId }: ContributionItemProps)
           <div className="flex items-center gap-2 flex-wrap">
             <h3 className="font-semibold text-slate-900 break-words">{item.title}</h3>
             {item.category && (
-              <span className="text-xs px-2 py-0.5 rounded-lg bg-indigo-50 text-indigo-700">
+              <span className="text-xs px-2 py-0.5 rounded-lg bg-teal-50 text-teal-800">
                 {item.category}
               </span>
             )}
@@ -48,7 +48,7 @@ export function ContributionItem({ item, currentUserId }: ContributionItemProps)
               {item.users.map((uc) => (
                 <span
                   key={uc.userId}
-                  className="text-xs px-2 py-0.5 rounded-lg bg-indigo-50 text-indigo-700"
+                  className="text-xs px-2 py-0.5 rounded-lg bg-teal-50 text-teal-800"
                 >
                   {uc.user.username ? `@${uc.user.username}` : uc.user.name}
                 </span>
@@ -62,7 +62,7 @@ export function ContributionItem({ item, currentUserId }: ContributionItemProps)
             className={`min-w-[44px] inline-flex items-center justify-center w-full sm:w-auto px-4 min-h-[44px] rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
               isSignedUp
                 ? "border border-red-300 text-red-700 hover:bg-red-50"
-                : "bg-indigo-600 text-white hover:bg-indigo-700"
+                : "bg-teal-700 text-white hover:bg-teal-800"
             }`}
           >
             {isSignedUp ? "Leave" : "Join"}

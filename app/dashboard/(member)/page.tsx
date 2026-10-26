@@ -75,7 +75,7 @@ export default async function DashboardPage() {
           <p className="text-sm text-slate-700 mt-2 leading-relaxed">
             Admin reviews your guest form before approving you for the trip.
           </p>
-          <a href="/dashboard/intake" className="inline-flex items-center justify-center mt-4 px-4 min-h-[44px] bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white rounded-lg text-sm font-medium">
+          <a href="/dashboard/intake" className="inline-flex items-center justify-center mt-4 px-4 min-h-[44px] bg-teal-700 hover:bg-teal-800 active:bg-teal-900 text-white rounded-lg text-sm font-medium">
             Open the guest form →
           </a>
         </div>
@@ -89,7 +89,7 @@ export default async function DashboardPage() {
             Now that you&apos;re approved, share your emergency contact, transportation, food, and activity
             preferences so the trip can actually be planned.
           </p>
-          <a href="/dashboard/preferences" className="inline-flex items-center justify-center mt-4 px-4 min-h-[44px] bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white rounded-lg text-sm font-medium">
+          <a href="/dashboard/preferences" className="inline-flex items-center justify-center mt-4 px-4 min-h-[44px] bg-teal-700 hover:bg-teal-800 active:bg-teal-900 text-white rounded-lg text-sm font-medium">
             Fill out preferences →
           </a>
         </div>
@@ -144,13 +144,13 @@ export default async function DashboardPage() {
             <a
               key={item.href}
               href={item.href}
-              className="group flex min-h-[132px] flex-col justify-between rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-colors hover:border-indigo-300 hover:bg-indigo-50/30 sm:p-5"
+              className="group flex min-h-[132px] flex-col justify-between rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-colors hover:border-teal-300 hover:bg-teal-50/30 sm:p-5"
             >
               <div>
                 <p className="font-semibold text-slate-900 text-sm">{item.label}</p>
                 <p className="mt-2 text-xs leading-5 text-slate-600">{item.detail}</p>
               </div>
-              <p className="mt-4 text-sm font-medium text-indigo-700">Open <span aria-hidden="true">→</span></p>
+              <p className="mt-4 text-sm font-medium text-teal-800">Open <span aria-hidden="true">→</span></p>
             </a>
           ))}
       </div>

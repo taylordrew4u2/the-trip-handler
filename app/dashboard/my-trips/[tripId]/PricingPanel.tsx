@@ -100,7 +100,7 @@ export function PricingPanel({ tripId, pricing }: { tripId: string; pricing: Pri
         <button
           type="submit"
           disabled={pricing.isLocked || isPending || splitDraft === pricing.costShareDivisor.toString()}
-          className="min-h-[44px] rounded-xl bg-indigo-600 px-4 text-sm font-medium text-white disabled:opacity-50"
+          className="min-h-[44px] rounded-xl bg-teal-700 px-4 text-sm font-medium text-white disabled:opacity-50"
         >
           Save split
         </button>
@@ -155,7 +155,7 @@ export function PricingPanel({ tripId, pricing }: { tripId: string; pricing: Pri
                       if (next !== amount(kind)) run(() => updateMyTripPrice(tripId, kind, next));
                     }}
                     inputMode="decimal"
-                    className="w-full min-w-0 sm:w-32 px-3 min-h-[44px] rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-600 focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 text-sm disabled:bg-slate-100 disabled:text-slate-600"
+                    className="w-full min-w-0 sm:w-32 px-3 min-h-[44px] rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-600 focus:outline-none focus:border-teal-700 focus:ring-1 focus:ring-teal-700 text-sm disabled:bg-slate-100 disabled:text-slate-600"
                     placeholder="0.00"
                   />
                 </div>
@@ -168,7 +168,7 @@ export function PricingPanel({ tripId, pricing }: { tripId: string; pricing: Pri
                   className={`inline-flex items-center justify-center shrink-0 px-3 min-h-[44px] rounded-xl text-xs font-medium disabled:opacity-50 ${
                     locked
                       ? "border border-slate-300 hover:bg-slate-100 text-slate-700"
-                      : "bg-indigo-600 transition-colors hover:bg-indigo-700 text-white"
+                      : "bg-teal-700 transition-colors hover:bg-teal-800 text-white"
                   }`}
                 >
                   {locked ? "Unlock" : "Lock"}
@@ -177,7 +177,7 @@ export function PricingPanel({ tripId, pricing }: { tripId: string; pricing: Pri
             );
           })}
 
-          <div className="rounded-xl border border-indigo-100 bg-indigo-50 px-4 py-4 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 text-sm">
+          <div className="rounded-xl border border-teal-100 bg-teal-50 px-4 py-4 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 text-sm">
             <span className="text-slate-600">Per-person share</span>
             <span className="font-semibold text-slate-950">
               ${share.toFixed(2)}{" "}

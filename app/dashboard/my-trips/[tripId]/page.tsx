@@ -150,7 +150,7 @@ export default async function ManageTripPage({
         <div className="min-w-0">
           <Link
             href="/dashboard/my-trips"
-            className="inline-flex items-center min-h-[44px] -ml-1 px-1 text-sm font-medium text-slate-600 hover:text-indigo-700"
+            className="inline-flex items-center min-h-[44px] -ml-1 px-1 text-sm font-medium text-slate-600 hover:text-teal-800"
           >
             ← My trips
           </Link>
@@ -172,7 +172,7 @@ export default async function ManageTripPage({
           {hasMeals(trip) && (
             <Link
               href={`/dashboard/my-trips/${trip.id}/meals`}
-              className="inline-flex items-center justify-center min-h-[44px] rounded-xl border border-indigo-100 bg-indigo-50 px-4 text-sm font-semibold text-indigo-700 transition-colors hover:bg-indigo-100"
+              className="inline-flex items-center justify-center min-h-[44px] rounded-xl border border-teal-100 bg-teal-50 px-4 text-sm font-semibold text-teal-800 transition-colors hover:bg-teal-100"
             >
               Manage meal poll →
             </Link>
@@ -205,7 +205,7 @@ export default async function ManageTripPage({
       <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
         <h2 className="font-serif text-2xl font-medium text-slate-950">Guest form questions</h2>
         <p className="mt-2 text-sm leading-6 text-slate-600">Choose what applicants answer before you approve them. Edit questions, add instructions, and mark answers as required or optional.</p>
-        <Link href={`/dashboard/my-trips/${trip.id}/intake`} className="mt-3 inline-flex min-h-11 items-center rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white">Edit intake questions</Link>
+        <Link href={`/dashboard/my-trips/${trip.id}/intake`} className="mt-3 inline-flex min-h-11 items-center rounded-xl bg-teal-700 px-4 text-sm font-semibold text-white">Edit intake questions</Link>
       </section>
       <RosterSettingsPanel tripId={trip.id} capacity={trip.rosterCapacity} />
       <PricingPanel

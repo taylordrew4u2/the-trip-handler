@@ -202,7 +202,7 @@ export function MealsPlanner({
       {!isAdmin && phase === "suggestions_open" && (
         <button
           onClick={() => setShowSuggestModal(true)}
-          className="min-w-[44px] inline-flex items-center justify-center px-4 min-h-[44px] bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 active:bg-indigo-800"
+          className="min-w-[44px] inline-flex items-center justify-center px-4 min-h-[44px] bg-teal-700 text-white rounded-lg text-sm font-medium hover:bg-teal-800 active:bg-teal-900"
         >
           + Suggest a meal
         </button>
@@ -308,7 +308,7 @@ function AdminPhaseControls({
               </button>
               <button
                 onClick={() => run("phase-suggest", () => setPhase(tripId, "suggestions_open"))}
-                className="min-w-[44px] inline-flex items-center justify-center text-xs px-3 min-h-[44px] border border-slate-600 text-slate-200 rounded-lg hover:bg-indigo-700"
+                className="min-w-[44px] inline-flex items-center justify-center text-xs px-3 min-h-[44px] border border-slate-600 text-slate-200 rounded-lg hover:bg-teal-800"
               >
                 ← Reopen suggestions
               </button>
@@ -327,13 +327,13 @@ function AdminPhaseControls({
                   if (!confirm("Finalize anyway, even though some users haven't voted?")) return;
                   run("phase-force", () => setPhase(tripId, "finalized", { force: true }));
                 }}
-                className="min-w-[44px] inline-flex items-center justify-center text-xs px-3 min-h-[44px] border border-amber-400 text-amber-200 rounded-lg hover:bg-indigo-700"
+                className="min-w-[44px] inline-flex items-center justify-center text-xs px-3 min-h-[44px] border border-amber-400 text-amber-200 rounded-lg hover:bg-teal-800"
               >
                 Finalize anyway (override)
               </button>
               <button
                 onClick={() => run("phase-vote-back", () => setPhase(tripId, "voting_open"))}
-                className="min-w-[44px] inline-flex items-center justify-center text-xs px-3 min-h-[44px] border border-slate-600 text-slate-200 rounded-lg hover:bg-indigo-700"
+                className="min-w-[44px] inline-flex items-center justify-center text-xs px-3 min-h-[44px] border border-slate-600 text-slate-200 rounded-lg hover:bg-teal-800"
               >
                 ← Reopen voting
               </button>
@@ -345,7 +345,7 @@ function AdminPhaseControls({
                 if (!confirm("Reopen suggestions? Confirmed meals stay confirmed but you can re-edit.")) return;
                 run("phase-reset", () => setPhase(tripId, "suggestions_open"));
               }}
-              className="min-w-[44px] inline-flex items-center justify-center text-xs px-3 min-h-[44px] border border-slate-600 text-slate-200 rounded-lg hover:bg-indigo-700"
+              className="min-w-[44px] inline-flex items-center justify-center text-xs px-3 min-h-[44px] border border-slate-600 text-slate-200 rounded-lg hover:bg-teal-800"
             >
               ← Reopen suggestions
             </button>
@@ -426,7 +426,7 @@ function MealSlotCard({
           <h3 className="font-medium text-slate-900">
             {slotLabel}
             {slot.isOptional && (
-              <span className="ml-2 text-xs px-2 py-0.5 rounded bg-indigo-50 text-indigo-700">
+              <span className="ml-2 text-xs px-2 py-0.5 rounded bg-teal-50 text-teal-800">
                 Optional
               </span>
             )}
@@ -488,7 +488,7 @@ function MealSlotCard({
                     <span className="text-slate-600"> · {s.submittedBy.name}</span>
                   </span>
                   <span className="flex items-center gap-2">
-                    <span className="text-xs px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 tabular-nums">
+                    <span className="text-xs px-2 py-0.5 rounded bg-teal-50 text-teal-800 tabular-nums">
                       {count} {count === 1 ? "vote" : "votes"}
                     </span>
                     <button
@@ -535,7 +535,7 @@ function MealSlotCard({
                         <span className="font-semibold text-slate-900 break-words">{s.mealName}</span>
                         <span className="text-slate-600 text-xs"> · {s.submittedBy.name}</span>
                         {isWinner && !isConfirmed && (
-                          <span className="ml-2 text-xs px-2 py-0.5 rounded bg-indigo-50 text-indigo-700">
+                          <span className="ml-2 text-xs px-2 py-0.5 rounded bg-teal-50 text-teal-800">
                             Recommended
                           </span>
                         )}
@@ -550,7 +550,7 @@ function MealSlotCard({
                         {!isConfirmed && (
                           <button
                             onClick={() => run("conf-" + s.id, () => confirmMeal(slot.id, s.id))}
-                            className="min-w-[44px] min-h-[44px] text-xs px-2 py-1 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+                            className="min-w-[44px] min-h-[44px] text-xs px-2 py-1 bg-teal-700 text-white rounded-lg hover:bg-teal-800"
                           >
                             Confirm
                           </button>
@@ -593,7 +593,7 @@ function SuggestFormFields({
 }) {
   const fieldsId = useId();
   const inputCls =
-    "w-full min-h-[44px] px-3 py-2.5 rounded-lg border border-slate-300 bg-white text-sm focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600/20";
+    "w-full min-h-[44px] px-3 py-2.5 rounded-lg border border-slate-300 bg-white text-sm focus:outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20";
   return (
     <>
       <div>
@@ -626,7 +626,7 @@ function SuggestFormFields({
         <div className="flex flex-wrap gap-2">
           {HELP_OPTIONS.map((h) => (
             <label key={h.value} className="flex min-h-[44px] items-center gap-2 rounded-lg border border-slate-200 px-3 text-sm text-slate-700 cursor-pointer">
-              <input type="checkbox" name="helpOffered" value={h.value} className="accent-indigo-600" />
+              <input type="checkbox" name="helpOffered" value={h.value} className="accent-teal-700" />
               {h.label}
             </label>
           ))}
@@ -637,7 +637,7 @@ function SuggestFormFields({
         <div className="flex flex-wrap gap-2">
           {DIETARY_OPTIONS.map((d) => (
             <label key={d} className="flex min-h-[44px] items-center gap-2 rounded-lg border border-slate-200 px-3 text-sm text-slate-700 cursor-pointer">
-              <input type="checkbox" name="dietaryTags" value={d} className="accent-indigo-600" />
+              <input type="checkbox" name="dietaryTags" value={d} className="accent-teal-700" />
               {d}
             </label>
           ))}
@@ -677,12 +677,12 @@ function PollBody({
             <label
               key={s.id}
               className={`relative flex min-h-[44px] items-start gap-3 px-3 py-3 rounded-lg border cursor-pointer overflow-hidden ${
-                isMine ? "border-indigo-600 bg-indigo-50/50" : "border-slate-200 hover:bg-slate-50"
+                isMine ? "border-teal-700 bg-teal-50/50" : "border-slate-200 hover:bg-slate-50"
               }`}
             >
               <span
                 aria-hidden
-                className="absolute inset-y-0 left-0 bg-indigo-600/5"
+                className="absolute inset-y-0 left-0 bg-teal-700/5"
                 style={{ width: `${pct}%` }}
               />
               <input
@@ -691,7 +691,7 @@ function PollBody({
                 checked={isMine}
                 disabled={busy !== null}
                 onChange={() => run("vote-" + slot.id, () => castVote(slot.id, s.id, false))}
-                className="h-4 w-4 shrink-0 mt-1 accent-indigo-600 relative z-10"
+                className="h-4 w-4 shrink-0 mt-1 accent-teal-700 relative z-10"
               />
               <span className="min-w-0 flex-1 break-words text-sm relative z-10">
                 <span className="font-semibold text-slate-900 break-words">{s.mealName}</span>
@@ -704,14 +704,14 @@ function PollBody({
                     </span>
                   ))}
                   {s.dietaryTags.map((t) => (
-                    <span key={t} className="text-xs px-2 py-0.5 rounded bg-indigo-50 text-indigo-700">
+                    <span key={t} className="text-xs px-2 py-0.5 rounded bg-teal-50 text-teal-800">
                       {t}
                     </span>
                   ))}
                 </span>
               </span>
               <span className="relative z-10 flex flex-col items-end gap-0.5">
-                <span className="text-xs px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 tabular-nums">
+                <span className="text-xs px-2 py-0.5 rounded bg-teal-50 text-teal-800 tabular-nums">
                   {count} {count === 1 ? "vote" : "votes"}
                 </span>
                 {canDelete && (
@@ -733,12 +733,12 @@ function PollBody({
 
         <label
           className={`relative flex min-h-[44px] items-start gap-3 px-3 py-3 rounded-lg border cursor-pointer overflow-hidden ${
-            myVote?.isDontCare ? "border-indigo-600 bg-indigo-50/50" : "border-slate-200 hover:bg-slate-50"
+            myVote?.isDontCare ? "border-teal-700 bg-teal-50/50" : "border-slate-200 hover:bg-slate-50"
           }`}
         >
           <span
             aria-hidden
-            className="absolute inset-y-0 left-0 bg-indigo-600/5"
+            className="absolute inset-y-0 left-0 bg-teal-700/5"
             style={{
               width: `${totalVotes > 0 ? Math.round((dontCareCount / totalVotes) * 100) : 0}%`,
             }}
@@ -749,10 +749,10 @@ function PollBody({
             checked={!!myVote?.isDontCare}
             disabled={busy !== null}
             onChange={() => run("vote-" + slot.id, () => castVote(slot.id, null, true))}
-            className="h-4 w-4 shrink-0 mt-1 accent-indigo-600 relative z-10"
+            className="h-4 w-4 shrink-0 mt-1 accent-teal-700 relative z-10"
           />
           <span className="flex-1 text-sm text-slate-700 italic relative z-10">I don&apos;t care</span>
-          <span className="relative z-10 text-xs px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 tabular-nums">
+          <span className="relative z-10 text-xs px-2 py-0.5 rounded bg-teal-50 text-teal-800 tabular-nums">
             {dontCareCount} {dontCareCount === 1 ? "vote" : "votes"}
           </span>
         </label>
@@ -802,12 +802,12 @@ function QuickSuggestForm({
         onChange={(e) => setName(e.target.value)}
         placeholder="Suggest a new idea (e.g. BBQ)"
         enterKeyHint="send"
-        className="flex-1 min-w-0 px-3 min-h-[44px] rounded-lg border border-slate-300 bg-white text-sm focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600/20"
+        className="flex-1 min-w-0 px-3 min-h-[44px] rounded-lg border border-slate-300 bg-white text-sm focus:outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20"
       />
       <button
         type="submit"
         disabled={busy !== null || !name.trim()}
-        className="min-w-[44px] inline-flex items-center justify-center shrink-0 px-3 min-h-[44px] bg-indigo-600 text-white text-sm rounded-lg font-medium hover:bg-indigo-700 active:bg-indigo-800 disabled:opacity-40"
+        className="min-w-[44px] inline-flex items-center justify-center shrink-0 px-3 min-h-[44px] bg-teal-700 text-white text-sm rounded-lg font-medium hover:bg-teal-800 active:bg-teal-900 disabled:opacity-40"
       >
         Submit
       </button>
@@ -840,7 +840,7 @@ function SuggestModal({
         >
           <SuggestFormFields slots={slots} presetSlotId={presetSlotId} />
           <div className="flex gap-2 pt-2">
-            <button type="submit" className="min-w-[44px] min-h-[44px] text-sm px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700">
+            <button type="submit" className="min-w-[44px] min-h-[44px] text-sm px-4 py-2 bg-teal-700 text-white rounded-lg font-medium hover:bg-teal-800">
               Add suggestion
             </button>
             <button type="button" onClick={onClose} className="min-w-[44px] min-h-[44px] text-sm px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-100">
@@ -874,7 +874,7 @@ function FinalSlotPanel({
           )}
           <div className="mt-1.5 flex flex-wrap gap-1">
             {confirmedSuggestion.dietaryTags.map((t) => (
-              <span key={t} className="text-xs px-2 py-0.5 rounded bg-indigo-50 text-indigo-700">
+              <span key={t} className="text-xs px-2 py-0.5 rounded bg-teal-50 text-teal-800">
                 {t}
               </span>
             ))}
@@ -976,13 +976,13 @@ function GroceryList({
               {items.map(({ item, slot }) => (
                 <li key={item.id} className="flex flex-wrap items-center gap-x-2 text-sm">
                   {isAdmin ? (
-                    <label className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg hover:bg-indigo-50">
+                    <label className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg hover:bg-teal-50">
                       <input
                         type="checkbox"
                         aria-label={`Mark ${item.name} as bought`}
                         checked={item.bought}
                         onChange={(e) => run("buy-" + item.id, () => toggleBought(item.id, e.target.checked))}
-                        className="h-4 w-4 accent-indigo-600"
+                        className="h-4 w-4 accent-teal-700"
                       />
                     </label>
                   ) : (
@@ -1037,7 +1037,7 @@ function GroceryList({
                     ))}
                   </select>
                   <input aria-label="Grocery quantity" name="quantity" placeholder="Qty" className="min-w-0 min-h-[44px] px-3 py-2 rounded-lg border border-slate-300 text-sm sm:col-span-3" />
-                  <button className="min-w-[44px] col-span-2 min-h-[44px] px-3 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700">Add</button>
+                  <button className="min-w-[44px] col-span-2 min-h-[44px] px-3 py-2 bg-teal-700 text-white rounded-lg text-sm font-medium hover:bg-teal-800">Add</button>
                 </form>
               )}
             </div>

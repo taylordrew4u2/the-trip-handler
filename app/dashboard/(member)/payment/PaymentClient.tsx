@@ -221,7 +221,7 @@ export function PaymentClient({ view }: { view: PaymentView }) {
             value={money(view.deposit)}
           />
           {view.paid > 0 && <Row label="Already paid" sub="Confirmed payments" value={`−${money(view.paid)}`} />}
-          <div className="px-4 py-4 flex flex-wrap justify-between items-center gap-3 bg-indigo-600 text-white">
+          <div className="px-4 py-4 flex flex-wrap justify-between items-center gap-3 bg-teal-700 text-white">
             <p className="text-sm font-semibold">
               {view.isLocked ? (view.paid > 0 ? "Balance due" : "Total today") : "Total when locked"}
             </p>
@@ -251,7 +251,7 @@ export function PaymentClient({ view }: { view: PaymentView }) {
                 <button
                   onClick={handlePay}
                   disabled={loading || view.remaining <= 0}
-                  className="min-w-[44px] min-h-[44px] w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium text-sm transition-colors disabled:opacity-50"
+                  className="min-w-[44px] min-h-[44px] w-full py-3 bg-teal-700 hover:bg-teal-800 text-white rounded-lg font-medium text-sm transition-colors disabled:opacity-50"
                 >
                   {loading && !method ? "Loading checkout…" : `Pay ${money(view.remaining)} by card`}
                 </button>
@@ -295,7 +295,7 @@ export function PaymentClient({ view }: { view: PaymentView }) {
                             href={`https://venmo.com/u/${encodeURIComponent(view.venmoHandle ?? "")}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="font-semibold text-indigo-700 underline underline-offset-2"
+                            className="font-semibold text-teal-800 underline underline-offset-2"
                           >
                             @{view.venmoHandle}
                           </a>
@@ -304,7 +304,7 @@ export function PaymentClient({ view }: { view: PaymentView }) {
                             href={`https://cash.app/$${encodeURIComponent(view.cashAppHandle ?? "")}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="font-semibold text-indigo-700 underline underline-offset-2"
+                            className="font-semibold text-teal-800 underline underline-offset-2"
                           >
                             ${view.cashAppHandle}
                           </a>
@@ -324,7 +324,7 @@ export function PaymentClient({ view }: { view: PaymentView }) {
                         min="0.01"
                         required
                         defaultValue={view.remaining.toFixed(2)}
-                        className="mt-1 block w-full px-3 min-h-[44px] rounded-xl border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:border-indigo-600"
+                        className="mt-1 block w-full px-3 min-h-[44px] rounded-xl border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:border-teal-700"
                       />
                     </label>
                     <label className="block text-xs font-medium text-slate-700">
@@ -344,7 +344,7 @@ export function PaymentClient({ view }: { view: PaymentView }) {
                         maxLength={500}
                         required={method === "OTHER"}
                         placeholder={method === "OTHER" ? "e.g. cash in person, Zelle" : undefined}
-                        className="mt-1 block w-full px-3 min-h-[44px] rounded-xl border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:border-indigo-600"
+                        className="mt-1 block w-full px-3 min-h-[44px] rounded-xl border border-slate-300 text-sm text-slate-900 bg-white focus:outline-none focus:border-teal-700"
                       />
                     </label>
                     <button
@@ -376,7 +376,7 @@ function Row({ label, sub, value, highlight }: { label: string; sub: string; val
   return (
     <div
       className={`px-4 py-4 flex flex-wrap justify-between items-start gap-3 border-t border-slate-100 first:border-t-0 ${
-        highlight ? "bg-indigo-50" : ""
+        highlight ? "bg-teal-50" : ""
       }`}
     >
       <div className="min-w-0 flex-1">
@@ -395,7 +395,7 @@ function MethodButton({ active, onClick, children }: { active: boolean; onClick:
       onClick={onClick}
       aria-pressed={active}
       className={`min-h-[44px] px-4 rounded-xl border text-sm font-medium transition-colors ${
-        active ? "border-indigo-600 bg-indigo-50 text-indigo-700" : "border-slate-300 text-slate-700 hover:bg-slate-50"
+        active ? "border-teal-700 bg-teal-50 text-teal-800" : "border-slate-300 text-slate-700 hover:bg-slate-50"
       }`}
     >
       {children}

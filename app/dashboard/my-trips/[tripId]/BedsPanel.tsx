@@ -88,14 +88,14 @@ export function BedsPanel({ tripId, beds }: { tripId: string; beds: Bed[] }) {
           value={label}
           onChange={(e) => setLabel(e.target.value)}
           placeholder="Label (e.g. Queen)"
-          className="col-span-2 min-w-0 px-3 min-h-[44px] rounded-xl border border-slate-300 text-sm text-slate-900 placeholder:text-slate-600 focus:outline-none focus:border-indigo-600"
+          className="col-span-2 min-w-0 px-3 min-h-[44px] rounded-xl border border-slate-300 text-sm text-slate-900 placeholder:text-slate-600 focus:outline-none focus:border-teal-700"
         />
         <input
           aria-label="Room"
           value={room}
           onChange={(e) => setRoom(e.target.value)}
           placeholder="Room"
-          className="min-w-0 px-3 min-h-[44px] rounded-xl border border-slate-300 text-sm text-slate-900 placeholder:text-slate-600 focus:outline-none focus:border-indigo-600"
+          className="min-w-0 px-3 min-h-[44px] rounded-xl border border-slate-300 text-sm text-slate-900 placeholder:text-slate-600 focus:outline-none focus:border-teal-700"
         />
         <input
           aria-label="How many beds"
@@ -106,13 +106,13 @@ export function BedsPanel({ tripId, beds }: { tripId: string; beds: Bed[] }) {
           value={count}
           onChange={(e) => setCount(e.target.value)}
           title="How many"
-          className="min-w-0 px-3 min-h-[44px] rounded-xl border border-slate-300 text-sm text-slate-900 placeholder:text-slate-600 focus:outline-none focus:border-indigo-600"
+          className="min-w-0 px-3 min-h-[44px] rounded-xl border border-slate-300 text-sm text-slate-900 placeholder:text-slate-600 focus:outline-none focus:border-teal-700"
         />
         <select
           aria-label="Bed type"
           value={type}
           onChange={(e) => setType(e.target.value as "SINGLE" | "DOUBLE")}
-          className="min-w-0 px-3 min-h-[44px] rounded-xl border border-slate-300 text-sm bg-white text-slate-900 placeholder:text-slate-600 focus:outline-none focus:border-indigo-600"
+          className="min-w-0 px-3 min-h-[44px] rounded-xl border border-slate-300 text-sm bg-white text-slate-900 placeholder:text-slate-600 focus:outline-none focus:border-teal-700"
         >
           <option value="DOUBLE">Double (2)</option>
           <option value="SINGLE">Single (1)</option>
@@ -125,16 +125,16 @@ export function BedsPanel({ tripId, beds }: { tripId: string; beds: Bed[] }) {
           value={price}
           onChange={(e) => setPrice(e.target.value)}
           placeholder="± $ per person"
-          className="min-w-0 px-3 min-h-[44px] rounded-xl border border-slate-300 text-sm text-slate-900 placeholder:text-slate-600 focus:outline-none focus:border-indigo-600"
+          className="min-w-0 px-3 min-h-[44px] rounded-xl border border-slate-300 text-sm text-slate-900 placeholder:text-slate-600 focus:outline-none focus:border-teal-700"
         />
         <label className="flex items-center gap-2 min-h-[44px] text-xs text-slate-600 cursor-pointer">
-          <input type="checkbox" checked={womenOnly} onChange={(e) => setWomenOnly(e.target.checked)} className="accent-indigo-600 w-4 h-4" />
+          <input type="checkbox" checked={womenOnly} onChange={(e) => setWomenOnly(e.target.checked)} className="accent-teal-700 w-4 h-4" />
           Women only
         </label>
         <button
           type="submit"
           disabled={isPending || !label.trim()}
-          className="col-span-2 sm:col-span-1 inline-flex items-center justify-center px-4 min-h-[44px] rounded-xl bg-indigo-600 transition-colors hover:bg-indigo-700 active:bg-indigo-800 text-white text-sm font-medium disabled:opacity-50"
+          className="col-span-2 sm:col-span-1 inline-flex items-center justify-center px-4 min-h-[44px] rounded-xl bg-teal-700 transition-colors hover:bg-teal-800 active:bg-teal-900 text-white text-sm font-medium disabled:opacity-50"
         >
           Add bed
         </button>
@@ -171,7 +171,7 @@ export function BedsPanel({ tripId, beds }: { tripId: string; beds: Bed[] }) {
                   const next = e.target.value === "" ? 0 : parseFloat(e.target.value);
                   if (Number.isFinite(next) && next !== bed.priceAdjustment) run(() => updateTripBedPrice(bed.id, next));
                 }}
-                className="w-24 px-3 min-h-[44px] rounded-xl border border-slate-300 text-sm text-slate-900 bg-white placeholder:text-slate-600 focus:outline-none focus:border-indigo-600"
+                className="w-24 px-3 min-h-[44px] rounded-xl border border-slate-300 text-sm text-slate-900 bg-white placeholder:text-slate-600 focus:outline-none focus:border-teal-700"
               />
               <button
                 type="button"

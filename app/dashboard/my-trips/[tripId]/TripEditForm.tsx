@@ -16,7 +16,7 @@ type Fields = {
 };
 
 const inputClass =
-  "w-full min-w-0 px-3 py-2.5 min-h-[44px] rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-600 focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 text-sm";
+  "w-full min-w-0 px-3 py-2.5 min-h-[44px] rounded-xl border border-slate-300 bg-white text-slate-900 placeholder:text-slate-600 focus:outline-none focus:border-teal-700 focus:ring-1 focus:ring-teal-700 text-sm";
 
 export function TripEditForm({ tripId, initial }: { tripId: string; initial: Fields }) {
   const [fields, setFields] = useState<Fields>(initial);
@@ -115,7 +115,7 @@ export function TripEditForm({ tripId, initial }: { tripId: string; initial: Fie
         <button
           type="submit"
           disabled={isPending}
-          className="inline-flex items-center justify-center w-full sm:w-auto px-5 min-h-[44px] rounded-xl bg-indigo-600 transition-colors hover:bg-indigo-700 active:bg-indigo-800 text-white text-sm font-medium disabled:opacity-50"
+          className="inline-flex items-center justify-center w-full sm:w-auto px-5 min-h-[44px] rounded-xl bg-teal-700 transition-colors hover:bg-teal-800 active:bg-teal-900 text-white text-sm font-medium disabled:opacity-50"
         >
           {isPending ? "Saving…" : "Save changes"}
         </button>

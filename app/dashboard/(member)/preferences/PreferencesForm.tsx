@@ -13,7 +13,7 @@ import {
 } from "@/components/forms/field";
 
 const inputCls =
-  "w-full min-h-[44px] px-3 py-2.5 rounded-lg border border-slate-300 bg-white text-sm focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600/20";
+  "w-full min-h-[44px] px-3 py-2.5 rounded-lg border border-slate-300 bg-white text-sm focus:outline-none focus:border-teal-700 focus:ring-2 focus:ring-teal-700/20";
 
 function Section({ title, intro, children }: { title: string; intro?: string; children: React.ReactNode }) {
   return (
@@ -84,14 +84,14 @@ function RadioGroup({ name, options, defaultValue, required }: {
   return (
     <div className="space-y-1.5">
       {options.map((opt, i) => (
-        <label key={opt.value} className="flex min-h-[44px] items-center gap-3 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-800 cursor-pointer hover:bg-indigo-50/50">
+        <label key={opt.value} className="flex min-h-[44px] items-center gap-3 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-800 cursor-pointer hover:bg-teal-50/50">
           <input
             type="radio"
             name={name}
             value={opt.value}
             defaultChecked={defaultValue === opt.value}
             required={required && i === 0}
-            className="h-4 w-4 shrink-0 accent-indigo-600"
+            className="h-4 w-4 shrink-0 accent-teal-700"
           />
           {opt.label}
         </label>
@@ -107,13 +107,13 @@ function CheckboxGroup({ name, options, defaultValue }: {
   return (
     <div className="space-y-1.5">
       {options.map((opt) => (
-        <label key={opt.value} className="flex min-h-[44px] items-center gap-3 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-800 cursor-pointer hover:bg-indigo-50/50">
+        <label key={opt.value} className="flex min-h-[44px] items-center gap-3 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-800 cursor-pointer hover:bg-teal-50/50">
           <input
             type="checkbox"
             name={`${name}[]`}
             value={opt.value}
             defaultChecked={set.has(opt.value)}
-            className="h-4 w-4 shrink-0 accent-indigo-600"
+            className="h-4 w-4 shrink-0 accent-teal-700"
           />
           <span>{opt.label}</span>
         </label>
@@ -240,7 +240,7 @@ export function PreferencesForm({ existing, off = [] }: { existing: GuestForm | 
           </Field>
           <Field label="Acknowledgement" required>
             <label className="flex min-h-[44px] items-start gap-3 rounded-lg border border-slate-200 px-3 py-3 text-sm text-slate-800 cursor-pointer">
-              <input type="checkbox" name="vanAck" defaultChecked={e?.vanAck} required className="h-4 w-4 mt-0.5 accent-indigo-600" />
+              <input type="checkbox" name="vanAck" defaultChecked={e?.vanAck} required className="h-4 w-4 mt-0.5 accent-teal-700" />
               I understand transportation is being coordinated by van and I need to be on time for pickup and departure.
             </label>
           </Field>
@@ -368,7 +368,7 @@ export function PreferencesForm({ existing, off = [] }: { existing: GuestForm | 
         <button
           type="submit"
           disabled={submitting}
-          className="min-w-[44px] min-h-[44px] px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium text-sm transition-colors disabled:opacity-50"
+          className="min-w-[44px] min-h-[44px] px-5 py-2.5 bg-teal-700 hover:bg-teal-800 text-white rounded-lg font-medium text-sm transition-colors disabled:opacity-50"
         >
           {submitting ? "Saving…" : existing?.preferencesSubmittedAt ? "Update preferences" : "Save preferences"}
         </button>

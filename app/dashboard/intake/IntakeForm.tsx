@@ -44,7 +44,7 @@ export function IntakeForm({ defaultEmail, defaultName, defaultPhone, existing, 
   }
 
   return <div className="space-y-5">
-    <div className="rounded-2xl border border-indigo-200 bg-indigo-50 p-5 text-sm leading-6 text-indigo-950">
+    <div className="rounded-2xl border border-teal-200 bg-teal-50 p-5 text-sm leading-6 text-teal-950">
       <p><strong>Before you start:</strong> answer the required questions, then choose Submit for review. The organizer decides who joins.</p>
       <p className="mt-2">Your answers go to the trip organizer. They are not shown on the group roster. Answers are saved when you submit; keep this page open until you finish.</p>
       <p className="mt-2">Signed in as <span className="break-all">{defaultEmail}</span>. <Link href="/help#guest-form" className="inline-flex min-h-11 items-center font-semibold underline underline-offset-4">Help with this form</Link></p>
@@ -54,7 +54,7 @@ export function IntakeForm({ defaultEmail, defaultName, defaultPhone, existing, 
       <p className="font-semibold text-slate-950">Your form has been submitted</p>
       <p className="text-slate-600">{editRequested ? "The organizer has your request to make changes. You can edit after they unlock the form." : "You can read your answers below. To change them, ask the organizer to unlock your form."}</p>
       {!editRequested && <button type="button" disabled={busy} onClick={requestEdit} className="mt-3 min-h-11 rounded-xl border border-slate-300 px-4 font-medium disabled:opacity-50">{busy ? "Sending…" : "Request changes"}</button>}
-      <Link href="/dashboard" className="ml-3 inline-flex min-h-11 items-center text-indigo-700 underline">Back to dashboard</Link>
+      <Link href="/dashboard" className="ml-3 inline-flex min-h-11 items-center text-teal-800 underline">Back to dashboard</Link>
     </div>}
     <form onSubmit={async e => {
       e.preventDefault();
@@ -75,7 +75,7 @@ export function IntakeForm({ defaultEmail, defaultName, defaultPhone, existing, 
       </fieldset>
       {!locked && <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-5 text-sm text-slate-600">
         <p>Review your answers before submitting. After you submit, the organizer can unlock your form if you need to make changes.</p>
-        <button type="submit" disabled={busy} className="mt-3 min-h-12 rounded-xl bg-indigo-600 px-5 py-3 font-semibold text-white disabled:opacity-50">{busy ? "Submitting…" : "Submit for review"}</button>
+        <button type="submit" disabled={busy} className="mt-3 min-h-12 rounded-xl bg-teal-700 px-5 py-3 font-semibold text-white disabled:opacity-50">{busy ? "Submitting…" : "Submit for review"}</button>
       </div>}
     </form>
   </div>;

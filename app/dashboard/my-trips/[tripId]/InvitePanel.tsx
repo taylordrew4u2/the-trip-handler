@@ -61,13 +61,13 @@ export function InvitePanel({
   }
 
   return (
-    <section aria-labelledby="invite-heading" className="rounded-2xl border border-indigo-200 bg-indigo-50/60 p-5 shadow-sm sm:p-6 space-y-4">
+    <section aria-labelledby="invite-heading" className="rounded-2xl border border-teal-200 bg-teal-50/60 p-5 shadow-sm sm:p-6 space-y-4">
       <div>
         <h2 id="invite-heading" className="font-serif text-2xl font-medium tracking-tight text-slate-950">Add people to this trip</h2>
         <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm leading-6 text-slate-700">
           <li>Send your friends the invite link below (text it, or share it anywhere).</li>
           <li>They open it, make an account, and fill out your guest form.</li>
-          <li>You approve them on <Link href="/dashboard/my-trips" className="font-semibold text-indigo-700 underline underline-offset-2">My trips</Link> — then they&apos;re in.</li>
+          <li>You approve them on <Link href="/dashboard/my-trips" className="font-semibold text-teal-800 underline underline-offset-2">My trips</Link> — then they&apos;re in.</li>
         </ol>
       </div>
 
@@ -90,18 +90,18 @@ export function InvitePanel({
             <button
               type="button"
               onClick={() => navigator.share({ title: tripName, text: message }).catch(() => {})}
-              className={`${button} bg-indigo-600 text-white hover:bg-indigo-700`}
+              className={`${button} bg-teal-700 text-white hover:bg-teal-800`}
             >
               Share invite
             </button>
           )}
-          <a href={`sms:?&body=${encodeURIComponent(message)}`} className={`${button} ${canShare ? "border border-indigo-200 bg-white text-indigo-700 hover:bg-indigo-50" : "bg-indigo-600 text-white hover:bg-indigo-700"}`}>
+          <a href={`sms:?&body=${encodeURIComponent(message)}`} className={`${button} ${canShare ? "border border-teal-200 bg-white text-teal-800 hover:bg-teal-50" : "bg-teal-700 text-white hover:bg-teal-800"}`}>
             Text it
           </a>
-          <button type="button" onClick={() => copy(link, "link")} aria-live="polite" className={`${button} border border-indigo-200 bg-white text-indigo-700 hover:bg-indigo-50`}>
+          <button type="button" onClick={() => copy(link, "link")} aria-live="polite" className={`${button} border border-teal-200 bg-white text-teal-800 hover:bg-teal-50`}>
             {copied === "link" ? "Copied" : "Copy link"}
           </button>
-          <button type="button" onClick={() => copy(message, "message")} aria-live="polite" className={`${button} border border-indigo-200 bg-white text-indigo-700 hover:bg-indigo-50`}>
+          <button type="button" onClick={() => copy(message, "message")} aria-live="polite" className={`${button} border border-teal-200 bg-white text-teal-800 hover:bg-teal-50`}>
             {copied === "message" ? "Copied" : "Copy invite message"}
           </button>
         </div>
@@ -111,20 +111,20 @@ export function InvitePanel({
         <p className="text-sm font-semibold text-slate-800">Trip code <span className="font-normal text-slate-600">— friends can type this on the home screen instead of using the link</span></p>
         {joinCode ? (
           <div className="flex flex-wrap items-center gap-2">
-            <code className="inline-flex min-h-[44px] items-center rounded-xl border border-indigo-100 bg-white px-3 font-mono text-base tracking-widest text-indigo-700">{joinCode}</code>
-            <button type="button" onClick={() => copy(joinCode, "code")} aria-live="polite" className={`${button} border border-indigo-200 bg-white text-indigo-700 hover:bg-indigo-50`}>
+            <code className="inline-flex min-h-[44px] items-center rounded-xl border border-teal-100 bg-white px-3 font-mono text-base tracking-widest text-teal-800">{joinCode}</code>
+            <button type="button" onClick={() => copy(joinCode, "code")} aria-live="polite" className={`${button} border border-teal-200 bg-white text-teal-800 hover:bg-teal-50`}>
               {copied === "code" ? "Copied" : "Copy code"}
             </button>
           </div>
         ) : (
-          <button type="button" disabled={isPending} onClick={() => run(() => generateMyTripJoinCode(tripId))} className={`${button} border border-indigo-200 bg-white text-indigo-700 hover:bg-indigo-50`}>
+          <button type="button" disabled={isPending} onClick={() => run(() => generateMyTripJoinCode(tripId))} className={`${button} border border-teal-200 bg-white text-teal-800 hover:bg-teal-50`}>
             Create a trip code
           </button>
         )}
       </div>
 
       {waiting > 0 && (
-        <Link href="/dashboard/my-trips" className="flex min-h-[44px] items-center justify-between gap-3 rounded-xl bg-white px-4 py-3 text-sm font-semibold text-indigo-700 ring-1 ring-indigo-200 hover:bg-indigo-50">
+        <Link href="/dashboard/my-trips" className="flex min-h-[44px] items-center justify-between gap-3 rounded-xl bg-white px-4 py-3 text-sm font-semibold text-teal-800 ring-1 ring-teal-200 hover:bg-teal-50">
           <span>{waiting} {waiting === 1 ? "person is" : "people are"} waiting for you to approve them</span>
           <span aria-hidden>→</span>
         </Link>

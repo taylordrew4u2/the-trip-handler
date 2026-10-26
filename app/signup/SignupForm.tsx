@@ -46,8 +46,8 @@ export function SignupForm({ invite }: { invite?: InviteInfo | null }) {
   if (success) {
     return (
       <div className="w-full rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm sm:p-8">
-        <span aria-hidden="true" className="mx-auto mb-5 grid size-12 place-items-center rounded-2xl bg-indigo-50 text-xl text-indigo-700">✓</span>
-        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-indigo-700">Account created</p>
+        <span aria-hidden="true" className="mx-auto mb-5 grid size-12 place-items-center rounded-2xl bg-teal-50 text-xl text-teal-800">✓</span>
+        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-teal-800">Account created</p>
         <h2 className="mb-3 font-serif text-3xl font-medium text-slate-950">
           {invite ? "One more step." : "You're all set."}
         </h2>
@@ -66,7 +66,7 @@ export function SignupForm({ invite }: { invite?: InviteInfo | null }) {
         </p>
         <Link
           href="/login"
-          className="inline-flex items-center justify-center px-5 min-h-[48px] bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white rounded-xl text-sm font-medium transition-colors"
+          className="inline-flex items-center justify-center px-5 min-h-[48px] bg-teal-700 hover:bg-teal-800 active:bg-teal-900 text-white rounded-xl text-sm font-medium transition-colors"
         >
           Sign in to continue
         </Link>
@@ -82,8 +82,8 @@ export function SignupForm({ invite }: { invite?: InviteInfo | null }) {
           <p className="mt-1 text-sm text-slate-600">A few details, then you can get started.</p>
         </div>
         {invite && (
-          <div className="mb-5 min-w-0 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-indigo-700">You&apos;re applying to</p>
+          <div className="mb-5 min-w-0 rounded-xl border border-teal-200 bg-teal-50 px-4 py-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-teal-800">You&apos;re applying to</p>
             <p className="mt-1 break-words text-sm font-semibold text-slate-950">{invite.tripName}</p>
             <p className="text-xs text-slate-600 mt-0.5">
               {[invite.destination, dateLabel(invite.startDate, invite.endDate)]
@@ -111,7 +111,7 @@ export function SignupForm({ invite }: { invite?: InviteInfo | null }) {
                 autoComplete="name"
                 autoCapitalize="words"
                 enterKeyHint="next"
-                className="min-h-12 w-full min-w-0 rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-600 focus:border-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-600/15"
+                className="min-h-12 w-full min-w-0 rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-600 focus:border-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-700/15"
                 placeholder="Your name"
               />
             </div>
@@ -125,7 +125,7 @@ export function SignupForm({ invite }: { invite?: InviteInfo | null }) {
                 autoCorrect="off"
                 spellCheck={false}
                 enterKeyHint="next"
-                className="min-h-12 w-full min-w-0 rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-600 focus:border-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-600/15"
+                className="min-h-12 w-full min-w-0 rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-600 focus:border-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-700/15"
                 placeholder="@handle"
               />
             </div>
@@ -143,7 +143,7 @@ export function SignupForm({ invite }: { invite?: InviteInfo | null }) {
               autoCorrect="off"
               spellCheck={false}
               enterKeyHint="next"
-              className="min-h-12 w-full min-w-0 rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-600 focus:border-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-600/15"
+              className="min-h-12 w-full min-w-0 rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-600 focus:border-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-700/15"
               placeholder="you@example.com"
             />
           </div>
@@ -157,7 +157,7 @@ export function SignupForm({ invite }: { invite?: InviteInfo | null }) {
               minLength={6}
               autoComplete="new-password"
               enterKeyHint="next"
-              className="min-h-12 w-full min-w-0 rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-600 focus:border-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-600/15"
+              className="min-h-12 w-full min-w-0 rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-600 focus:border-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-700/15"
               placeholder="At least 6 characters"
             />
           </div>
@@ -170,14 +170,14 @@ export function SignupForm({ invite }: { invite?: InviteInfo | null }) {
               autoComplete="tel"
               inputMode="tel"
               enterKeyHint="go"
-              className="min-h-12 w-full min-w-0 rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-600 focus:border-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-600/15"
+              className="min-h-12 w-full min-w-0 rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-600 focus:border-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-700/15"
               placeholder="Optional"
             />
           </div>
           <button
             type="submit"
             disabled={loading}
-            className="mt-2 inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700 active:bg-indigo-800 disabled:opacity-50"
+            className="mt-2 inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-teal-700 px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-teal-800 active:bg-teal-900 disabled:opacity-50"
           >
             <span className="min-w-0 break-words">{loading ? "Submitting…" : invite ? `Apply to ${invite.tripName}` : "Create account"}</span>
           </button>
@@ -186,7 +186,7 @@ export function SignupForm({ invite }: { invite?: InviteInfo | null }) {
 
       <p className="mt-6 text-center text-sm text-slate-600">
         Already have an account?{" "}
-        <Link href="/login" className="text-slate-950 font-medium underline underline-offset-2 decoration-indigo-200 hover:decoration-indigo-600">
+        <Link href="/login" className="text-slate-950 font-medium underline underline-offset-2 decoration-teal-200 hover:decoration-teal-700">
           Sign in
         </Link>
       </p>
