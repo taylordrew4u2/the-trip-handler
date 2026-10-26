@@ -10,6 +10,7 @@ test("help is available without signing in and can be searched", async ({ page }
   await expect(page.getByRole("heading", { name: "Help and FAQ", exact: true })).toBeVisible();
   await page.getByLabel("Search help").fill("roster");
   await expect(page.getByText("Does changing roster spots change the price?", { exact: true })).toBeVisible();
+  await expect(page.getByText("Yes. Once the approved group reaches", { exact: false })).toBeVisible();
   await page.getByLabel("Search help").fill("zzzz-no-result");
   await expect(page.getByRole("status")).toContainText("0 answers found");
   await page.getByRole("link", { name: "Guest form and answers", exact: true }).click();

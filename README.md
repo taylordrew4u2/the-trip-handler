@@ -479,6 +479,8 @@ landed: a member posts to the board and sees it appear, adds and removes a
 reaction, and no request 5xxs while doing it. These mutate data, so they run on
 one viewport rather than all five, and each undoes what it does.
 
+`tests/e2e/payment-lifecycle.spec.ts` covers applying, submitting intake, roster-capacity approval, saving a custom cost split, locking prices, uploading a private receipt, confirming payment, and undoing it. It also covers repeated owner joins and Stripe completion/refund/replay events against real database records. The test server uses synthetic Stripe credentials and locally signed event fixtures; these tests never contact Stripe or transfer money.
+
 ### Accessibility tests — same command
 
 `tests/e2e/a11y.spec.ts` runs axe-core against every page behind and in front of

@@ -40,9 +40,17 @@ export async function settleCheckoutSession(session: Stripe.Checkout.Session): P
       stripeSessionId: session.id,
       stripePaymentId: paymentIntent,
     },
-    // Never resurrect a refunded payment on a replayed event.
-    update: { amount, stripePaymentId: paymentIntent, status: "COMPLETED" },
+    // Leave existing status untouched until the conditional write below.
+    update: {},
   });
+
+  // Stripe may replay completion after charge.refunded. Keep the terminal
+  // refund in the WHERE clause so a concurrent refund also wins.
+  const recorded = await prisma.payment.updateMany({
+    where: { stripeSessionId: session.id, userId, status: { not: "REFUNDED" } },
+    data: { amount, stripePaymentId: paymentIntent, status: "COMPLETED" },
+  });
+  if (recorded.count === 0) return;
 
   const user = await prisma.user.findUnique({ where: { id: userId }, select: { status: true } });
   if (!user || !PAYABLE.has(user.status)) return;

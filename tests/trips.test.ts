@@ -15,12 +15,19 @@ vi.mock("@/lib/db", () => ({
   prisma: {
     trip: { findUnique: vi.fn(), findFirst: vi.fn(), update: vi.fn(), create: vi.fn(), updateMany: vi.fn() },
     user: { findUnique: vi.fn(), update: vi.fn(), count: vi.fn() },
+    payment: { count: vi.fn() },
+    bedAssignment: { deleteMany: vi.fn() },
+    bedmateRequest: { deleteMany: vi.fn() },
+    userContribution: { deleteMany: vi.fn() },
+    guestForm: { deleteMany: vi.fn() },
+    $transaction: vi.fn().mockResolvedValue([]),
   },
 }));
 
 import { getServerSession } from "next-auth";
 import { prisma } from "@/lib/db";
 import {
+  joinMyTripAsGuest,
   updateMyTripRosterCapacity,
   updateMyTripCostShareDivisor,
   lockMyTripPrice,
@@ -305,5 +312,26 @@ describe("admin roster spots", () => {
     expect(prisma.trip.update).toHaveBeenCalledWith({
       where: { id: "t1", ownerId: "owner1" }, data: { rosterCapacity: capacity },
     });
+  });
+});
+
+
+describe("owner joining as a guest", () => {
+  beforeEach(() => {
+    session.mockResolvedValue({ user: { id: "owner1" } });
+    tripFindFirst.mockResolvedValue({ id: "t1", isLocked: true });
+  });
+
+  it.each(["APPROVED", "PENDING_PAYMENT", "CONFIRMED_PAID"])("preserves an existing %s membership", async (status) => {
+    userFindUnique.mockResolvedValue({ tripId: "t1", status });
+    expect(await joinMyTripAsGuest("t1")).toEqual({ success: true });
+    expect(prisma.user.update).not.toHaveBeenCalled();
+  });
+
+  it("cannot carry completed payments from a previous trip into an owned trip", async () => {
+    userFindUnique.mockResolvedValue({ tripId: "oldTrip", status: "CANCELLED" });
+    (prisma.payment.count as unknown as Mock).mockResolvedValue(1);
+    expect(await joinMyTripAsGuest("t1")).toHaveProperty("error");
+    expect(prisma.user.update).not.toHaveBeenCalled();
   });
 });

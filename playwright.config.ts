@@ -55,6 +55,8 @@ export default defineConfig({
 
   webServer: {
     command: `npx next start -p ${PORT}`,
+    // Synthetic credentials only for signed local webhook fixtures. No API calls.
+    env: { STRIPE_SECRET_KEY: "sk_test_e2e_only", STRIPE_WEBHOOK_SECRET: "whsec_e2e_only" },
     url: BASE_URL,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
