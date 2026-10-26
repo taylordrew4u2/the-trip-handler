@@ -1,9 +1,11 @@
+/** Travel route mark shared by app icons and social previews. */
 export function LogoMark({ size }: { size: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 80 80" fill="none">
-      <path d="M20 58V30a12 12 0 0 1 12-12h12a12 12 0 0 1 12 12v6" stroke="#0f766e" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
-      <circle cx="20" cy="58" r="5" fill="#0f766e" />
-      <path d="m38 48 10 10 20-22" stroke="#0f766e" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
+    <svg width={size} height={size} viewBox="0 0 128 128" fill="none">
+      <title>The Trip Handler — destination and route mark</title>
+      <path d="M64 113C54 101 23 76 23 49a41 41 0 0 1 82 0c0 27-31 52-41 64Z" stroke="#0F766E" strokeWidth="8" strokeLinejoin="round" />
+      <path d="M45 65V52a9 9 0 0 1 9-9h28m-11-11 11 11-11 11" stroke="#0F766E" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="45" cy="68" r="4" fill="#0F172A" />
     </svg>
   );
 }
