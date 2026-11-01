@@ -33,6 +33,7 @@ export function ProfileForm({
   const [sleepTags, setSleepTags] = useState<string[]>(defaults.sleepTags);
 
   function toggleTag(value: string) {
+    setSavedAt(null);
     setSleepTags((prev) =>
       prev.includes(value) ? prev.filter((t) => t !== value) : [...prev, value]
     );
@@ -42,6 +43,7 @@ export function ProfileForm({
     e.preventDefault();
     setSubmitting(true);
     setError("");
+    setSavedAt(null);
     const fd = new FormData(e.currentTarget);
     const name = (fd.get("name") as string)?.trim();
     const username = ((fd.get("username") as string) ?? "").trim();
@@ -55,39 +57,44 @@ export function ProfileForm({
       setSubmitting(false);
       return;
     }
-    if (username && !/^[a-zA-Z0-9_]+$/.test(username)) {
-      setError("Username can only contain letters, numbers, and underscores.");
+    if (username.length > 40) {
+      setError("Username must be 40 characters or fewer.");
       setSubmitting(false);
       return;
     }
 
-    const result = await updateProfile(userId, {
-      name,
-      username: username || undefined,
-      phone: phone || undefined,
-      bio: bio || undefined,
-      gender: gender || undefined,
-      sleepTags,
-      sleepNote: sleepNote || undefined,
-    });
-    setSubmitting(false);
-    if (result?.error) {
-      setError(result.error);
-      return;
+    try {
+      const result = await updateProfile(userId, {
+        name,
+        username,
+        phone,
+        bio,
+        gender,
+        sleepTags,
+        sleepNote,
+      });
+      if (result?.error) {
+        setError(result.error);
+        return;
+      }
+      setSavedAt(new Date().toLocaleTimeString());
+      router.refresh();
+    } catch {
+      setError("Could not save your profile. Please try again.");
+    } finally {
+      setSubmitting(false);
     }
-    setSavedAt(new Date().toLocaleTimeString());
-    router.refresh();
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
+    <form onSubmit={handleSubmit} onChange={() => setSavedAt(null)} className="space-y-5">
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2 text-sm">
+        <div role="alert" className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2 text-sm">
           {error}
         </div>
       )}
       {savedAt && !error && (
-        <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg px-3 py-2 text-sm">
+        <div role="status" className="bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg px-3 py-2 text-sm">
           Saved at {savedAt}.
         </div>
       )}
@@ -101,7 +108,7 @@ export function ProfileForm({
           name="username"
           defaultValue={defaults.username}
           className={inputCls}
-          placeholder="Letters, numbers, underscores"
+          placeholder="Optional username"
         />
       </Field>
 
